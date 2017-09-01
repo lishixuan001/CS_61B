@@ -6,10 +6,10 @@ import java.util.Formatter;
 public class IntList {
 
     /** First element of list. */
-    public int head;
+    private int head;
 
     /** Remaining elements of list. */
-    public IntList tail;
+    private IntList tail;
 
     /** A List with head HEAD0 and tail TAIL0. */
     public IntList(int head0, IntList tail0) {
@@ -63,7 +63,7 @@ public class IntList {
 
         // Creates an example IntList.
         IntList L1 = list(1, 2, 3, 4, 5);
-
+        System.out.println(L1);
         //TODO:  Print out L1 using IntelliJ's 'sout' command.
     }
 
