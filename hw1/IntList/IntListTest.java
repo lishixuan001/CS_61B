@@ -32,6 +32,12 @@ public class IntListTest {
 
     @Test
     public void testDcatenate() {
+        IntList a = new IntList(1, null);
+        IntList b = new IntList(2, null);
+        IntList c = new IntList(1, b);
+
+        assertEquals(IntList.dcatenate(IntList.list(), a), a);
+        assertEquals(IntList.dcatenate(a, b), c);
 
     }
 
@@ -42,6 +48,19 @@ public class IntListTest {
 
     @Test
     public void testSubtail() {
+        IntList a = new IntList(1, null);
+        IntList b = new IntList(2, a);
+        IntList c = new IntList(3, b);
+
+
+        IntList test1 = IntList.subTail(c, -1);
+        assertEquals(null, test1);
+
+        IntList test2 = IntList.subTail(c, 1);
+        assertEquals(test2, b);
+
+        IntList test3 = IntList.subTail(c, 5);
+        assertEquals(null, test3);
 
     }
 
@@ -52,7 +71,19 @@ public class IntListTest {
 
     @Test
     public void testSublist() {
+        IntList a = new IntList(1, null);
+        IntList b = new IntList(2, a);
+        IntList c = new IntList(3, b);
+        IntList d = new IntList(2, null);
 
+        IntList test1 = IntList.sublist(c, -1, 1);
+        assertEquals(null, test1);
+
+        IntList test2 = IntList.sublist(c, 1,1);
+        assertEquals(test2, d);
+
+        IntList test3 = IntList.sublist(c, 5, 1);
+        assertEquals(null, test3);
     }
 
     /** Tests that dSublist works properly. Again, don't use new.
@@ -63,6 +94,23 @@ public class IntListTest {
 
     @Test
     public void testDsublist() {
+        IntList a = new IntList(1, null);
+        IntList b = new IntList(2, a);
+        IntList c = new IntList(3, b);
+        IntList input = new IntList (3, b);
+
+        IntList test1 = IntList.dsublist(input, -1, 1);
+        assertEquals(null, test1);
+
+        IntList input2 = new IntList (3, b);
+
+        IntList test2 = IntList.sublist(input2, 1,2);
+        assertEquals(test2, b);
+
+        IntList input3 = new IntList (3, b);
+
+        IntList test3 = IntList.sublist(input3, 1,5);
+        assertEquals(test3, b);
     }
 
 

@@ -27,36 +27,89 @@ public class IntDList {
     /** Return value #I in this list, where item 0 is the first, 1 is the
      *  second, ...., -1 is the last, -2 the second to last.... */
     public int get(int i) {
-        return 0;   // Your code here
+
+        DNode n = null;
+        if (i >= 0){
+            n = _front;
+            while (n != null && i != 0){
+                n = n._next;
+                i -= 1;
+            }
+        }
+        else {
+            n = _back;
+            while (n != null && i != -1){
+                n = n._prev;
+                i += 1;
+            }
+        }
+        if (n != null) {
+            return n._val;
+        } else {
+            return 0;
+        }
+
+        // Your code here
     }
 
     /** The length of this list. */
     public int size() {
-        return 0;   // Your code here
+        DNode n = _front;
+        int size = 0;
+
+        while(n != null){
+            n = n._prev;
+            size += 1;
+        }
+        return size;
+           // Your code here
     }
 
     /** Adds D to the front of the IntDList. */
     public void insertFront(int d) {
-        // Your code here 
+        DNode new_node = new DNode(d);
+        DNode ori_node = _front;
+
+        new_node._prev = ori_node;
+        if(ori_node != null)
+            ori_node._next = new_node;
+
+        _front = new_node;
+        if(_back == null)
+            _back = new_node;
+        // Your code here
     }
 
     /** Adds D to the back of the IntDList. */
     public void insertBack(int d) {
-        // Your code here 
+        DNode new_node = new DNode(d);
+        DNode ori_node = _back;
+
+        new_node._next = ori_node;
+        if(ori_node != null)
+            ori_node._prev = new_node;
+
+        _back = new_node;
+        if(_front == null)
+            _front = new_node;
+        // Your code here
     }
 
     /** Removes the last item in the IntDList and returns it.
      * This is an extra challenge problem. */
     public int deleteBack() {
-        return 0;   // Your code here
+        return 0;
+        }
+        // Your code here
 
-    }
+
 
     /** Returns a string representation of the IntDList in the form
-     *  [] (empty list) or [1, 2], etc. 
+     *  [] (empty list) or [1, 2], etc.
      * This is an extra challenge problem. */
-    public String toString() {
-        return null;   // Your code here
+        public String toString() { return "0";
+
+        // Your code here
     }
 
     /* DNode is a "static nested class", because we're only using it inside

@@ -11,26 +11,37 @@ public class BuggyIntDListSolution extends IntDList {
     /** Removes value #I in this list, where item 0 is the first, 1 is the
      *  second, ...., -1 is the last, -2 the second to last.... */
     public void remove(int i) {
-        DNode p;
+        DNode n;
         if (i >= 0) {
-            p = _front;
+            n = _front;
             while (i > 0) {
                 i -= 1;
-                p = p._next;
+                n = n._next;
             }
         } else {
-            p = _back;
+            n = _back;
             while (i < -1) {
                 i += 1;
-                p = p._prev;
+                n = n._prev;
             }
         }
-        if (p._next != null) {
-            p._next._prev = p._prev;
-        } else {
-            _back = p._prev;
+
+        if (n._next != null){
+            if (n._prev != null){
+                n._next._prev = n._prev;
+                n._prev._next = n._next;
+            }
+            else{
+                n._next._prev = _front;
+                _front = n._next;
+            }
         }
-        p._prev._next = p._next;
+        else {
+            n._prev._next = _back;
+            _back = n._prev;
+        }
+
+
     }
     public String getException() {
         //hint : this is what comes after the "java.lang" at the top of the stack trace

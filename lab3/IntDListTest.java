@@ -17,7 +17,7 @@ public class IntDListTest {
         d = new IntDList(5, 1, 0);
         assertEquals("Size of 3-element list", 3, d.size());
     }
-        
+
     /** Test front and back. */
     @Test
     public void testFrontBack() {
@@ -49,7 +49,7 @@ public class IntDListTest {
         d.insertBack(10);
         d.insertFront(3);
         d.insertFront(1);
-        
+
         assertEquals(".size()", 4, d.size());
 
         assertEquals(".get(0)", 1, d.get(0));
@@ -63,7 +63,7 @@ public class IntDListTest {
         assertEquals(".get(-1)", 10, d.get(-1));
     }
 
-    /* Uncomment the following methods for challenge problems, if desired: 
+    /* Uncomment the following methods for challenge problems, if desired:
     @Test
     public void testDeleteBack() {
         IntDList d = new IntDList(5, 10, 15, 20);
