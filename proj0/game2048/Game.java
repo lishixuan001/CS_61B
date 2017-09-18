@@ -77,7 +77,27 @@ public class Game {
      *  one that fits on the current board. Assumes there is at least one
      *  empty square on the board. */
     private Tile getValidNewTile() {
-        return null; // FIXME
+        //FIXME START
+        int board_size = _model.size();
+        Tile new_tile = _source.getNewTile(board_size);
+        while(true){
+            boolean condition = Check(new_tile);
+            if (condition){
+                return new_tile;
+            }
+            new_tile = _source.getNewTile(board_size);
+        }
+        //FIXME END
+    }
+
+    private boolean Check(Tile Input){
+        // get information from "Input"
+        int row = Input.row();
+        int col = Input.col();
+        // If there is value on the board at the same space
+        Tile board_space = _model.tile(col, row);
+        boolean result = board_space == null;
+        return result;
     }
 
     /** The playing board. */

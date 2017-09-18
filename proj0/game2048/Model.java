@@ -78,9 +78,54 @@ class Model extends Observable {
     boolean tilt(Side side) {
         boolean changed;
         changed = false;
+        // FIXME START
+        int[] columns = {0, 1, 2, 3};
 
-        // FIXME
+        for(int col : columns){
+            int drow = 3;
+            int crow = 2;
 
+            Tile destin_place;
+            Tile curr_place;
+
+            // Change: Deleted "drow >= 0"
+            while(crow >= 0){
+                destin_place = vtile(col, drow, side);
+                curr_place = vtile(col, crow, side);
+
+                boolean curr_is_null = curr_place == null;
+                boolean destin_is_null = destin_place == null;
+                boolean same_value = false;
+                if ((!curr_is_null) && (!destin_is_null)){
+                    if (destin_place.value() == curr_place.value()){
+                        same_value = true;
+                    }
+                }
+
+                if (drow == crow){
+                    crow -= 1;
+                }
+                else if (curr_is_null){
+                    crow -= 1;
+                }
+                else if (same_value){
+                    setVtile(col, drow, side, curr_place);
+                    changed = true;
+                    _score += vtile(col, drow, side).value();
+                    drow -= 1;
+                    crow -= 1;
+                }
+                else if(destin_is_null){
+                    setVtile(col, drow, side, curr_place);
+                    changed = true;
+                    crow -= 1;
+                }
+                else {
+                    drow -= 1;
+                }
+            }
+        }
+        // FIXME END
         checkGameOver();
         if (changed) {
             setChanged();
@@ -116,7 +161,73 @@ class Model extends Observable {
     /** Deternmine whether game is over and update _gameOver and _maxScore
      *  accordingly. */
     private void checkGameOver() {
-        // FIXME
+        // FIXME START
+        /* 1. Check 2048 -- true
+         *  2. Full-filled?
+         *      1) No
+         *      2) Yes
+         *          1' Can continue
+         *          2' Cannot -- true
+         */
+        int[] columns = {0,1,2,3};
+        int[] rows = {0,1,2,3};
+        int the_value;
+        boolean index_2048 = false;
+        boolean not_filled = false;
+        boolean still_possible = false;
+
+        for(int col : columns){
+            for(int row : rows){
+                if(tile(col,row) != null){
+                    the_value = tile(col,row).value();
+                    if (the_value == 2048){
+                        index_2048 = true;
+                    }
+                    if (check(col-1, row, the_value) || check(col+1, row, the_value) || check(col, row-1, the_value) || check(col, row+1, the_value)){
+                        still_possible = true;
+                    }
+                }
+                else{
+                    not_filled = true;
+                }
+
+            }
+        }
+        if (index_2048){
+            _gameOver = true;
+
+        }
+        else if(!not_filled && !still_possible){
+            _gameOver = true;
+
+        }
+
+        /*Update Score*/
+        if (_gameOver) {
+            _maxScore = _score;
+        }
+        // FIXME END
+    }
+
+    private boolean check(int col, int row, int value){
+        int low = 0;
+        int high = 3;
+        if ((col < low) || (col > high) || (row < low) || (row > high)){
+            return false;
+        }
+        else{
+            if(tile(col,row) != null){
+                if (tile(col,row).value() == value){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+            else{
+                return true;
+            }
+        }
     }
 
     @Override
