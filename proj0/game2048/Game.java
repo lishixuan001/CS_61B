@@ -3,7 +3,8 @@ package game2048;
 import static game2048.Side.*;
 
 /** The input/output and GUI controller for play of a game of 2048.
- *  @author */
+ *  @author Wayne Li & P. N. Hilfinger
+ *  */
 public class Game {
 
     /** Controller for a game represented by MODEL, using SOURCE as the
@@ -77,27 +78,28 @@ public class Game {
      *  one that fits on the current board. Assumes there is at least one
      *  empty square on the board. */
     private Tile getValidNewTile() {
-        //FIXME START
-        int board_size = _model.size();
-        Tile new_tile = _source.getNewTile(board_size);
-        while(true){
-            boolean condition = Check(new_tile);
-            if (condition){
-                return new_tile;
+        int boardSize = _model.size();
+        Tile newTile = _source.getNewTile(boardSize);
+        while (true) {
+            boolean condition = doCheck(newTile);
+            if (condition) {
+                return newTile;
             }
-            new_tile = _source.getNewTile(board_size);
+            newTile = _source.getNewTile(boardSize);
         }
-        //FIXME END
     }
 
-    private boolean Check(Tile Input){
-        // get information from "Input"
-        int row = Input.row();
-        int col = Input.col();
-        // If there is value on the board at the same space
-        Tile board_space = _model.tile(col, row);
-        boolean result = board_space == null;
-        return result;
+    /** Check if there already has an value.
+     * @return
+     * @param theInput ** This is a input
+     * */
+    private boolean doCheck(Tile theInput) {
+        int row = theInput.row();
+        int col = theInput.col();
+
+        Tile boardSpace = _model.tile(col, row);
+        boolean theResult = boardSpace == null;
+        return theResult;
     }
 
     /** The playing board. */

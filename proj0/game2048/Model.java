@@ -6,7 +6,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author
+ *  @author Wayne Li & P. N. Hilfinger
  */
 class Model extends Observable {
 
@@ -78,54 +78,43 @@ class Model extends Observable {
     boolean tilt(Side side) {
         boolean changed;
         changed = false;
-        // FIXME START
         int[] columns = {0, 1, 2, 3};
 
-        for(int col : columns){
+        for (int col : columns) {
             int drow = 3;
             int crow = 2;
-
-            Tile destin_place;
-            Tile curr_place;
-
-            // Change: Deleted "drow >= 0"
-            while(crow >= 0){
-                destin_place = vtile(col, drow, side);
-                curr_place = vtile(col, crow, side);
-
-                boolean curr_is_null = curr_place == null;
-                boolean destin_is_null = destin_place == null;
-                boolean same_value = false;
-                if ((!curr_is_null) && (!destin_is_null)){
-                    if (destin_place.value() == curr_place.value()){
-                        same_value = true;
+            Tile destinPlace;
+            Tile currPlace;
+            while (crow >= 0) {
+                destinPlace = vtile(col, drow, side);
+                currPlace = vtile(col, crow, side);
+                boolean currNull = currPlace == null;
+                boolean destinNull = destinPlace == null;
+                boolean sameValue = false;
+                if ((!currNull) && (!destinNull)) {
+                    if (destinPlace.value() == currPlace.value()) {
+                        sameValue = true;
                     }
                 }
-
-                if (drow == crow){
+                if (drow == crow) {
                     crow -= 1;
-                }
-                else if (curr_is_null){
+                } else if (currNull) {
                     crow -= 1;
-                }
-                else if (same_value){
-                    setVtile(col, drow, side, curr_place);
+                } else if (sameValue) {
+                    setVtile(col, drow, side, currPlace);
                     changed = true;
                     _score += vtile(col, drow, side).value();
                     drow -= 1;
                     crow -= 1;
-                }
-                else if(destin_is_null){
-                    setVtile(col, drow, side, curr_place);
+                } else if (destinNull) {
+                    setVtile(col, drow, side, currPlace);
                     changed = true;
                     crow -= 1;
-                }
-                else {
+                } else {
                     drow -= 1;
                 }
             }
         }
-        // FIXME END
         checkGameOver();
         if (changed) {
             setChanged();
@@ -161,72 +150,63 @@ class Model extends Observable {
     /** Deternmine whether game is over and update _gameOver and _maxScore
      *  accordingly. */
     private void checkGameOver() {
-        // FIXME START
-        /* 1. Check 2048 -- true
-         *  2. Full-filled?
-         *      1) No
-         *      2) Yes
-         *          1' Can continue
-         *          2' Cannot -- true
-         */
-        int[] columns = {0,1,2,3};
-        int[] rows = {0,1,2,3};
-        int the_value;
-        boolean index_2048 = false;
-        boolean not_filled = false;
-        boolean still_possible = false;
 
-        for(int col : columns){
-            for(int row : rows){
-                if(tile(col,row) != null){
-                    the_value = tile(col,row).value();
-                    if (the_value == 2048){
-                        index_2048 = true;
-                    }
-                    if (check(col-1, row, the_value) || check(col+1, row, the_value) || check(col, row-1, the_value) || check(col, row+1, the_value)){
-                        still_possible = true;
-                    }
-                }
-                else{
-                    not_filled = true;
-                }
+        int[] columns = {0, 1, 2, 3};
+        int[] rows = {0, 1, 2, 3};
+        int theValue;
+        boolean indexNum = false;
+        boolean notFilled = false;
+        boolean stillPossible = false;
 
+        for (int col : columns) {
+            for (int row : rows) {
+                if (tile(col, row) != null) {
+                    theValue = tile(col, row).value();
+                    if (theValue == MAX_PIECE) {
+                        indexNum = true;
+                    }
+
+                    boolean check1 = check(col - 1, row, theValue);
+                    boolean check2 = check(col + 1, row, theValue);
+                    boolean check3 = check(col, row - 1, theValue);
+                    boolean check4 = check(col, row + 1, theValue);
+
+                    if (check1 || check2 || check3 || check4) {
+                        stillPossible = true;
+                    }
+                } else {
+                    notFilled = true;
+                }
             }
         }
-        if (index_2048){
+        if (indexNum) {
             _gameOver = true;
 
-        }
-        else if(!not_filled && !still_possible){
+        } else if (!notFilled && !stillPossible) {
             _gameOver = true;
-
         }
 
-        /*Update Score*/
         if (_gameOver) {
             _maxScore = _score;
         }
-        // FIXME END
     }
 
-    private boolean check(int col, int row, int value){
+    /** Check the tiles around the current tile,
+     *  determining if there are same values.
+     *  @return
+     *  @param col ** The column number
+     *  @param row ** The row number
+     *  @param value ** The value in tile
+     *  */
+    private boolean check(int col, int row, int value) {
         int low = 0;
         int high = 3;
-        if ((col < low) || (col > high) || (row < low) || (row > high)){
+        if ((col < low) || (col > high) || (row < low) || (row > high)) {
             return false;
-        }
-        else{
-            if(tile(col,row) != null){
-                if (tile(col,row).value() == value){
-                    return true;
-                }
-                else{
-                    return false;
-                }
-            }
-            else{
-                return true;
-            }
+        } else if (tile(col, row) != null) {
+            return tile(col, row).value() == value;
+        } else {
+            return true;
         }
     }
 
