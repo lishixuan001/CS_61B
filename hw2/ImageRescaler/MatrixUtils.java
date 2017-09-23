@@ -53,7 +53,45 @@ public class MatrixUtils {
      */
 
     public static double[][] accumulateVertical(double[][] m) {
-        return null; //your code here
+
+        m = copy(m);
+        int rows = m.length;
+        int cols = m[0].length;
+        double best = Double.POSITIVE_INFINITY;
+        double temp;
+        boolean i;
+
+        for (int row = 0; row < rows; row += 1) {
+            for (int col = 0; col < cols; col += 1) {
+
+                if (row == 0) {
+                    continue;
+                }
+
+                i = true;
+                for (int index = col - 1; index <= col + 1; index += 1) {
+
+                    if (index < 0) {
+                        continue;
+                    } else if (index >= cols) {
+                        break;
+                    }
+
+                    if (i) {
+                        best = m[row - 1][index];
+                        i = false;
+                    }
+
+                    temp = m[row - 1][index];
+                    if (temp < best) {
+                        best = temp;
+                    }
+                }
+                m[row][col] += best;
+                best = 0;
+            }
+        }
+        return m;
     }
 
     /** Non-destructively accumulates a matrix M along the specified
@@ -80,7 +118,27 @@ public class MatrixUtils {
      */
 
     public static double[][] accumulate(double[][] m, Orientation orientation) {
-        return null; //your code here
+        if (orientation == Orientation.HORIZONTAL) {
+            m = transpose(m);
+            return transpose(accumulateVertical(m));
+        }
+        return accumulateVertical(m);
+    }
+
+    /** Helper Function for Transpose.
+     * @param m ** the input
+     * @return
+     * */
+    public static double[][] transpose(double[][] m) {
+        int rows = m.length;
+        int cols = m[0].length;
+        double[][] newM = new double[cols][rows];
+        for (int row = 0; row < rows; row += 1) {
+            for (int col = 0; col < cols; col += 1) {
+                newM[col][row] = m[row][col];
+            }
+        }
+        return newM;
     }
 
     /** Finds the vertical seam VERTSEAM of the given matrix M.
@@ -113,7 +171,7 @@ public class MatrixUtils {
      */
 
     public static int[] findVerticalSeam(double[][] m) {
-        return null; //your code here
+        return null;
     }
 
     /** Returns the SEAM of M with the given ORIENTATION.
@@ -122,7 +180,7 @@ public class MatrixUtils {
      */
 
     public static int[] findSeam(double[][] m, Orientation orientation) {
-        return null; //your code here
+        return null;
     }
 
     /** does nothing. ARGS not used. use for whatever purposes you'd like */

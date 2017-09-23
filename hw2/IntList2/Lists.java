@@ -4,7 +4,7 @@
 /** HW #2, Problem #1. */
 
 /** List problem.
- *  @author
+ *  @author Wayne Li
  */
 class Lists {
     /** Return the list of lists formed by breaking up L into "natural runs":
@@ -15,7 +15,36 @@ class Lists {
      *  Destructive: creates no new IntList items, and may modify the
      *  original list pointed to by L. */
     static IntList2 naturalRuns(IntList L) {
-        /* *Replace this body with the solution. */
-        return null;
+        if (L == null) {
+            return null;
+        }
+
+        IntList subList = L;
+        IntList copyList = L;
+        IntList tailList = L.tail;
+        int headValue = L.head;
+
+        while (true) {
+            if (L == null || headValue > L.head) {
+                break;
+            }
+            headValue = L.head;
+            copyList = L;
+            tailList = L.tail;
+
+            L = L.tail;
+
+            if (tailList == null) {
+                break;
+            }
+            if (headValue >= L.head) {
+                break;
+            }
+        }
+
+        if (copyList != null) {
+            copyList.tail = null;
+        }
+        return new IntList2(subList, naturalRuns(tailList));
     }
 }
