@@ -1,9 +1,11 @@
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ArrayList;
 
+import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
@@ -11,7 +13,7 @@ import static org.junit.Assert.*;
  */
 
 public class EveryOtherWord {
-    /** Collects every other unique string from a list of strings
+    /** Collects every other string from a list of strings
       * starting from the 0th string of the list. The order
       * in which the words are returned does not matter.
       *
@@ -22,21 +24,18 @@ public class EveryOtherWord {
       */
 
     public static Iterable<String> everyOtherWord(List<String> L) {
-        int index = 0;
-        Set<String> resultSet = new HashSet<String>();
-        for (String item : L) {
-            if (index % 2 == 0) {
-                resultSet.add(item);
+        int count = 0;
+        Set<String> retset = new HashSet<String>();
+        for (String s : L) {
+            if (count % 2 == 0) {
+                retset.add(s);
             }
-            index += 1;
+            count += 1;
         }
-        return resultSet;
+        return retset;
     }
 
-
-    /** Tests whether or not your everyOtherWord method works correctly.
-     * @param args **input
-     * */
+    /** Tests whether or not your everyOtherWord method works correctly. */
     public static void main(String[] args) {
         List<String> L = new ArrayList<String>();
         L.add("hey"); L.add("this"); L.add("fish"); L.add("eats");
@@ -63,12 +62,6 @@ public class EveryOtherWord {
 
     public static boolean haveSameItems(Iterable<String> c1,
                                         Iterable<String> c2) {
-        if ((c1 == null) && (c2 != null)) {
-            return false;
-        }
-        if ((c1 != null) && (c2 == null)) {
-            return false;
-        }
         List<String> L1 = new ArrayList<String>();
         for (String s : c1) {
             L1.add(s);
@@ -84,4 +77,4 @@ public class EveryOtherWord {
         return L1.equals(L2);
     }
 
-}
+} 

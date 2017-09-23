@@ -11,21 +11,21 @@ class AlternatingFilter<Value> extends Filter<Value> {
      *  value. */
     AlternatingFilter(Iterator<Value> input) {
         super(input);
-        index = true;
+        allow = true;
     }
 
     @Override
+    /** can be made simpler, but this is for maximum pedagogical clarity */
     protected boolean keep() {
-        if (index) {
-            index = false;
+        if (allow == true) {
+            allow = false;
             return true;
         } else {
-            index = true;
+            allow = true;
             return false;
         }
     }
 
-    /**Defines the index.
-     * */
-    private boolean index;
+    boolean allow;
+
 }
