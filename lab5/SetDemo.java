@@ -11,7 +11,7 @@ public class SetDemo {
     public static void main(String[] args) {
         Set<String> resultSet = new HashSet<String>();
         resultSet.add("papa");
-        resultSet.add("bear");
+        resultSet.add("bear"
         resultSet.add("mama");
         resultSet.add("bear");
         resultSet.add("baby");
