@@ -1,7 +1,8 @@
 import java.io.IOException;
+import java.io.StringReader;
 
 /** String translation.
- *  @author
+ *  @author Wayne Li
  */
 public class Translate {
     /** Return the String S, but with all characters that occur in FROM
@@ -11,12 +12,15 @@ public class Translate {
         /* NOTE: The try {...} catch is a technicality to keep Java happy. */
         char[] buffer = new char[S.length()];
         try {
-            throw new IOException();
-            // REPLACE ABOVE LINE WITH THE RIGHT ANSWER.
+            StringReader str = new StringReader(S);
+            TrReader aReader = new TrReader(str, from, to);
+            aReader.read(buffer, 0, buffer.length);
+            return new String(buffer);
         } catch (IOException e) {
             return null;
         }
     }
+
     /*
        REMINDER: translate must
       a. Be non-recursive
