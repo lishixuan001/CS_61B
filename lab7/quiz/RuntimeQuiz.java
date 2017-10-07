@@ -32,7 +32,6 @@ public class RuntimeQuiz {
 
     public static Asymptotic f2_notation = Asymptotic.BIG_THETA;
     public static Runtime f2_runtime = Runtime.QUADRATIC;
-    //EXPONENTIAL, LINEAR,
     public int f2(int n) {
         if (n <= 1) return n;
         f1(new int[n]);
@@ -40,7 +39,8 @@ public class RuntimeQuiz {
     }
 
     public static Asymptotic f3_notation = Asymptotic.BIG_O;
-    public static Runtime f3_runtime = Runtime.EXPONENTIAL;
+    public static Runtime f3_runtime = Runtime.LOG_N;
+    //EXPONENTIAL,
     /* When f3 is first called, start will be 0 and end will be the length of the array - 1 */
     public int f3(char[] array, int start, int end) {
         if (array.length <= 1 || end <= start) return 1;
