@@ -21,7 +21,7 @@ public class RuntimeQuiz {
      * where N is the length of the input array.
      */
     public static Asymptotic f1_notation = Asymptotic.BIG_THETA;
-    public static Runtime f1_runtime = Runtime.QUADRATIC;
+    public static Runtime f1_runtime = Runtime.LINEAR;
     public void f1(int[] array) {
         for (int i = 0; i < array.length; i++) {
             for (int j = 0; j < Integer.MAX_VALUE; j++) {
@@ -31,7 +31,7 @@ public class RuntimeQuiz {
     }
 
     public static Asymptotic f2_notation = Asymptotic.BIG_THETA;
-    public static Runtime f2_runtime = Runtime.EXPONENTIAL;
+    public static Runtime f2_runtime = Runtime.QUADRATIC;
     //EXPONENTIAL, LINEAR,
     public int f2(int n) {
         if (n <= 1) return n;
