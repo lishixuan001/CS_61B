@@ -469,7 +469,8 @@ class Table {
                 }
             }
         }
-
+        return result;
+    }
 
     /** Return the row that wanted */
     public String[] getrow(int row) {
