@@ -37,12 +37,15 @@ class Condition {
      *  performing the test I denote. */
     boolean test(Integer... rows) {
         int compareResult;
-        _val1 = _col1.getFrom(rows);
+        String temp2;
+        String _val1 = _col1.getFrom(rows);
+
         if (_col2 == null) {
-            String temp_val2 = _col2.getFrom(rows);
-            compareResult = _val1.compareTo(temp_val2);
+            temp2 = _val2;
+            compareResult = _val1.compareTo(temp2);
         } else {
-            compareResult = _val1.compareTo(_val2);
+            temp2 = _col2.getFrom(rows);
+            compareResult = _val1.compareTo(temp2);
         }
 
         if (_relation.equals("<")) {
@@ -65,9 +68,6 @@ class Condition {
 
     /** Return true iff ROWS satisfies all CONDITIONS. */
     static boolean test(List<Condition> conditions, Integer... rows) {
-        if (conditions.isEmpty()) {
-            return true;
-        }
         for (Condition cond : conditions) {
             if (!cond.test(rows)) {
                 return false;
@@ -80,5 +80,5 @@ class Condition {
      *  is a literal. */
     private Column _col1, _col2;
     /** Second operand, if literal (otherwise null). */
-    private String _val1, _val2, _relation;
+    private String _val2, _relation;
 }

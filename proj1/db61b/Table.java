@@ -96,27 +96,53 @@ class Table {
      *  row already exists.  Return true if anything was added,
      *  false otherwise. */
     public boolean add(String[] values) {
-        ValueList current_list;
-        String new_item;
-        boolean check = false;
+
+        if (values.length != _rowSize) {
+            throw error("added length doesn't match the table");
+        }
+
         /** Checking. */
-        for (int i = 0; i < _titles.length; i++) {
-            current_list = _columns[i];
-            new_item = values[i];
-            if (!current_list.contains(new_item)) {
-                check = true;
+        if (size() != 0) {
+            for (int j = 0; j < _size; j++) {
+                ArrayList<String> record = new ArrayList<>();
+                for (int i = 0; i < _rowSize; i++) {
+                    if (values[i].equals(this.get(j, i))) {
+                        record.add(values[i]);
+                    }
+                }
+                if (record.size() == _rowSize) {
+                    return false;
+                }
             }
         }
+//        for (int i = 0; i < _titles.length; i++) {
+//            current_list = _columns[i];
+//            new_item = values[i];
+//            if (!current_list.contains(new_item)) {
+//                check = true;
+//            }
+//        }
+
         /** Operating. */
-        if (check) {
-            for (int index_add = 0; index_add < _titles.length; index_add++) {
-                _columns[index_add].add(values[index_add]);
-            }
-            _size += 1;
-            return true;
-        } else {
-            return false;
+        _size += 1;
+        for (int index_add = 0; index_add < _rowSize; index_add += 1) {
+            _columns[index_add].add(values[index_add]);
         }
+
+        /** For Index */
+        int index = _size - 1;
+        for (int row = 0; row < _size - 1; row += 1) {
+            if (compareRows(_size - 1, row) < 0) {
+                int record = _index.get(row);
+                _index.remove(row);
+                _index.add(row, record + 1);
+                index -= 1;
+            }
+        }
+        _index.add(index);
+
+        return true;
+
     }
 
     /** Add a new row whose column values are extracted by COLUMNS from
@@ -125,7 +151,7 @@ class Table {
      *  Column.getFrom(Integer...) for a description of how Columns
      *  extract values. */
     public boolean add(List<Column> columns, Integer... rows) {
-        String[] new_row = new String[columns()];
+        String[] new_row = new String[_rowSize];
         int index = 0;
         for (Column column : columns) {
             new_row[index] = column.getFrom(rows);
@@ -152,8 +178,8 @@ class Table {
             table = new Table(columnNames);
             String valueLine = input.readLine();
             while (valueLine != null) {
-                String[] extracted_row = valueLine.split(",");
-                table.add(extracted_row);
+                String[] extractedRow = valueLine.split(",");
+                table.add(extractedRow);
                 valueLine = input.readLine();
             }
 
@@ -182,24 +208,29 @@ class Table {
             String sep;
             sep = "";
             output = new PrintStream(name + ".db");
+
             /** Write in the titles and the commas */
-            for (int index = 0; index < _titles.length; index++) {
-                if (index != _titles.length - 1) {
-                    output.print(getTitle(index) + ",");
+            for (int index = 0; index < _rowSize; index++) {
+                if (index != _rowSize - 1) {
+                    sep = sep + _titles[index] + ",";
                 } else {
-                    output.print(getTitle(index));
+                    sep = sep + _titles[index];
                 }
-            } output.println();
+            }
+            output.println(sep);
+
 
             /** Write in the values and the commas */
             for (int row = 0; row < size(); row++) {
+                String result = "";
                 for (int col = 0; col < columns(); col++) {
                     if (col != columns() - 1) {
-                        output.print(_columns[col].get(row) + ",");
+                        result = result + get(row, col) + ",";
                     } else {
-                        output.print(_columns[col].get(row));
+                        result = result + get(row, col);
                     }
                 }
+                output.println(result);
             }
         } catch (IOException e) {
             throw error("trouble writing to %s.db", name);
@@ -213,17 +244,100 @@ class Table {
     /** Print my contents on the standard output, separated by spaces
      *  and indented by two spaces. */
     void print() {
-        for (int row = 0; row < size(); row++) {
-            for (int col = 0; col < columns(); col++) {
+        String printMaterial = new String();
+        for (int row = 0; row < _size; row++) {
+            for (int col = 0; col < _rowSize; col++) {
                 if (col == 0) {
-                    System.out.print("  ");
+                    printMaterial = "  " + get(_index.indexOf(row), col);
                 } else {
-                    System.out.print(" " + _columns[col].get(row));
+                    printMaterial = printMaterial + " " + get(_index.indexOf(row), col);
                 }
             }
-            System.out.println("");
+            System.out.println(printMaterial);
         }
     }
+
+//    /** Return a new Table whose columns are COLUMNNAMES, selected from
+//     *  rows of this table that satisfy CONDITIONS. */
+//    Table select(List<String> columnNames, List<Condition> conditions) {
+//        for (String name : columnNames) {
+//            if (findColumn(name) < 0) {
+//                throw error("Invalid column name");
+//            }
+//        }
+//        Table result = new Table(columnNames);
+//        ArrayList<Integer> index = new ArrayList<>();
+//        for (String name : columnNames) {
+//            index.add(findColumn(name));
+//        }
+//
+//        ArrayList<Integer> record = new ArrayList<>();
+//        for (int row = 0; row < _size; row += 1) {
+//            if (conditions == null) {
+//                record.add(row);
+//            } else {
+//                if (Condition.test(conditions, row)) {
+//                    record.add(row);
+//                }
+//            }
+//        }
+//        for (int i: record) {
+//            int k = 0;
+//            String[] rowValue = new String[columnNames.size()];
+//            for (int j: index) {
+//                rowValue[k] = get(i, j);
+//                k += 1;
+//            }
+//            result.add(rowValue);
+//        }
+//
+//        return result;
+//    }
+//
+//    /** Return a new Table whose columns are COLUMNNAMES, selected
+//     *  from pairs of rows from this table and from TABLE2 that match
+//     *  on all columns with identical names and satisfy CONDITIONS. */
+//    Table select(Table table2, List<String> columnNames,
+//                 List<Condition> conditions) {
+//
+//        Table result = new Table(columnNames);
+//        ArrayList<String> common = new ArrayList<>();
+//        for (String name: _titles) {
+//            int a = table2.findColumn(name);
+//            if (a >= 0) {
+//                common.add(name);
+//            }
+//        }
+//        ArrayList<Column> collection = new ArrayList<>();
+//        for (String col : columnNames) {
+//            Column toAdd = new Column(col, this, table2);
+//            collection.add(toAdd);
+//        }
+//
+//        ArrayList<Column> one = new ArrayList<>();
+//        ArrayList<Column> two = new ArrayList<>();
+//        for (String name : common) {
+//            one.add(new Column(name, this));
+//            two.add(new Column(name, table2));
+//        }
+//
+//        for (int i = 0; i < _size; i += 1) {
+//            for (int j = 0; j < table2.size(); j += 1) {
+//                if (equijoin(one, two, i, j)) {
+//                    if (conditions == null) {
+//                        result.add(collection, i, j);
+//                    } else {
+//                        if (Condition.test(conditions, i, j)) {
+//                            result.add(collection, i, j);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        return result;
+//
+//    }
 
     /** Return a new Table whose columns are COLUMNNAMES, selected from
      *  rows of this table that satisfy CONDITIONS. */
@@ -244,17 +358,17 @@ class Table {
         /** The select based on conditions */
         for (int row = 0; row < size(); row++) {
             List<String> newRow = new ArrayList<String>(newColumns.size());
-            List<Integer> rowIndex = new ArrayList<Integer>();
             for (int col = 0; col < columns(); col++) {
                 String item = _columns[col].get(row);
                 newRow.add(item);
             }
-            rowIndex.add(row);
             String[] theNewRow = newRow.toArray(new String[newRow.size()]);
 
             /** Go over the conditions */
-            for (Integer num : rowIndex) {
-                if (Condition.test(conditions, num)) {
+            if (conditions == null) {
+                result.add(theNewRow);
+            } else {
+                if (Condition.test(conditions, row)) {
                     result.add(theNewRow);
                 }
             }
@@ -268,94 +382,78 @@ class Table {
      *  on all columns with identical names and satisfy CONDITIONS. */
     Table select(Table table2, List<String> columnNames,
                  List<Condition> conditions) {
-        Table result;
 
-        boolean canTable1 = true;
-        boolean canTable2 = true;
+        Table result = new Table(columnNames);
+        List<Column> newColumns = new ArrayList<Column>();
+        List<Column> recordSame1 = new ArrayList<Column>();
+        List<Column> recordSame2 = new ArrayList<Column>();
+        List<Integer> colIndex = new ArrayList<Integer>();
+        int tableIndex;
+        int rowIndex;
 
-        /** See if tables meet requirements */
+        /** First select the columns */
         for (String wantedCol : columnNames) {
-            if (findColumn(wantedCol) < 0) {
-                canTable1 = false;
-            } else if (table2.findColumn(wantedCol) < 0) {
-                canTable2 = false;
+            Column col = new Column(wantedCol, this, table2);
+            newColumns.add(col);
+        }
+
+        /** Record the same cols in the tables */
+        int findSame;
+        Column sameColumn1, sameColumn2;
+        for (String title : mytitles()) {
+            findSame = table2.findColumn(title);
+            if (findSame >= 0) {
+                sameColumn1 = new Column(title, this);
+                sameColumn2 = new Column(title, table2);
+                recordSame1.add(sameColumn1);
+                recordSame2.add(sameColumn2);
             }
         }
 
-        /** Find results based on the availability */
-        if (!canTable1 && !canTable2) {
-            throw error("Both tables don't have the selected columns");
-        } else if (canTable1 && !canTable2) {
-            Table initTable1 = this.select(columnNames, conditions);
-            return initTable1;
-        } else if (!canTable1 && canTable2) {
-            Table initTable2 = table2.select(columnNames, conditions);
-            return initTable2;
+        for (String col : columnNames) {
+            if (this.findColumn(col) >= 0) {
+                colIndex.add(1);
+                colIndex.add(this.findColumn(col));
+            } else if (table2.findColumn(col) >= 0) {
+                colIndex.add(2);
+                colIndex.add(table2.findColumn(col));
+            } else {
+                throw error("Both table don't have the selection.");
+            }
         }
 
-        Table initTable1 = this.select(columnNames, conditions);
-        Table initTable2 = table2.select(columnNames, conditions);
+        Iterator indexTrack = colIndex.iterator();
 
-        int tableTwoRowNum = initTable2._columns[0].size();
-        String[] oneRow;
+        /** Apply conditions on the results and ignore the same */
+        int tableRows = _columns[0].size();
+        int tableTwoRows = table2._columns[0].size();
 
-        for (int i = 0; i < tableTwoRowNum; i++) {
-             oneRow = table2.getrow(i);
-             initTable1.add(oneRow);
+        for (int i = 0; i < tableTwoRows; i++) {
+            for (int j = 0; j < tableRows; j++) {
+                boolean cond1 = equijoin(recordSame1, recordSame2, j, i);
+                boolean cond2 = Condition.test(conditions, j, i);
+                if (cond1 && cond2) {
+                    String[] fromTable = this.getrow(j);
+                    String[] fromTableSecond = table2.getrow(i);
+
+                    List<String> newRow = new ArrayList<String>();
+                    while (indexTrack.hasNext()) {
+                        tableIndex = (int) indexTrack.next();
+                        if (tableIndex == 1) {
+                            rowIndex = (int) indexTrack.next();
+                            newRow.add(fromTable[rowIndex]);
+                        } else if (tableIndex == 2) {
+                            rowIndex = (int) indexTrack.next();
+                            newRow.add(fromTableSecond[rowIndex]);
+                        }
+                    }
+                    String[] newStringRow = newRow.toArray(new String[newRow.size()]);
+                    result.add(newStringRow);
+
+                }
+            }
         }
-
-        result = initTable1;
         return result;
-
-//        /** Filter the same rows from tables */
-//        ValueList[] resultList = initTable1._columns;
-//        ValueList[] tableTwoList = initTable1._columns;
-//        ArrayList[] rowsResult = new ArrayList[];
-//        ArrayList[] eachRow = new ArrayList[];
-//
-//        int listLength = resultList.length;
-//        int resultRows = resultList[0].size();
-//        for (int i = 0; i < resultRows; i++) {
-//
-//        }
-//
-//
-//        for (int i = 0; i < listLength; i++) {
-//            for (int j = 0; j < listLength; j++) {
-//                resultList[i].add(tableTwoList[j])
-//            }
-//        }
-
-
-
-
-
-
-//        Table result = new Table(columnNames);
-//        List<Column> newColumns = new ArrayList<Column>();
-//        List<Column> recordSame1 = new ArrayList<Column>();
-//        List<Column> recordSame2 = new ArrayList<Column>();
-//
-//        /** First select the columns */
-//        for (String wantedCol : columnNames) {
-//            Column col = new Column(wantedCol, this, table2);
-//            newColumns.add(col);
-//        }
-//
-//        /** Record the same cols in the tables */
-//        int findSame;
-//        Column sameColumn1, sameColumn2;
-//        for (String title : mytitles()) {
-//            findSame = table2.findColumn(title);
-//            if (findSame >= 0) {
-//                sameColumn1 = new Column(title, this);
-//                sameColumn2 = new Column(title, table2);
-//                recordSame1.add(sameColumn1);
-//                recordSame2.add(sameColumn2);
-//            }
-//        }
-//
-//        /** Apply conditions on the results and ignore the same */
     }
 
     /** Return the row that wanted */
