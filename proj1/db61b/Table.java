@@ -345,19 +345,24 @@ class Table {
         Table result;
 
         /** First select the columns */
-        List<Column> newColumns = new ArrayList<Column>();
+        List<Column> newColumns = new ArrayList<>();
+        List<Integer> indexColumns = new ArrayList<>();
+        List<Integer> indexRows = new ArrayList<>();
+
         for (String wantedCol : columnNames) {
             if (findColumn(wantedCol) < 0) {
                 throw error("Invalid column name");
             }
             Column col = new Column(wantedCol, this);
             newColumns.add(col);
+            indexColumns.add(findColumn(wantedCol));
         }
         result = new Table(columnNames);
 
         /** The select based on conditions */
         for (int row = 0; row < size(); row++) {
-            List<String> newRow = new ArrayList<String>(newColumns.size());
+            List<String> newRow = new ArrayList<>(newColumns.size());
+
             for (int col = 0; col < columns(); col++) {
                 String item = _columns[col].get(row);
                 newRow.add(item);
@@ -366,14 +371,25 @@ class Table {
 
             /** Go over the conditions */
             if (conditions == null) {
-                result.add(theNewRow);
+//                result.add(theNewRow);
+                indexRows.add(row);
             } else {
                 if (Condition.test(conditions, row)) {
-                    result.add(theNewRow);
+//                    result.add(theNewRow);
+                    indexRows.add(row);
                 }
             }
         }
 
+        for (int row : indexRows) {
+            int index = 0;
+            String[] insertRow = new String[columnNames.size()];
+            for (int col : indexColumns) {
+                insertRow[index] = this.get(row, col);
+                index += 1;
+            }
+            result.add(insertRow);
+        }
         return result;
     }
 
@@ -453,8 +469,7 @@ class Table {
                 }
             }
         }
-        return result;
-    }
+
 
     /** Return the row that wanted */
     public String[] getrow(int row) {
