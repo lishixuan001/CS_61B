@@ -17,7 +17,9 @@ class Condition {
      *  are column designators. and RELATION is one of the
      *  strings "<", ">", "<=", ">=", "=", or "!=". */
     Condition(Column col1, String relation, Column col2) {
-        // YOUR CODE HERE
+        _col1 = col1;
+        _col2 = col2;
+        _relation = relation;
     }
 
     /** A Condition representing COL1 RELATION 'VAL2', where COL1 is
@@ -34,12 +36,38 @@ class Condition {
      *  from which my columns are selected, returns the result of
      *  performing the test I denote. */
     boolean test(Integer... rows) {
-        // REPLACE WITH SOLUTION
-        return false;
+        int compareResult;
+        _val1 = _col1.getFrom(rows);
+        if (_col2 == null) {
+            String temp_val2 = _col2.getFrom(rows);
+            compareResult = _val1.compareTo(temp_val2);
+        } else {
+            compareResult = _val1.compareTo(_val2);
+        }
+
+        if (_relation.equals("<")) {
+            return compareResult < 0;
+        } else if (_relation.equals("<=")) {
+            return compareResult <= 0;
+        } else if (_relation.equals(">")) {
+            return compareResult > 0;
+        } else if (_relation.equals(">=")) {
+            return compareResult <= 0;
+        } else if (_relation.equals("==")) {
+            return compareResult == 0;
+        } else if (_relation.equals("!=")) {
+            return compareResult != 0;
+        } else {
+            return false;
+        }
+
     }
 
     /** Return true iff ROWS satisfies all CONDITIONS. */
     static boolean test(List<Condition> conditions, Integer... rows) {
+        if (conditions.isEmpty()) {
+            return true;
+        }
         for (Condition cond : conditions) {
             if (!cond.test(rows)) {
                 return false;
@@ -52,6 +80,5 @@ class Condition {
      *  is a literal. */
     private Column _col1, _col2;
     /** Second operand, if literal (otherwise null). */
-    private String _val2;
-    // ADD ADDITIONAL FIELDS HERE
+    private String _val1, _val2, _relation;
 }

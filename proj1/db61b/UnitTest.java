@@ -1,5 +1,7 @@
 package db61b;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 import ucb.junit.textui;
 
 /** The suite of all JUnit tests for the qirkat package.
@@ -7,10 +9,110 @@ import ucb.junit.textui;
  */
 public class UnitTest {
 
+    @Test
+    public void testColumns() {
+
+        int result = newTable.columns();
+        assertEquals(4, result);
+    }
+
+    @Test
+    public void testGetTitle() {
+        String result = newTable.getTitle(1);
+        assertEquals("T2", result);
+    }
+
+
+    @Test
+    public void testFindColumn() {
+        int result = newTable.findColumn("T2");
+        assertEquals(1, result);
+        int result2 = newTable.findColumn("T5");
+        assertEquals(-1, result2);
+    }
+
+    @Test
+    public void testSize() {
+        int result = newTable.size();
+        assertEquals(2, result);
+    }
+
+    @Test
+    public void testAdd() {
+        boolean shouldFalse = newTable.add(rowTwo);
+        assertEquals(true, addOne);
+        assertEquals(true, addTwo);
+        assertEquals(false, shouldFalse);
+    }
+
+    @Test
+    public void testDatabase() {
+        Database database = new Database();
+        database.put("newTable", newTable);
+        database.put("newTable2", newTable2);
+        Table get1 = database.get("newTable");
+        int result = get1.findColumn("T2");
+        assertEquals(1, result);
+        Table get2 = database.get("newTable2");
+        int result2 = get2.findColumn("C2");
+        assertEquals(1, result2);
+    }
+
+    @Test
+    public void testMyTitle() {
+        String[] title = newTable.mytitles();
+        assertArrayEquals(title, newTitles);
+    }
+
+    @Test
+    public void testPrint() {
+        newTable.print();
+        System.out.println("");
+        newTable2.print();
+    }
+
+    @Test
+    public void testWriteTable() {
+        newTable.writeTable("saveNewTable");
+        assertEquals(true, true);
+    }
+
+    @Test
+    public void testReadTable() {
+        Table tempTable = copyNewTable.readTable("saveNewTable");
+        int result = tempTable.findColumn("T2");
+        assertEquals(1, result);
+    }
+
+    @Test
+    public void testGetRow() {
+        String[] result = newTable.getrow(0);
+        assertArrayEquals(result, rowOne);
+    }
+
+    /** Initialize newTable */
+    String[] newTitles = {"T1", "T2", "T3", "T4"};
+    Table newTable = new Table(newTitles);
+    String[] rowOne = {"row1-T1", "row1-T2", "row1-T3", "row1-T4"};
+    String[] rowTwo = {"row2-T1", "row2-T2", "row2-T3", "row2-T4"};
+    boolean addOne = newTable.add(rowOne);
+    boolean addTwo = newTable.add(rowTwo);
+
+    /** Initialize newTable2 */
+    String[] newTitles2 = {"C1", "C2", "C3", "C4"};
+    Table newTable2 = new Table(newTitles2);
+    String[] rowOne2 = {"row1-C1", "row1-C2", "row1-C3", "row1-C4"};
+    String[] rowTwo2 = {"row2-C1", "row2-C2", "row2-C3", "row2-C4"};
+    boolean addOne2 = newTable2.add(rowOne2);
+    boolean addTwo2 = newTable2.add(rowTwo2);
+
+    Table copyNewTable;
+
     /** Run the JUnit tests in this package. Add xxxTest.class entries to
      *  the arguments of runClasses to run other JUnit tests. */
     public static void main(String[] ignored) {
         /* textui.runClasses(); */
+        System.exit(textui.runClasses(UnitTest.class));
     }
 
 }

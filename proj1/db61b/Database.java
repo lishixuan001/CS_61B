@@ -7,20 +7,24 @@
 // solutions.
 package db61b;
 
+import java.util.HashMap;
 // FILL IN (WITH IMPORTS)?
 
 /** A collection of Tables, indexed by name.
- *  @author */
+ *  @author Shixuan (Wayne) Li*/
 class Database {
     /** An empty database. */
     public Database() {
-        // FILL IN
+        tableCollection = new HashMap<String, Table>();
     }
 
     /** Return the Table whose name is NAME stored in this database, or null
      *  if there is no such table. */
     public Table get(String name) {
-        return null;             // REPLACE WITH SOLUTION
+        if (tableCollection.containsKey(name)) {
+            return tableCollection.get(name);
+        }
+        return null;
     }
 
     /** Set or replace the table named NAME in THIS to TABLE.  TABLE and
@@ -29,8 +33,8 @@ class Database {
         if (name == null || table == null) {
             throw new IllegalArgumentException("null argument");
         }
-        // FILL IN
+        tableCollection.put(name, table);
     }
 
-    // FILL IN?
+    private HashMap<String, Table> tableCollection;
 }

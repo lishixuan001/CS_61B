@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static db61b.Utils.*;
@@ -29,19 +30,19 @@ class Table {
         }
         _size = 0;
         _rowSize = columnTitles.length;
-
         for (int i = columnTitles.length - 1; i >= 1; i -= 1) {
             for (int j = i - 1; j >= 0; j -= 1) {
                 if (columnTitles[i].equals(columnTitles[j])) {
-                    throw error("duplicate column name: %s",
-                                columnTitles[i]);
+                    throw error("duplicate column name: %s", columnTitles[i]);
                 }
             }
         }
 
-        // FIXME
-        _titles = null;
-        _columns = null;
+        _titles = columnTitles;
+        _columns = new ValueList[_rowSize];
+        for (int i = 0; i < _titles.length; i++) {
+            _columns[i] = new ValueList();
+        }
     }
 
     /** A new Table whose columns are give by COLUMNTITLES. */
@@ -49,32 +50,43 @@ class Table {
         this(columnTitles.toArray(new String[columnTitles.size()]));
     }
 
+    public String[] mytitles() {
+        return _titles;
+    }
+
     /** Return the number of columns in this table. */
     public int columns() {
-        return 0;  // REPLACE WITH SOLUTION
+        return _titles.length;
     }
 
     /** Return the title of the Kth column.  Requires 0 <= K < columns(). */
     public String getTitle(int k) {
-        return null;  // REPLACE WITH SOLUTION
+        if (k > columns() || k < 0) {
+            throw new IndexOutOfBoundsException("'k' index is out of boundary");
+        }
+        return _titles[k];
     }
 
     /** Return the number of the column whose title is TITLE, or -1 if
      *  there isn't one. */
     public int findColumn(String title) {
-        return -1;  // REPLACE WITH SOLUTION
+        for (int i = 0; i < _titles.length; i++) {
+            if (_titles[i].equals(title)) {
+                return i;
+            }
+        } return -1;
     }
 
     /** Return the number of rows in this table. */
     public int size() {
-        return 0;  // REPLACE WITH SOLUTION
+        return _size;
     }
 
     /** Return the value of column number COL (0 <= COL < columns())
      *  of record number ROW (0 <= ROW < size()). */
     public String get(int row, int col) {
         try {
-            return null; // REPLACE WITH SOLUTION
+            return _columns[col].get(row);
         } catch (IndexOutOfBoundsException excp) {
             throw error("invalid row or column");
         }
@@ -84,7 +96,27 @@ class Table {
      *  row already exists.  Return true if anything was added,
      *  false otherwise. */
     public boolean add(String[] values) {
-        return false;   // REPLACE WITH SOLUTION
+        ValueList current_list;
+        String new_item;
+        boolean check = false;
+        /** Checking. */
+        for (int i = 0; i < _titles.length; i++) {
+            current_list = _columns[i];
+            new_item = values[i];
+            if (!current_list.contains(new_item)) {
+                check = true;
+            }
+        }
+        /** Operating. */
+        if (check) {
+            for (int index_add = 0; index_add < _titles.length; index_add++) {
+                _columns[index_add].add(values[index_add]);
+            }
+            _size += 1;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /** Add a new row whose column values are extracted by COLUMNS from
@@ -93,7 +125,13 @@ class Table {
      *  Column.getFrom(Integer...) for a description of how Columns
      *  extract values. */
     public boolean add(List<Column> columns, Integer... rows) {
-        return false;   // REPLACE WITH SOLUTION
+        String[] new_row = new String[columns()];
+        int index = 0;
+        for (Column column : columns) {
+            new_row[index] = column.getFrom(rows);
+            index += 1;
+        }
+        return add(new_row);
     }
 
     /** Read the contents of the file NAME.db, and return as a Table.
@@ -110,7 +148,15 @@ class Table {
                 throw error("missing header in DB file");
             }
             String[] columnNames = header.split(",");
-            // FILL IN
+            /** Create a new table. */
+            table = new Table(columnNames);
+            String valueLine = input.readLine();
+            while (valueLine != null) {
+                String[] extracted_row = valueLine.split(",");
+                table.add(extracted_row);
+                valueLine = input.readLine();
+            }
+
         } catch (FileNotFoundException e) {
             throw error("could not find %s.db", name);
         } catch (IOException e) {
@@ -136,7 +182,25 @@ class Table {
             String sep;
             sep = "";
             output = new PrintStream(name + ".db");
-            // FILL THIS IN
+            /** Write in the titles and the commas */
+            for (int index = 0; index < _titles.length; index++) {
+                if (index != _titles.length - 1) {
+                    output.print(getTitle(index) + ",");
+                } else {
+                    output.print(getTitle(index));
+                }
+            } output.println();
+
+            /** Write in the values and the commas */
+            for (int row = 0; row < size(); row++) {
+                for (int col = 0; col < columns(); col++) {
+                    if (col != columns() - 1) {
+                        output.print(_columns[col].get(row) + ",");
+                    } else {
+                        output.print(_columns[col].get(row));
+                    }
+                }
+            }
         } catch (IOException e) {
             throw error("trouble writing to %s.db", name);
         } finally {
@@ -149,14 +213,53 @@ class Table {
     /** Print my contents on the standard output, separated by spaces
      *  and indented by two spaces. */
     void print() {
-        // FILL IN
+        for (int row = 0; row < size(); row++) {
+            for (int col = 0; col < columns(); col++) {
+                if (col == 0) {
+                    System.out.print("  ");
+                } else {
+                    System.out.print(" " + _columns[col].get(row));
+                }
+            }
+            System.out.println("");
+        }
     }
 
     /** Return a new Table whose columns are COLUMNNAMES, selected from
      *  rows of this table that satisfy CONDITIONS. */
     Table select(List<String> columnNames, List<Condition> conditions) {
-        Table result = new Table(columnNames);
-        // FILL IN
+        Table result;
+
+        /** First select the columns */
+        List<Column> newColumns = new ArrayList<Column>();
+        for (String wantedCol : columnNames) {
+            if (findColumn(wantedCol) < 0) {
+                throw error("Invalid column name");
+            }
+            Column col = new Column(wantedCol, this);
+            newColumns.add(col);
+        }
+        result = new Table(columnNames);
+
+        /** The select based on conditions */
+        for (int row = 0; row < size(); row++) {
+            List<String> newRow = new ArrayList<String>(newColumns.size());
+            List<Integer> rowIndex = new ArrayList<Integer>();
+            for (int col = 0; col < columns(); col++) {
+                String item = _columns[col].get(row);
+                newRow.add(item);
+            }
+            rowIndex.add(row);
+            String[] theNewRow = newRow.toArray(new String[newRow.size()]);
+
+            /** Go over the conditions */
+            for (Integer num : rowIndex) {
+                if (Condition.test(conditions, num)) {
+                    result.add(theNewRow);
+                }
+            }
+        }
+
         return result;
     }
 
@@ -165,8 +268,104 @@ class Table {
      *  on all columns with identical names and satisfy CONDITIONS. */
     Table select(Table table2, List<String> columnNames,
                  List<Condition> conditions) {
-        Table result = new Table(columnNames);
-        // FILL IN
+        Table result;
+
+        boolean canTable1 = true;
+        boolean canTable2 = true;
+
+        /** See if tables meet requirements */
+        for (String wantedCol : columnNames) {
+            if (findColumn(wantedCol) < 0) {
+                canTable1 = false;
+            } else if (table2.findColumn(wantedCol) < 0) {
+                canTable2 = false;
+            }
+        }
+
+        /** Find results based on the availability */
+        if (!canTable1 && !canTable2) {
+            throw error("Both tables don't have the selected columns");
+        } else if (canTable1 && !canTable2) {
+            Table initTable1 = this.select(columnNames, conditions);
+            return initTable1;
+        } else if (!canTable1 && canTable2) {
+            Table initTable2 = table2.select(columnNames, conditions);
+            return initTable2;
+        }
+
+        Table initTable1 = this.select(columnNames, conditions);
+        Table initTable2 = table2.select(columnNames, conditions);
+
+        int tableTwoRowNum = initTable2._columns[0].size();
+        String[] oneRow;
+
+        for (int i = 0; i < tableTwoRowNum; i++) {
+             oneRow = table2.getrow(i);
+             initTable1.add(oneRow);
+        }
+
+        result = initTable1;
+        return result;
+
+//        /** Filter the same rows from tables */
+//        ValueList[] resultList = initTable1._columns;
+//        ValueList[] tableTwoList = initTable1._columns;
+//        ArrayList[] rowsResult = new ArrayList[];
+//        ArrayList[] eachRow = new ArrayList[];
+//
+//        int listLength = resultList.length;
+//        int resultRows = resultList[0].size();
+//        for (int i = 0; i < resultRows; i++) {
+//
+//        }
+//
+//
+//        for (int i = 0; i < listLength; i++) {
+//            for (int j = 0; j < listLength; j++) {
+//                resultList[i].add(tableTwoList[j])
+//            }
+//        }
+
+
+
+
+
+
+//        Table result = new Table(columnNames);
+//        List<Column> newColumns = new ArrayList<Column>();
+//        List<Column> recordSame1 = new ArrayList<Column>();
+//        List<Column> recordSame2 = new ArrayList<Column>();
+//
+//        /** First select the columns */
+//        for (String wantedCol : columnNames) {
+//            Column col = new Column(wantedCol, this, table2);
+//            newColumns.add(col);
+//        }
+//
+//        /** Record the same cols in the tables */
+//        int findSame;
+//        Column sameColumn1, sameColumn2;
+//        for (String title : mytitles()) {
+//            findSame = table2.findColumn(title);
+//            if (findSame >= 0) {
+//                sameColumn1 = new Column(title, this);
+//                sameColumn2 = new Column(title, table2);
+//                recordSame1.add(sameColumn1);
+//                recordSame2.add(sameColumn2);
+//            }
+//        }
+//
+//        /** Apply conditions on the results and ignore the same */
+    }
+
+    /** Return the row that wanted */
+    public String[] getrow(int row) {
+        List<String> resultList = new ArrayList<String>();
+        int limit = _columns.length;
+        for (int i = 0; i < limit; i++) {
+            resultList.add(_columns[i].get(row));
+        }
+        String[] result = resultList.toArray(new String[resultList.size()]);
         return result;
     }
 
@@ -193,7 +392,19 @@ class Table {
      *  into those tables. */
     private static boolean equijoin(List<Column> common1, List<Column> common2,
                                     int row1, int row2) {
-        return true; // REPLACE WITH SOLUTION
+        int limit = common1.size();
+        Column col1, col2;
+        String item1, item2;
+        for (int i = 0; i < limit; i++) {
+            col1 = common1.get(i);
+            col2 = common2.get(i);
+            item1 = col1.getFrom(row1);
+            item2 = col2.getFrom(row2);
+            if (!item1.equals(item2)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** A class that is essentially ArrayList<String>.  For technical reasons,
