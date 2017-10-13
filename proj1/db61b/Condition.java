@@ -10,7 +10,7 @@ package db61b;
 import java.util.List;
 
 /** Represents a single 'where' condition in a 'select' command.
- *  @author */
+ *  @author Wayne Li */
 class Condition {
 
     /** A Condition representing COL1 RELATION COL2, where COL1 and COL2
@@ -38,32 +38,31 @@ class Condition {
     boolean test(Integer... rows) {
         int compareResult;
         String temp2;
-        String _val1 = _col1.getFrom(rows);
+        String temp1 = _col1.getFrom(rows);
 
         if (_col2 == null) {
             temp2 = _val2;
-            compareResult = _val1.compareTo(temp2);
+            compareResult = temp1.compareTo(temp2);
         } else {
             temp2 = _col2.getFrom(rows);
-            compareResult = _val1.compareTo(temp2);
+            compareResult = temp1.compareTo(temp2);
         }
 
-        if (_relation.equals("<")) {
-            return compareResult < 0;
-        } else if (_relation.equals("<=")) {
-            return compareResult <= 0;
-        } else if (_relation.equals(">")) {
-            return compareResult > 0;
-        } else if (_relation.equals(">=")) {
-            return compareResult <= 0;
-        } else if (_relation.equals("==")) {
-            return compareResult == 0;
-        } else if (_relation.equals("!=")) {
-            return compareResult != 0;
-        } else {
-            return false;
+        switch (_relation) {
+            case "<":
+                return compareResult < 0;
+            case ">":
+                return compareResult > 0;
+            case "<=":
+                return compareResult <= 0;
+            case ">=":
+                return compareResult >= 0;
+            case "=":
+                return compareResult == 0;
+            case "!=":
+                return compareResult != 0;
         }
-
+        return true;
     }
 
     /** Return true iff ROWS satisfies all CONDITIONS. */

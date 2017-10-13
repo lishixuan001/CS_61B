@@ -21,10 +21,7 @@ class Database {
     /** Return the Table whose name is NAME stored in this database, or null
      *  if there is no such table. */
     public Table get(String name) {
-        if (tableCollection.containsKey(name)) {
-            return tableCollection.get(name);
-        }
-        return null;
+        return tableCollection.get(name);
     }
 
     /** Set or replace the table named NAME in THIS to TABLE.  TABLE and
@@ -33,7 +30,9 @@ class Database {
         if (name == null || table == null) {
             throw new IllegalArgumentException("null argument");
         }
-        tableCollection.put(name, table);
+        if (!Character.isDigit(name.charAt(0))) {
+            tableCollection.put(name, table);
+        }
     }
 
     private HashMap<String, Table> tableCollection;
