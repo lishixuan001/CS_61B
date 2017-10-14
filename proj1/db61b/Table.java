@@ -1,10 +1,3 @@
-// This is a SUGGESTED skeleton for a class that represents a single
-// Table.  You can throw this away if you want, but it is a good
-// idea to try to understand it first.  Our solution changes or adds
-// about 100 lines in this skeleton.
-
-// Comments that start with "//" are intended to be removed from your
-// solutions.
 package db61b;
 
 import java.io.BufferedReader;
@@ -13,13 +6,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static db61b.Utils.*;
 
 /** A single table in a database.
- *  @author P. N. Hilfinger
+ *  @author P. N. Hilfinger & Shixuan (Wayne) Li
  */
 class Table {
     /** A new Table whose columns are given by COLUMNTITLES, which may
@@ -50,6 +42,8 @@ class Table {
         this(columnTitles.toArray(new String[columnTitles.size()]));
     }
 
+    /** Redundant but helpful mytitles.
+     * @return */
     public String[] mytitles() {
         return _titles;
     }
@@ -101,7 +95,6 @@ class Table {
             throw error("added length doesn't match the table");
         }
 
-        /** Checking. */
         if (size() != 0) {
             for (int j = 0; j < _size; j += 1) {
                 ArrayList<String> checkRow = new ArrayList<>();
@@ -115,21 +108,12 @@ class Table {
                 }
             }
         }
-//        for (int i = 0; i < _titles.length; i++) {
-//            current_list = _columns[i];
-//            new_item = values[i];
-//            if (!current_list.contains(new_item)) {
-//                check = true;
-//            }
-//        }
 
-        /** Operating. */
         _size += 1;
-        for (int index_add = 0; index_add < _rowSize; index_add += 1) {
-            _columns[index_add].add(values[index_add]);
+        for (int index = 0; index < _rowSize; index += 1) {
+            _columns[index].add(values[index]);
         }
 
-        /** For Index */
         int index = _size - 1;
         for (int row = 0; row < _size - 1; row += 1) {
             if (compareRows(_size - 1, row) < 0) {
@@ -151,13 +135,13 @@ class Table {
      *  Column.getFrom(Integer...) for a description of how Columns
      *  extract values. */
     public boolean add(List<Column> columns, Integer... rows) {
-        String[] new_row = new String[_rowSize];
+        String[] newRow = new String[_rowSize];
         int index = 0;
         for (Column column : columns) {
-            new_row[index] = column.getFrom(rows);
+            newRow[index] = column.getFrom(rows);
             index += 1;
         }
-        return add(new_row);
+        return add(newRow);
     }
 
     /** Read the contents of the file NAME.db, and return as a Table.
@@ -174,7 +158,7 @@ class Table {
                 throw error("missing header in DB file");
             }
             String[] columnNames = header.split(",");
-            /** Create a new table. */
+
             table = new Table(columnNames);
             String valueLine = input.readLine();
             while (valueLine != null) {
@@ -199,8 +183,8 @@ class Table {
         return table;
     }
 
-    /** Write the contents of TABLE into the file NAME.db. Any I/O errors
-     *  cause a DBException. */
+    /** A method writeTable.
+     * @param name -- the String input */
     void writeTable(String name) {
         PrintStream output;
         output = null;
@@ -209,7 +193,6 @@ class Table {
             sep = "";
             output = new PrintStream(name + ".db");
 
-            /** Write in the titles and the commas */
             for (int index = 0; index < _rowSize; index++) {
                 if (index != _rowSize - 1) {
                     sep = sep + _titles[index] + ",";
@@ -219,8 +202,6 @@ class Table {
             }
             output.println(sep);
 
-
-            /** Write in the values and the commas */
             for (int row = 0; row < size(); row++) {
                 String result = "";
                 for (int col = 0; col < columns(); col++) {
@@ -250,7 +231,8 @@ class Table {
                 if (col == 0) {
                     printMaterial = "  " + get(_index.indexOf(row), col);
                 } else {
-                    printMaterial = printMaterial + " " + get(_index.indexOf(row), col);
+                    printMaterial = printMaterial + " "
+                                    + get(_index.indexOf(row), col);
                 }
             }
             System.out.println(printMaterial);
@@ -263,7 +245,6 @@ class Table {
     Table select(List<String> columnNames, List<Condition> conditions) {
         Table result;
 
-        /** First select the columns */
         List<Column> newColumns = new ArrayList<>();
         List<Integer> indexColumns = new ArrayList<>();
         List<Integer> indexRows = new ArrayList<>();
@@ -278,7 +259,6 @@ class Table {
         }
         result = new Table(columnNames);
 
-        /** The select based on conditions */
         for (int row = 0; row < size(); row++) {
             List<String> newRow = new ArrayList<>(newColumns.size());
 
@@ -288,13 +268,10 @@ class Table {
             }
             String[] theNewRow = newRow.toArray(new String[newRow.size()]);
 
-            /** Go over the conditions */
             if (conditions == null) {
-//                result.add(theNewRow);
                 indexRows.add(row);
             } else {
                 if (Condition.test(conditions, row)) {
-//                    result.add(theNewRow);
                     indexRows.add(row);
                 }
             }
@@ -327,16 +304,12 @@ class Table {
         int tableIndex;
         int rowIndex;
 
-        /** First select the columns */
         for (String wantedCol : columnNames) {
             Column col = new Column(wantedCol, this, table2);
             newColumns.add(col);
         }
 
-        /** Record the same cols in the tables */
         int findSame;
-//        Column sameColumn1, sameColumn2;
-
         for (String title : _titles) {
             findSame = table2.findColumn(title);
             if (findSame >= 0) {
@@ -361,12 +334,6 @@ class Table {
             }
         }
 
-//        Iterator indexTrack = colIndex.iterator();
-
-        /** Apply conditions on the results and ignore the same */
-//        int tableRows = _columns[0].size();
-//        int tableTwoRows = table2._columns[0].size();
-
         for (int i = 0; i < _size; i += 1) {
             for (int j = 0; j < table2.size(); j += 1) {
                 boolean cond1 = equijoin(recordSame1, recordSame2, i, j);
@@ -379,31 +346,14 @@ class Table {
                             result.add(newColumns, i, j);
                         }
                     }
-//
-//                    String[] fromTable = this.getrow(j);
-//                    String[] fromTableSecond = table2.getrow(i);
-//
-//                    List<String> newRow = new ArrayList<String>();
-//                    while (indexTrack.hasNext()) {
-//                        tableIndex = (int) indexTrack.next();
-//                        if (tableIndex == 1) {
-//                            rowIndex = (int) indexTrack.next();
-//                            newRow.add(fromTable[rowIndex]);
-//                        } else if (tableIndex == 2) {
-//                            rowIndex = (int) indexTrack.next();
-//                            newRow.add(fromTableSecond[rowIndex]);
-//                        }
-//                    }
-//                    String[] newStringRow = newRow.toArray(new String[newRow.size()]);
-//                    result.add(newStringRow);
-
                 }
             }
         }
         return result;
     }
 
-    /** Return the row that wanted */
+    /** Return the row that wanted.
+     * @param row -- an int input */
     public String[] getrow(int row) {
         List<String> resultList = new ArrayList<String>();
         int limit = _columns.length;

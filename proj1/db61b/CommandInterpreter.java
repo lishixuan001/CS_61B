@@ -10,7 +10,7 @@ import static db61b.Tokenizer.*;
 
 /** An object that reads and interprets a sequence of commands from an
  *  input source.
- *  @author Violet Fu */
+ *  @author Shixuan (Wayne) Li */
 class CommandInterpreter {
 
     /* STRATEGY.
@@ -123,31 +123,31 @@ class CommandInterpreter {
      *  iff the command is something other than quit or exit. */
     boolean statement() {
         switch (_input.peek()) {
-            case "create":
-                createStatement();
-                break;
-            case "load":
-                loadStatement();
-                break;
-            case "exit": case "quit":
-                exitStatement();
-                return false;
-            case "*EOF*":
-                return false;
-            case "insert":
-                insertStatement();
-                break;
-            case "print":
-                printStatement();
-                break;
-            case "select":
-                selectStatement();
-                break;
-            case "store":
-                storeStatement();
-                break;
-            default:
-                throw error("unrecognizable command");
+        case "create":
+            createStatement();
+            break;
+        case "load":
+            loadStatement();
+            break;
+        case "exit": case "quit":
+            exitStatement();
+            return false;
+        case "*EOF*":
+            return false;
+        case "insert":
+            insertStatement();
+            break;
+        case "print":
+            printStatement();
+            break;
+        case "select":
+            selectStatement();
+            break;
+        case "store":
+            storeStatement();
+            break;
+        default:
+            throw error("unrecognizable command");
         }
         return true;
     }
@@ -177,28 +177,27 @@ class CommandInterpreter {
         _input.next("into");
         Table table = tableName();
         _input.next("values");
+
         int cols = table.columns();
+
+        ArrayList<String> values = new ArrayList<>();
 
         while (true) {
             _input.next("(");
-            String[] values = new String[cols];
-            String record = literal();
-            int k = 0;
-            values[k] = record;
+            values.add(literal());
             while (_input.nextIf(",")) {
-                record = literal();
-                k += 1;
-                values[k] = record;
+                values.add(literal());
             }
             _input.next(")");
-            table.add(values);
-            if (_input.nextIs(",")) {
-                _input.next(",");
+            table.add(values.toArray(new String[values.size()]));
+            _input.next(";");
+
+            if (_input.nextIf(",")) {
+                continue;
             } else {
                 break;
             }
         }
-        _input.next(";");
     }
 
     /** Parse and execute a load statement from the token stream. */
@@ -236,7 +235,8 @@ class CommandInterpreter {
     void selectStatement() {
         _input.next("select");
         Table result = selectClause();
-        System.out.println("Search results:");
+        System.out.printf("Search results:");
+        System.out.println();
         result.print();
         _input.next(";");
     }
@@ -245,18 +245,17 @@ class CommandInterpreter {
      *  table. */
     Table tableDefinition() {
         Table table;
+        ArrayList<String> newRow = new ArrayList<>();
+
         if (_input.nextIf("(")) {
-            ArrayList<String> titles = new ArrayList<>();
-            String title = columnName();
-            titles.add(title);
+            newRow.add(columnName());
             while (_input.nextIf(",")) {
-                String nextTitle = columnName();
-                titles.add(nextTitle);
+                newRow.add(columnName());
             }
+            table = new Table(newRow);
             _input.nextIf(")");
-            table = new Table(titles);
         } else {
-            _input.next("as");
+            _input.nextIf("as");
             _input.next("select");
             table = selectClause();
         }
@@ -268,33 +267,34 @@ class CommandInterpreter {
      *  resulting table. */
     Table selectClause() {
         ArrayList<String> columnRecord = new ArrayList<>();
+        ArrayList<Condition> conditions;
+        Table result;
+
         columnRecord.add(columnName());
         while (_input.nextIf(",")) {
             columnRecord.add(columnName());
         }
 
         _input.next("from");
-        ArrayList<Condition> condition;
-        Table firstTable = tableName();
-        Table table;
+
+        Table tableOne = tableName();
         if (_input.nextIf(",")) {
-            Table secondTable = tableName();
+            Table tableTwo = tableName();
             if (_input.nextIf("where")) {
-                condition = conditionClause(firstTable, secondTable);
-                table = firstTable.select(secondTable, columnRecord, condition);
+                conditions = conditionClause(tableOne, tableTwo);
+                result = tableOne.select(tableTwo, columnRecord, conditions);
             } else {
-                table = firstTable.select(secondTable, columnRecord, null);
+                result = tableOne.select(tableTwo, columnRecord, null);
             }
         } else {
             if (_input.nextIf("where")) {
-                condition = conditionClause(firstTable);
-                table = firstTable.select(columnRecord, condition);
+                conditions = conditionClause(tableOne);
+                result = tableOne.select(columnRecord, conditions);
             } else {
-                table = firstTable.select(columnRecord, null);
+                result = tableOne.select(columnRecord, null);
             }
         }
-
-        return table;
+        return result;
     }
 
     /** Parse and return a valid name (identifier) from the token stream. */
@@ -332,12 +332,11 @@ class CommandInterpreter {
      *  or more Conditions. */
     ArrayList<Condition> conditionClause(Table... tables) {
         ArrayList<Condition> result = new ArrayList<>();
-        Condition firstCondition = condition(tables);
-        result.add(firstCondition);
-        while (_input.nextIs("and")) {
-            _input.next("and");
-            Condition secondCondition = condition(tables);
-            result.add(secondCondition);
+        Condition conditionList = condition(tables);
+        result.add(conditionList);
+        while (_input.nextIf("and")) {
+            Condition otherConditions = condition(tables);
+            result.add(otherConditions);
         }
         return result;
     }
@@ -345,17 +344,19 @@ class CommandInterpreter {
     /** Parse and return a Condition that applies to TABLES from the
      *  token stream. */
     Condition condition(Table... tables) {
-        String columnRecord = columnName();
+        Column colOne = new Column(columnName(), tables);
         String relation = _input.next(Tokenizer.RELATION);
-        Column one = new Column(columnRecord, tables);
+        Condition result;
+
         if (_input.nextIs(Tokenizer.LITERAL)) {
-            return new Condition(one, relation, literal());
+            result = new Condition(colOne, relation, literal());
         } else {
-            String secondCol = columnName();
-            Column two = new Column(secondCol, tables);
-            return new Condition(one, relation, two);
+            Column colTwo = new Column(columnName(), tables);
+            result = new Condition(colOne, relation, colTwo);
         }
+        return result;
     }
+
 
     /** Advance the input past the next semicolon. */
     void skipCommand() {

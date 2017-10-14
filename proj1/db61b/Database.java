@@ -1,14 +1,7 @@
-// This is a SUGGESTED skeleton for a class that contains the Tables your
-// program manipulates.  You can throw this away if you want, but it is a good
-// idea to try to understand it first.  Our solution changes about 6
-// lines in this skeleton.
-
-// Comments that start with "//" are intended to be removed from your
-// solutions.
 package db61b;
 
 import java.util.HashMap;
-// FILL IN (WITH IMPORTS)?
+
 
 /** A collection of Tables, indexed by name.
  *  @author Shixuan (Wayne) Li*/
@@ -35,5 +28,6 @@ class Database {
         }
     }
 
+    /** Define the tableCollection. */
     private HashMap<String, Table> tableCollection;
 }

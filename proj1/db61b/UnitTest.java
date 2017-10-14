@@ -5,7 +5,6 @@ import org.junit.Test;
 import ucb.junit.textui;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /** The suite of all JUnit tests for the qirkat package.
  *  @author P. N. Hilfinger
@@ -61,11 +60,11 @@ public class UnitTest {
         assertEquals(1, result2);
     }
 
-//    @Test
-//    public void testMyTitle() {
-//        String[] title = newTable.mytitles();
-//        assertArrayEquals(title, newTitles);
-//    }
+    @Test
+    public void testMyTitle() {
+        String[] title = newTable.mytitles();
+        assertArrayEquals(title, newTitles);
+    }
 
     @Test
     public void testPrint() {
@@ -85,14 +84,13 @@ public class UnitTest {
         Table tempTable = copyNewTable.readTable("saveNewTable");
         int result = tempTable.findColumn("T2");
         assertEquals(1, result);
-//        assertEquals(true, true);
     }
 
-//    @Test
-//    public void testGetRow() {
-//        String[] result = newTable.getrow(0);
-//        assertArrayEquals(result, rowOne);
-//    }
+    @Test
+    public void testGetRow() {
+        String[] result = newTable.getrow(0);
+        assertArrayEquals(result, rowOne);
+    }
 
     @Test
     public void testSelectOneTable() {
@@ -127,7 +125,8 @@ public class UnitTest {
         condList.add(condition);
         condList.add(condition2);
 
-        Table result = newSelecTable1.select(newSelecTable2, selectFrom, condList);
+        Table result;
+        result = newSelecTable1.select(newSelecTable2, selectFrom, condList);
         System.out.print(result.columns());
         result.print();
     }
