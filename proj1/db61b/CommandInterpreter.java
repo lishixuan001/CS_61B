@@ -177,7 +177,6 @@ class CommandInterpreter {
         _input.next("into");
         Table table = tableName();
         _input.next("values");
-
         int cols = table.columns();
 
         ArrayList<String> values = new ArrayList<>();
@@ -192,7 +191,7 @@ class CommandInterpreter {
             table.add(values.toArray(new String[values.size()]));
 
             if (_input.nextIs(",")) {
-                continue;
+                _input.next(",");
             } else {
                 break;
             }
