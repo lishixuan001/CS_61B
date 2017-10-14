@@ -179,10 +179,11 @@ class CommandInterpreter {
         _input.next("values");
         int cols = table.columns();
 
-        ArrayList<String> values = new ArrayList<>();
+
 
         while (true) {
             _input.next("(");
+            ArrayList<String> values = new ArrayList<>();
             values.add(literal());
             while (_input.nextIf(",")) {
                 values.add(literal());
