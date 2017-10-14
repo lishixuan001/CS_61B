@@ -177,19 +177,20 @@ class CommandInterpreter {
         _input.next("into");
         Table table = tableName();
         _input.next("values");
-        int cols = table.columns();
-
-
 
         while (true) {
             _input.next("(");
-            ArrayList<String> values = new ArrayList<>();
-            values.add(literal());
+            String[] values = new String[table.columns()];
+            int k = 0;
+            values[k] = literal();
+
             while (_input.nextIf(",")) {
-                values.add(literal());
+                k += 1;
+                values[k] = literal();
             }
+
             _input.next(")");
-            table.add(values.toArray(new String[values.size()]));
+            table.add(values);
 
             if (_input.nextIs(",")) {
                 _input.next(",");
