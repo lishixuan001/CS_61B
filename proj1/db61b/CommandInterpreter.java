@@ -180,17 +180,13 @@ class CommandInterpreter {
 
         while (true) {
             _input.next("(");
-            String[] values = new String[table.columns()];
-            int k = 0;
-            values[k] = literal();
-
+            ArrayList<String> values = new ArrayList<>();
+            values.add(literal());
             while (_input.nextIf(",")) {
-                k += 1;
-                values[k] = literal();
+                values.add(literal());
             }
-
             _input.next(")");
-            table.add(values);
+            table.add(values.toArray(new String[values.size()]));
 
             if (_input.nextIs(",")) {
                 _input.next(",");
