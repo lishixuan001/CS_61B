@@ -190,14 +190,14 @@ class CommandInterpreter {
             }
             _input.next(")");
             table.add(values.toArray(new String[values.size()]));
-            _input.next(";");
 
-            if (_input.nextIf(",")) {
+            if (_input.nextIs(",")) {
                 continue;
             } else {
                 break;
             }
         }
+        _input.next(";");
     }
 
     /** Parse and execute a load statement from the token stream. */
