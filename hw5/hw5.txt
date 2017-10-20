@@ -3,25 +3,40 @@ HW #5.
 
 Question D.
 
-1.
+1. Θ(N^2)
 
 
-2.
+2. Θ(log(N))
 
 
-3.
+3. Θ(N^2)
 
 
-4.
+4. Θ(N + M)
 
 
-5.
+5. Ω(log(N)); O(N^2);
 
 
-6.
+6. Denote b = 10^k;
+   Thus log_b_(f(x)) = log_10^k_(f(x)) = (1/k) * log_10_(f(x));
+   Thus log_b_(f(x)) and log_10_(f(x)) always have constant times of difference.
 
 
-7.
+7. Denote p(x) = a[n]*x^n + a[n-1]*x(n-1) + ... + a[1]*x + a[0];
+   Then according to calculus rule, p(x) ∈ O(x^n);
+   Thus log(p(x)) ∈ log(x^n);
+   ==>  log(p(x)) ∈ n * log(x);
+   ==>  log(p(x)) ∈ log(x);
 
 
-8.
+8. Denote f(x) = a[n]*x^n + a[n-1]*x(n-1) + ... + a[1]*x + a[0];
+   Thus f(x) <= ∑[0~n]{x^n} = ⌈f(n)⌉;
+   Denote F(x) = ∑[0~n]{x^n};
+   O(F(x)) = O(F(x));
+   Thus ⌈f(n)⌉ = O(⌈f(n)⌉) <= O(F(x));
+   Let F(x) = k * f(x), where k >= 1;
+   Thus ⌈f(n)⌉ <= O(k * f(x));
+   ==>  ⌈f(n)⌉ <= O(f(x));
+
+

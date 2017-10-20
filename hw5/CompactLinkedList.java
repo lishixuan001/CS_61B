@@ -1,10 +1,14 @@
 /* HW 5, Problem B */
 
+import org.omg.CosNaming.NamingContextPackage.NotFound;
+
+import java.io.IOException;
 import java.util.AbstractSequentialList;
 import java.util.ListIterator;
+import java.lang.Error;
 
 /** A list of objects of type T with a fixed maximum list size.
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 public class CompactLinkedList<T> extends AbstractSequentialList<T> {
 
@@ -70,7 +74,15 @@ public class CompactLinkedList<T> extends AbstractSequentialList<T> {
 
         @Override
         public T next() {
-            return null; // REPLACE WITH SOLUTION
+            if (hasNext()) {
+                int _preNext = _next;
+                _next = _link[_next] ^ _prev;
+                _prev = _preNext;
+                _nextIndex += 1;
+                return _data[_preNext];
+            } else {
+                throw new Error("No next found");
+            }
         }
 
         @Override
@@ -85,7 +97,15 @@ public class CompactLinkedList<T> extends AbstractSequentialList<T> {
 
         @Override
         public T previous() {
-            return null; // REPLACE WITH SOLUTION
+            if (hasPrevious()) {
+                int _prePre = _prev;
+                _prev = _link[_prev] ^ _next;
+                _next = _prePre;
+                _nextIndex -= 1;
+                return _data[_prePre];
+            } else {
+                throw new Error("No previous found");
+            }
         }
 
         @Override
@@ -106,7 +126,24 @@ public class CompactLinkedList<T> extends AbstractSequentialList<T> {
              * require some other way of finding indices that are
              * no longer in use (for example, that were being used, but were
              * then removed).  For this exercise, you needn't bother. */
-            // FILL IN
+            _data[_size] = obj;
+            _link[_size] = _prev ^ _next;
+            _nextIndex += 1;
+
+            if (_prev == -1) {
+                _first = _size;
+            } else {
+                _link[_prev] = _link[_prev] ^ _next ^ _size;
+            }
+
+            if (_next == -1) {
+                _last = _size;
+            } else {
+                _link[_next] = _link[_next] ^ _prev ^ _size;
+            }
+
+            _prev = _size;
+            _size += 1;
         }
 
 

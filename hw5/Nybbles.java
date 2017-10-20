@@ -1,11 +1,12 @@
 /** Represents an array of integers each in the range -8..7.
  *  Such integers may be represented in 4 bits (called nybbles).
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 public class Nybbles {
 
     /** Maximum positive value of a Nybble. */
     public static final int MAX_VALUE = 7;
+    public static final int MASK = Integer.parseInt("1111", 2);
 
     /** Return an array of size N. */
     public Nybbles(int N) {
@@ -25,7 +26,9 @@ public class Nybbles {
         if (k < 0 || k >= _n) {
             throw new IndexOutOfBoundsException();
         } else {
-            return 0; // REPLACE WITH SOLUTION
+            int firstShiftLeft = _data[k/8] << (4 * (7 - (k % 8)));
+            int thenShiftRight = firstShiftLeft >> (4 * 7);
+            return thenShiftRight;
         }
     }
 
@@ -37,7 +40,10 @@ public class Nybbles {
         } else if (val < (-MAX_VALUE - 1) || val > MAX_VALUE) {
             throw new IllegalArgumentException();
         } else {
-            _data[0] = 0; // REPLACE WITH SOLUTION
+            int setNy = _data[k / 8] & ~(MASK << 4 * (k % 8));
+            int setVal = (val & MASK) << 4 * (k % 8);
+            int theValue = setNy | setVal;
+            _data[k / 8] = theValue;
         }
     }
 
