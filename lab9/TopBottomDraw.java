@@ -1,3 +1,5 @@
+import java.lang.Math;
+
 class TopBottomDraw {
 
     /** An array of all cards in the deck. */
@@ -13,13 +15,19 @@ class TopBottomDraw {
 
     /** Finds the best score, assuming our maximizer is going first.
      */
-    public int findBestScore(int i, int j) {
+    public int findBestScore(int i, int j, int person) {
         if (i == j) {
-            return 0;
-        } else if ((j - i) % 2 == deck.length % 2) {
-            return Math.max(findBestScore(i + 1, j) + deck[i], findBestScore(i, j - 1) + deck[j]);
+            if (deck.length % 2 == 0) {
+                return 0;
+            } else {
+                return deck[i];
+            }
+        } else if (person == 0) {
+            person = Math.abs(person - 1);
+            return Math.max(findBestScore(i + 1, j, person) + deck[i], findBestScore(i, j - 1, person) + deck[j]);
         } else {
-            return Math.min(findBestScore(i + 1, j), findBestScore(i, j - 1));
+            person = Math.abs(person - 1);
+            return Math.min(findBestScore(i + 1, j, person), findBestScore(i, j - 1, person));
         }
     }
 
@@ -30,8 +38,8 @@ class TopBottomDraw {
         int[] exampleDeck2 = new int[] {1, 3, 45, 6, 7, 8, 9, 9, 2};
         TopBottomDraw tbp1 = new TopBottomDraw(exampleDeck1);
         TopBottomDraw tbp2 = new TopBottomDraw(exampleDeck2);
-        System.out.printf("findBestScore returned %d, should be 63\n", tbp1.findBestScore(0, exampleDeck1.length - 1));
-        System.out.printf("findBestScore returned %d, should be 27\n", tbp2.findBestScore(0, exampleDeck2.length - 1));
+        System.out.printf("findBestScore returned %d, should be 63\n", tbp1.findBestScore(0, exampleDeck1.length - 1, 0));
+        System.out.printf("findBestScore returned %d, should be 27\n", tbp2.findBestScore(0, exampleDeck2.length - 1, 0));
     }
 
 }
