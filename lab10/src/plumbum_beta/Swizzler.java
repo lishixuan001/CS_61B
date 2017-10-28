@@ -25,7 +25,8 @@ public class Swizzler {
 		int[] output = new int[index.length];
 
 		for (int i = 0; i < index.length; i++) {
-			output[i] = source[i];
+			int ind = index[i];
+			output[i] = source[ind];
 		}
 
 		return output;

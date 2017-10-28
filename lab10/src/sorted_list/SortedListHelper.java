@@ -22,6 +22,7 @@ public class SortedListHelper {
             if (item.compareTo(list.get(i)) < 0) {
                 list.add(i, item);
                 inserted = true;
+                return;
             }
         }
 
