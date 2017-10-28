@@ -136,13 +136,13 @@ class Move {
     }
 
     /** Return the column letter of linearized index K. */
-    static int col(int k) {
-        return (char) ((k - INDEX_ORIGIN) % STEP_R / STEP_C);
+    static char col(int k) {
+        return (char) (k % STEP_R + 'a');
     }
 
     /** Return the row digit of linearized index K. */
-    static int row(int k) {
-        return (char) ((k - INDEX_ORIGIN) / STEP_R);
+    static char row(int k) {
+        return (char) (k / STEP_R + '1');
     }
 
     /** Return true iff this is a capturing move (a jump). */
