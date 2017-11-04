@@ -5,7 +5,7 @@
 /** A set of String values.
  *  @author
  */
-class ECHashStringSet extends BSTStringSet {
+class ECHashStringSet implements StringSet {
 
 
 }
