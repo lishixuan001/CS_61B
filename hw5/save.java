@@ -3,8 +3,8 @@
 // out of the box. It bears scant relation to a proper solution (for one thing,
 // a hash table should not be a SortedStringSet.)
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
 
 /** A set of String values.
  *  @author Shixuan (Wayne) Li
@@ -16,9 +16,9 @@ class ECHashStringSet implements StringSet {
 
     public ECHashStringSet() {
         _size = 0;
-        _bucket = new ArrayList[INIT_SIZE];
+        _bucket = new LinkedList[INIT_SIZE];
         for (int i = 0; i < INIT_SIZE; i += 1) {
-            _bucket[i] = new ArrayList();
+            _bucket[i] = new LinkedList<String>();
         }
     }
 
@@ -35,11 +35,11 @@ class ECHashStringSet implements StringSet {
     }
 
     public void resize() {
-        List<String>[] _oldbucket = _bucket;
-        _bucket = new ArrayList[_oldbucket.length * 2];
+        LinkedList<String>[] _oldbucket = _bucket;
+        _bucket = new LinkedList[_oldbucket.length * 2];
         _size = 0;
 
-        for(List<String> list : _oldbucket) {
+        for(LinkedList<String> list : _oldbucket) {
             if (list != null) {
                 for (String s : list) {
                     this.put(s);
@@ -65,7 +65,7 @@ class ECHashStringSet implements StringSet {
             int position = stringToBucket(s);
 
             if (_bucket[position] == null) {
-                _bucket[position] = new ArrayList();
+                _bucket[position] = new LinkedList();
             } else {
                 _bucket[position].add(s);
             }
@@ -89,6 +89,6 @@ class ECHashStringSet implements StringSet {
         return null;
     }
 
-    private List<String>[] _bucket;
+    private LinkedList<String>[] _bucket;
     private int _size;
 }

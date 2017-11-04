@@ -1,23 +1,70 @@
 1a. Results for InsertRandomSpeedTest for N = 1000000:
 
+    Inserting 1000000 random length 10 Strings into a StringSet of type BSTStringSet
+    Took: 1.10 sec.
+
+    Inserting 1000000 random length 10 Strings into a StringSet of type ECHashStringSet
+    Took: 0.62 sec.
+
+    Inserting 1000000 random length 10 Strings into a StringSet of type java.util.TreeSet
+    Took: 1.35 sec.
+
+    Inserting 1000000 random length 10 Strings into a StringSet of type java.util.HashSet
+    Took: 0.42 sec.
 
 1b. Results for InsertRandomSpeedTest for N = 2000000:
 
+    Inserting 2000000 random length 10 Strings into a StringSet of type BSTStringSet
+    Took: 3.27 sec.
+
+    Inserting 2000000 random length 10 Strings into a StringSet of type ECHashStringSet
+    Took: 1.00 sec.
+
+    Inserting 2000000 random length 10 Strings into a StringSet of type java.util.TreeSet
+    Took: 2.91 sec.
+
+    Inserting 2000000 random length 10 Strings into a StringSet of type java.util.HashSet
+    Took: 1.11 sec.
 
 1c. Does your ECHashStringSet look roughly linear or roughly quadratic
 in its scaling behavior for random strings?
-
+    It looks roughly linear with parameter of 2.
 
 
 
 2a. Results for InsertInOrderSpeedTest for N = 10000:
 
+    Inserting 10000 in-order strings into a StringSet of type BSTStringSet
+    Took: 0.56 sec.
+
+    Inserting 10000 in-order strings into a StringSet of type ECHashStringSet
+    Took: 0.01 sec.
+
+    Inserting 10000 in-order strings Strings into a StringSet of type java.util.TreeSet
+    Took: 0.01 sec.
+
+    Inserting 10000 in-order strings Strings into a StringSet of type java.util.HashSet
+    Took: 0.01 sec.
+
 
 2b. Results for InsertInOrderSpeedTest for N = 20000:
+
+    Inserting 20000 in-order strings into a StringSet of type BSTStringSet
+    Took: 1.50 sec.
+
+    Inserting 20000 in-order strings into a StringSet of type ECHashStringSet
+    Took: 0.02 sec.
+
+    Inserting 20000 in-order strings Strings into a StringSet of type java.util.TreeSet
+    Took: 0.02 sec.
+
+    Inserting 20000 in-order strings Strings into a StringSet of type java.util.HashSet
+    Took: 0.01 sec.
 
 
 2c. Does your **BST**StringSet look roughly linear or roughly
 quadratic in its scaling behavior for in order strings?
+    It looks roughly linear with parameter of 2.
 
 
 Before submitting, make sure that your ECHashStringSet is capable of
