@@ -105,9 +105,6 @@ public class BSTStringSet implements SortedStringSet, Iterable<String> {
          *  of recursively applying this rule to the result of popping
          *  the stack. */
         private Stack<Node> _toDo = new Stack<>();
-        private Node node;
-        private String left;
-        private String right;
 
         /** A new iterator over the labels in NODE. */
         BSTIterator(Node node) {
@@ -158,7 +155,7 @@ public class BSTStringSet implements SortedStringSet, Iterable<String> {
         private String _high;
 
         /** A new iterator over the labels in NODE. */
-        BSTBoundIterator(String low, String high) {
+        public BSTBoundIterator(String low, String high) {
             this._low = low;
             this._high = high;
             _node = root;
