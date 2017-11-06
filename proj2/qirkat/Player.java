@@ -1,7 +1,7 @@
 package qirkat;
 
 /** A generic Qirkat Player.
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 abstract class Player {
 

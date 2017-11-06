@@ -8,7 +8,7 @@ import java.util.Stack;
 class CommandSources implements CommandSource {
 
     /** Read and return a line of input from the input stream,
-     *  removing comments and leading and trailing whitespace,
+     *  removing comments and lehading and trailing whitespace,
      *  and skipping blank lines.  Returns null when input exhausted.
      *  PROMPT suggests a prompt string that might be used, if
      *  appropriate to the input method. */

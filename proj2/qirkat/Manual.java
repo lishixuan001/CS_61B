@@ -4,7 +4,7 @@ import static qirkat.PieceColor.*;
 import static qirkat.Command.Type.*;
 
 /** A Player that receives its moves from its Game's getMoveCmnd method.
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 class Manual extends Player {
 

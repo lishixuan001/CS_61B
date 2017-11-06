@@ -1,6 +1,9 @@
 package qirkat;
 
 import static java.lang.Math.abs;
+
+import java.util.List;
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.function.Function;
@@ -11,7 +14,7 @@ import java.util.regex.Matcher;
  *  each distinct Move.  A "vestigial" move represents a single board
  *  position, as opposed to a move (its starting and ending rows are
  *  equal, likewise columns).
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 class Move {
 
@@ -108,12 +111,19 @@ class Move {
             return move0;
         }
         if (move0.isVestigial()) {
-            return null; // FIXME
+            // FIXME -- Fixed
+            return move(move0._col0, move0._row0, move1._col0,
+                    move1._row0, move1._nextJump);
         }
         if (move0.jumpTail() == null) {
-            return null; // FIXME
+            // FIXME -- Fixed
+            return move(move0._col0, move0._row0, move0._col1,
+                    move0._row1, move1);
         } else {
-            return null; // FIXME
+            // FIXME -- Fixed
+            Move newNext = move(move0._nextJump, move1);
+            return move(move0._col0, move0._row0, move0._col1,
+                    move0._row1, newNext);
         }
 
     }
@@ -132,8 +142,29 @@ class Move {
     static int index(char c, char r) {
         int k = c * STEP_C + r * STEP_R + INDEX_ORIGIN;
         assert 0 <= k && k <= MAX_INDEX;
+        // FIXME -- Changed by Wayne -- Correct Index
+//        k = MAX_INDEX - k;
+        k = changeLeftRight(k);
         return k;
     }
+
+    /** Added by Wayne, 左右互换.
+     * @param i -- input 'i'
+     * @return */
+    static int changeLeftRight(int i) {
+        int k = i;
+        if (i == 0 || i % SIDE == 0) {
+            k = i + 4;
+        } else if ((i + 4) % SIDE == 0) {
+            k = i + 2;
+        } else if ((i + 2) % SIDE == 0) {
+            k = i - 2;
+        } else if ((i + 1) % SIDE == 0) {
+            k = i - 4;
+        }
+        return k;
+    }
+
 
     /** Return the column letter of linearized index K. */
     static char col(int k) {
@@ -159,13 +190,25 @@ class Move {
     /** Return true iff this is a horizontal, non-capturing move to
      *  the left. */
     boolean isLeftMove() {
-        return false; // FIXME
+        // FIXME -- Fixed
+        if (_row0 == _row1) {
+            if (_col1 < _col0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Return true iff this is a horizontal, non-capturing move
      *  to the right. */
     boolean isRightMove() {
-        return false; // FIXME
+        // FIXME -- Fixed
+        if (_row0 == _row1) {
+            if (_col0 < _col1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Returns the source column. */
@@ -191,13 +234,37 @@ class Move {
     /** For a jump, returns the row of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as row1(). */
     char jumpedRow() {
-        return '1';  // FIXME
+        // FIXME -- Fixed
+        if (isJump()) {
+            for (char row : _rows) {
+                boolean condition1 = row < _row1 && row > _row0;
+                boolean condition2 = row < _row0 && row > _row1;
+                if (condition1 || condition2) {
+                    return row;
+                }
+            }
+            return row1();
+        } else {
+            throw new Error("This is not a jump! -- from Move.jumpedCol");
+        }
     }
 
     /** For a jump, returns the column of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as col1(). */
     char jumpedCol() {
-        return 'a'; // FIXME
+        // FIXME -- Fixed
+        if (isJump()) {
+            for (char col : _columns) {
+                boolean condition1 = col < _col1 && col > _col0;
+                boolean condition2 = col < _col0 && col > _col1;
+                if (condition1 || condition2) {
+                    return col;
+                }
+            }
+            return col1();
+        } else {
+            throw new Error("This is not a jump! -- from Move.jumpedCol");
+        }
     }
 
     /** Return the linearized index of my source square. */
@@ -262,6 +329,12 @@ class Move {
         return result;
     }
 
+    /** Added by Wayne, check if the 'Move' stays.
+     * @return */
+    private boolean isStay() {
+        return _row0 == _row1 && _col0 == _col1;
+    }
+
     @Override
     public String toString() {
         Formatter out = new Formatter();
@@ -271,7 +344,28 @@ class Move {
 
     /** Write my string representation into OUT. */
     private void toString(Formatter out) {
-        out.format("???"); // FIXME
+        // FIXME -- Fixed
+        if (_nextJump == null) {
+            out.format("%1$c%2$c-%3$c%4$c", _col0, _row0, _col1, _row1);
+        } else {
+            String string = String.format("%1$c%2$c-%3$c%4$c",
+                    _col0, _row0, _col1, _row1);
+            Move nextMove = _nextJump;
+            Move thisMove = this;
+            while (nextMove != null && !nextMove.isStay()) {
+                boolean condition1 = nextMove.row0() == thisMove.row1();
+                boolean condition2 = nextMove.col0() == thisMove.col1();
+                if (condition1 && condition2) {
+                    string = String.format("%1$s-%2$c%3$c", string,
+                            nextMove.col1(), nextMove.row1());
+                    thisMove = nextMove;
+                    nextMove = nextMove.jumpTail();
+                } else {
+                    break;
+                }
+            }
+            out.format("%s", string);
+        }
     }
 
     /** Set me to COL0 ROW0 - COL1 ROW1 - NEXTJUMP. */
@@ -321,4 +415,11 @@ class Move {
     /** The identity function on Moves. */
     static final Function<Move, Move> IDENTITY = k -> k;
 
+    /** All possible columns. */
+    private final List<Character> _columns =
+            Arrays.asList('a', 'b', 'c', 'd', 'e');
+
+    /** All possible rows. */
+    private final List<Character> _rows =
+            Arrays.asList('1', '2', '3', '4', '5');
 }

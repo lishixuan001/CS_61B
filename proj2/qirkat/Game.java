@@ -17,7 +17,7 @@ import static qirkat.Command.Type.*;
 import static qirkat.GameException.error;
 
 /** Controls the play of the game.
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 class Game {
 
@@ -183,22 +183,40 @@ class Game {
 
     /** Perform the move OPERANDS[0]. */
     void doMove(String[] operands) {
-        // FIXME
+        // FIXME -- Fixing -- Not Complete
+        String string = operands[0];
+        Move mov = Move.parseMove(string);
+        _board.makeMove(mov);
     }
 
     /** Perform the command 'clear'. */
     void doClear(String[] unused) {
-        // FIXME
+        // FIXME -- Fixed
+        _state = SETUP;
+        _board.clear();
     }
 
     /** Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
     void doSet(String[] operands) {
-        // FIXME
+        // FIXME -- Fixed -- Not Tested
+        String string = operands[0].toUpperCase();
+        if (string.equals("WHITE")) {
+            _board.setPieces(operands[1], WHITE);
+        } else if (string.equals("BLACK")) {
+            _board.setPieces(operands[1], BLACK);
+        } else if (string.equals("EMPTY")) {
+            _board.setPieces(operands[1], EMPTY);
+        } else {
+            throw new Error("Wrong Input for 'doSet'.'");
+        }
     }
 
     /** Perform the command 'dump'. */
     void doDump(String[] unused) {
-        // FIXME
+        // FIXME -- Fixed -- Not Tested
+        System.out.println("===");
+        System.out.println(_board.toString());
+        System.out.println("===");
     }
 
     /** Execute 'seed OPERANDS[0]' command, where the operand is a string

@@ -1,10 +1,11 @@
 package qirkat;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /** Tests of the Board class.
- *  @author
+ *  @author Shixuan (Wayne) Li
  */
 public class BoardTest {
 
@@ -27,6 +28,12 @@ public class BoardTest {
         }
     }
 
+    private String getString(String str) {
+        str = str.replaceAll("\\s", "");
+        str = str.replaceAll(" ", "");
+        return str;
+    }
+
     @Test
     public void testInit1() {
         Board b0 = new Board();
@@ -37,7 +44,8 @@ public class BoardTest {
     public void testMoves1() {
         Board b0 = new Board();
         makeMoves(b0, GAME1);
-        assertEquals(GAME1_BOARD, b0.toString());
+        System.out.println(b0.board());
+        assertEquals(getString(GAME1_BOARD), b0.board());
     }
 
     @Test
@@ -46,12 +54,20 @@ public class BoardTest {
         Board b1 = new Board(b0);
         makeMoves(b0, GAME1);
         Board b2 = new Board(b0);
+
         for (int i = 0; i < GAME1.length; i += 1) {
             b0.undo();
         }
-        assertEquals("failed to return to start", b1, b0);
+        assertEquals("'testUndo' problem", b1.toString(), b0.toString());
+        assertEquals("'testUndo' problem", b1.whoseMove(), b0.whoseMove());
+        assertEquals("'testUndo' problem", b1.board(), b0.board());
+        assertEquals("'testUndo' problem", b1.gameOver(), b0.gameOver());
+
         makeMoves(b0, GAME1);
-        assertEquals("second pass failed to reach same position", b2, b0);
+        assertEquals("'testUndo' problem", b2.toString(), b0.toString());
+        assertEquals("'testUndo' problem", b2.whoseMove(), b0.whoseMove());
+        assertEquals("'testUndo' problem", b2.board(), b0.board());
+        assertEquals("'testUndo' problem", b2.gameOver(), b0.gameOver());
     }
 
 }
