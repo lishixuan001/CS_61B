@@ -20,6 +20,14 @@ public class MoveTest {
     }
 
     @Test
+    public void testMove2() {
+        Move m = move('a', '3', 'b', '2');
+        Move n = move('a', '2', 'b', '3');
+        Move mov = Move.move(m, n);
+        assertTrue(mov.jumpTail() == n);
+    }
+
+    @Test
     public void testJump1() {
         Move m = move('a', '3', 'a', '5');
         assertNotNull(m);

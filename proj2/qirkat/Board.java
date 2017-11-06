@@ -400,7 +400,7 @@ class Board extends Observable {
     /** Undo the last move, if any. */
     void undo() {
         // FIXME
-        // -- Fixing -- WhoseTurn？
+        // -- Fixing -- WhoseTurn
         String string = boardList.get(boardList.size() - 1);
         setPieces(string, WHITE);
         boardList.remove(boardList.size() - 1);
