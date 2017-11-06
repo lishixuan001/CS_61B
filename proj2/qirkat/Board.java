@@ -26,7 +26,8 @@ class Board extends Observable {
 
     /** A new, cleared board at the start of the game. */
     Board() {
-        // FIXME -- Not Changed
+        // FIXME
+        // -- Not Changed
         clear();
     }
 
@@ -47,7 +48,8 @@ class Board extends Observable {
         _whoseMove = WHITE;
         _gameOver = false;
 
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         setPieces(_initPieces, WHITE);
         _board = board();
         _state = "set_up";
@@ -64,7 +66,8 @@ class Board extends Observable {
     /** Copy B into me. */
     private void internalCopy(Board b) {
 
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         _board = b.board();
         _pieces = b.pieces();
         _state = b.state();
@@ -91,7 +94,8 @@ class Board extends Observable {
             throw new IllegalArgumentException("bad board description");
         }
 
-        // FIXME -- 设置'_pieces' -- Changed index
+        // FIXME
+        // -- 设置'_pieces' -- Changed index
 
 //        for (int k = 0; k < str.length(); k += 1) {
         for (int i = 0; i < str.length(); i += 1) {
@@ -128,14 +132,17 @@ class Board extends Observable {
     /** Return the current contents of square C R, where 'a' <= C <= 'e',
      *  and '1' <= R <= '5'.  */
     PieceColor get(char c, char r) {
+        // FIXME
+        // -- Not Changed
         assert validSquare(c, r);
-        return get(index(c, r)); // FIXME -- Not Changed
+        return get(index(c, r));
     }
 
     /** Return the current contents of the square at linearized index K. */
     PieceColor get(int k) {
         assert validSquare(k);
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         return _pieces.get(k);
     }
 
@@ -143,19 +150,23 @@ class Board extends Observable {
      *  '1' <= R <= '5'. */
     private void set(char c, char r, PieceColor v) {
         assert validSquare(c, r);
-        set(index(c, r), v);  // FIXME -- Not Changed
+        // FIXME
+        // -- Not Changed
+        set(index(c, r), v);
     }
 
     /** Set get(K) to V, where K is the linearized index of a square. */
     private void set(int k, PieceColor v) {
         assert validSquare(k);
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         _pieces.put(k, v);
     }
 
     /** Return true iff MOV is legal on the current board. */
     boolean legalMove(Move mov) {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         char col0 = mov.col0();
         char col1 = mov.col1();
         char row0 = mov.row0();
@@ -231,7 +242,8 @@ class Board extends Observable {
     /** Return true iff a jump is possible for a piece at position with
      *  linearized index K. */
     boolean jumpPossible(int k) {
-        // FIXME -- Fixed -- Not Tested
+        // FIXME
+        // -- Fixed -- Not Tested
         if (!validSquare(k) || !_pieces.get(k).isPiece()) {
             return false;
         }
@@ -296,7 +308,8 @@ class Board extends Observable {
 
 //    /** Added by Wayne, if makeMove has input String[]. */
 //    void makeMove(String[] strings) {
-//        // FIXME -- Created -- Fixed -- Abandoned
+//        // FIXME
+//        // -- Created -- Fixed -- Abandoned
 //        assert strings.length > 0;
 //
 //        String last = strings[strings.length - 1];
@@ -305,7 +318,8 @@ class Board extends Observable {
 //        for (int k = strings.length - 1; k >= 0; k -= 1) {
 //            String string = strings[k];
 //            string = string.replaceAll("-", "");
-//            // FIXME -- Fixed -- "a3c5c3" -- Abandoned
+//            // FIXME
+//            // -- Fixed -- "a3c5c3" -- Abandoned
 //            Move mov = stringToMove(string);
 //            moves = Move.move(mov, moves);
 //        }
@@ -340,7 +354,8 @@ class Board extends Observable {
     /** Make the Move MOV on this Board, assuming it is legal. */
     void makeMove(Move mov) {
 
-        // FIXME -- Fixed -- Legal Jump/Move -- isMove()? -- gameOver()?
+        // FIXME
+        // -- Fixed -- Legal Jump/Move -- isMove()? -- gameOver()?
         boardList.add(board());
         while (mov != null) {
             int position0 = mov.fromIndex();
@@ -384,7 +399,8 @@ class Board extends Observable {
 
     /** Undo the last move, if any. */
     void undo() {
-        // FIXME -- Fixing -- 出手顺序？
+        // FIXME
+        // -- Fixing -- 出手顺序？
         String string = boardList.get(boardList.size() - 1);
         setPieces(string, WHITE);
         boardList.remove(boardList.size() - 1);
@@ -402,7 +418,8 @@ class Board extends Observable {
      *  column numbers around the edges. */
     String toString(boolean legend) {
         Formatter out = new Formatter();
-        // FIXME -- Fixed -- Fixing "legend"
+        // FIXME
+        // -- Fixed -- Fixing "legend"
         StringBuilder string = new StringBuilder();
         string.append(" ");
         for (int i = 0; i <= MAX_INDEX; i++) {
@@ -522,7 +539,8 @@ class Board extends Observable {
     /** Added by Wayne, get board map.
      * @return */
     public String board() {
-        // FIXME - Fixed
+        // FIXME
+        // - Fixed
         StringBuilder string = new StringBuilder();
         for (int key = MAX_INDEX; key >= 0; key--) {
             PieceColor piece = _pieces.get(key);

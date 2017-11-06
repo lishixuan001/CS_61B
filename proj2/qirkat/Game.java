@@ -183,7 +183,8 @@ class Game {
 
     /** Perform the move OPERANDS[0]. */
     void doMove(String[] operands) {
-        // FIXME -- Fixing -- Not Complete
+        // FIXME
+        // -- Fixing -- Not Complete
         String string = operands[0];
         Move mov = Move.parseMove(string);
         _board.makeMove(mov);
@@ -191,7 +192,8 @@ class Game {
 
     /** Perform the command 'clear'. */
     void doClear(String[] unused) {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         _state = SETUP;
         _board.clear();
     }
@@ -213,7 +215,8 @@ class Game {
 
     /** Perform the command 'dump'. */
     void doDump(String[] unused) {
-        // FIXME -- Fixed -- Not Tested
+        // FIXME
+        // -- Fixed -- Not Tested
         System.out.println("===");
         System.out.println(_board.toString());
         System.out.println("===");

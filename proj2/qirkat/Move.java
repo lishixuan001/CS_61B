@@ -111,16 +111,19 @@ class Move {
             return move0;
         }
         if (move0.isVestigial()) {
-            // FIXME -- Fixed
+            // FIXME
+            // -- Fixed
             return move(move0._col0, move0._row0, move1._col0,
                     move1._row0, move1._nextJump);
         }
         if (move0.jumpTail() == null) {
-            // FIXME -- Fixed
+            // FIXME
+            // -- Fixed
             return move(move0._col0, move0._row0, move0._col1,
                     move0._row1, move1);
         } else {
-            // FIXME -- Fixed
+            // FIXME
+            // -- Fixed
             Move newNext = move(move0._nextJump, move1);
             return move(move0._col0, move0._row0, move0._col1,
                     move0._row1, newNext);
@@ -142,7 +145,8 @@ class Move {
     static int index(char c, char r) {
         int k = c * STEP_C + r * STEP_R + INDEX_ORIGIN;
         assert 0 <= k && k <= MAX_INDEX;
-        // FIXME -- Changed by Wayne -- Correct Index
+        // FIXME
+        // -- Changed by Wayne -- Correct Index
 //        k = MAX_INDEX - k;
         k = changeLeftRight(k);
         return k;
@@ -190,7 +194,8 @@ class Move {
     /** Return true iff this is a horizontal, non-capturing move to
      *  the left. */
     boolean isLeftMove() {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         if (_row0 == _row1) {
             if (_col1 < _col0) {
                 return true;
@@ -202,7 +207,8 @@ class Move {
     /** Return true iff this is a horizontal, non-capturing move
      *  to the right. */
     boolean isRightMove() {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         if (_row0 == _row1) {
             if (_col0 < _col1) {
                 return true;
@@ -234,7 +240,8 @@ class Move {
     /** For a jump, returns the row of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as row1(). */
     char jumpedRow() {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         if (isJump()) {
             for (char row : _rows) {
                 boolean condition1 = row < _row1 && row > _row0;
@@ -252,7 +259,8 @@ class Move {
     /** For a jump, returns the column of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as col1(). */
     char jumpedCol() {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         if (isJump()) {
             for (char col : _columns) {
                 boolean condition1 = col < _col1 && col > _col0;
@@ -344,7 +352,8 @@ class Move {
 
     /** Write my string representation into OUT. */
     private void toString(Formatter out) {
-        // FIXME -- Fixed
+        // FIXME
+        // -- Fixed
         if (_nextJump == null) {
             out.format("%1$c%2$c-%3$c%4$c", _col0, _row0, _col1, _row1);
         } else {
