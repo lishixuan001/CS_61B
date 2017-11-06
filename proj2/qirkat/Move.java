@@ -152,7 +152,7 @@ class Move {
         return k;
     }
 
-    /** Added by Wayne, 左右互换.
+    /** Added by Wayne, change Left & Right.
      * @param i -- input 'i'
      * @return */
     static int changeLeftRight(int i) {

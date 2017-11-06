@@ -95,7 +95,7 @@ class Board extends Observable {
         }
 
         // FIXME
-        // -- 设置'_pieces' -- Changed index
+        // -- Set '_pieces' -- Changed index
 
 //        for (int k = 0; k < str.length(); k += 1) {
         for (int i = 0; i < str.length(); i += 1) {
@@ -400,7 +400,7 @@ class Board extends Observable {
     /** Undo the last move, if any. */
     void undo() {
         // FIXME
-        // -- Fixing -- 出手顺序？
+        // -- Fixing -- WhoseTurn？
         String string = boardList.get(boardList.size() - 1);
         setPieces(string, WHITE);
         boardList.remove(boardList.size() - 1);
