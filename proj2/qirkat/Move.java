@@ -148,7 +148,7 @@ class Move {
         // FIXME
         // -- Changed by Wayne -- Correct Index
 //        k = MAX_INDEX - k;
-        k = changeLeftRight(k);
+//        k = changeLeftRight(k);
         return k;
     }
 
@@ -172,11 +172,13 @@ class Move {
 
     /** Return the column letter of linearized index K. */
     static char col(int k) {
+//        k = changeLeftRight(k);
         return (char) (k % STEP_R + 'a');
     }
 
     /** Return the row digit of linearized index K. */
     static char row(int k) {
+//        k = changeLeftRight(k);
         return (char) (k / STEP_R + '1');
     }
 

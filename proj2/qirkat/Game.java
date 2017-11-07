@@ -200,14 +200,13 @@ class Game {
 
     /** Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
     void doSet(String[] operands) {
-        // FIXME -- Fixed -- Not Tested
+        // FIXME
+        // -- Fixed -- Not Tested
         String string = operands[0].toUpperCase();
         if (string.equals("WHITE")) {
             _board.setPieces(operands[1], WHITE);
         } else if (string.equals("BLACK")) {
             _board.setPieces(operands[1], BLACK);
-        } else if (string.equals("EMPTY")) {
-            _board.setPieces(operands[1], EMPTY);
         } else {
             throw new Error("Wrong Input for 'doSet'.'");
         }

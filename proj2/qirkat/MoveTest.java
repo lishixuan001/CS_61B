@@ -21,8 +21,8 @@ public class MoveTest {
 
     @Test
     public void testMove2() {
-        Move m = move('a', '3', 'b', '2');
-        Move n = move('a', '2', 'b', '3');
+        Move m = move('a', '2', 'a', '4');
+        Move n = move('a', '4', 'c', '4');
         Move mov = Move.move(m, n);
         assertTrue(mov.jumpTail() == n);
     }
@@ -32,6 +32,22 @@ public class MoveTest {
         Move m = move('a', '3', 'a', '5');
         assertNotNull(m);
         assertTrue("move should be jump", m.isJump());
+    }
+
+    @Test
+    public void testLeftRightMove() {
+        Move m = move('a', '3', 'b', '3');
+        Move n = move('b', '3', 'a', '3');
+        assertTrue(m.isRightMove());
+        assertTrue(n.isLeftMove());
+    }
+
+    @Test
+    public void testJumpIndexAndChar() {
+        Move m = move('a', '3', 'c', '3');
+        int k = m.jumpedIndex();
+        assertEquals(Move.col(k), 'b');
+        assertEquals(Move.row(k), '3');
     }
 
     @Test

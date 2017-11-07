@@ -44,8 +44,19 @@ public class BoardTest {
     public void testMoves1() {
         Board b0 = new Board();
         makeMoves(b0, GAME1);
-        System.out.println(b0.board());
         assertEquals(getString(GAME1_BOARD), b0.board());
+    }
+
+    private static final String[] GAME2 = { "c2-c3", "c4-c2", "c1-c3"};
+    @Test
+    public void testJumpPossible() {
+        Board b0 = new Board();
+        makeMoves(b0, GAME2);
+        assertTrue(b0.jumpPossible('b', '2'));
+        makeMoves(b0, new String[]{"a3-c1"});
+        System.out.println(b0.toString());
+        System.out.println(Move.index('b', '3'));
+        assertFalse(b0.jumpPossible('b', '3'));
     }
 
     @Test

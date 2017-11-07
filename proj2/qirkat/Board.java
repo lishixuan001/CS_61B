@@ -50,7 +50,7 @@ class Board extends Observable {
 
         // FIXME
         // -- Fixed
-        setPieces(_initPieces, WHITE);
+        setPieces(INIT_PIECES, WHITE);
         _board = board();
         _state = "set_up";
 
@@ -99,8 +99,8 @@ class Board extends Observable {
 
 //        for (int k = 0; k < str.length(); k += 1) {
         for (int i = 0; i < str.length(); i += 1) {
-//            int k = MAX_INDEX - i;
-            int k = changeLeftRight(i);
+            int k = i;
+//            int k = changeLeftRight(i);
             switch (str.charAt(i)) {
             case '-':
                 set(k, EMPTY);
@@ -216,12 +216,14 @@ class Board extends Observable {
      *  with linearized index K to MOVES. */
     private void getMoves(ArrayList<Move> moves, int k) {
         // FIXME
+        // Waiting
     }
 
     /** Add all legal captures from the position with linearized index K
      *  to MOVES. */
     private void getJumps(ArrayList<Move> moves, int k) {
         // FIXME
+        // Waiting
     }
 
     /** Return true iff MOV is a valid jump sequence on the current board.
@@ -231,7 +233,9 @@ class Board extends Observable {
         if (mov == null) {
             return true;
         }
-        return false; // FIXME
+        // FIXME
+        // Waiting
+        return false;
     }
 
     /** Return true iff a jump is possible for a piece at position C R. */
@@ -244,7 +248,9 @@ class Board extends Observable {
     boolean jumpPossible(int k) {
         // FIXME
         // -- Fixed -- Not Tested
-        if (!validSquare(k) || !_pieces.get(k).isPiece()) {
+        if (!validSquare(k)
+                || !_pieces.get(k).isPiece()
+                || !(k % 2 == 0)) {
             return false;
         }
         int l, r, u, d, lu, ld, ru, rd;
@@ -270,8 +276,22 @@ class Board extends Observable {
             int first = lst1.get(i);
             int second = lst2.get(i);
             if (validSquare(first) && validSquare(second)) {
-                if (_pieces.get(first).opposite() == _pieces.get(second)) {
-                    return true;
+                boolean condition1 =
+                        (_pieces.get(first).isPiece()
+                                && _pieces.get(first) != EMPTY)
+                                && _pieces.get(second) == EMPTY;
+                boolean condition2 =
+                        (_pieces.get(second).isPiece()
+                                || _pieces.get(second) != EMPTY)
+                                && _pieces.get(first) == EMPTY;
+                if (condition1) {
+                    if (_pieces.get(first).opposite() == _pieces.get(k)) {
+                        return true;
+                    }
+                } else if (condition2) {
+                    if (_pieces.get(second).opposite() == _pieces.get(k)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -416,7 +436,7 @@ class Board extends Observable {
 
     /** Return a text depiction of the board.  If LEGEND, supply row and
      *  column numbers around the edges. */
-    String toString(boolean legend) {
+    private String toString(boolean legend) {
         Formatter out = new Formatter();
         // FIXME
         // -- Fixed -- Fixing "legend"
@@ -542,7 +562,27 @@ class Board extends Observable {
         // FIXME
         // - Fixed
         StringBuilder string = new StringBuilder();
-        for (int key = MAX_INDEX; key >= 0; key--) {
+        for (int key = 4 * SIDE; key <= MAX_INDEX; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 3 * SIDE; key < 4 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 2 * SIDE; key < 3 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 1 * SIDE; key < 2 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 0 * SIDE; key < 1 * SIDE; key++) {
             PieceColor piece = _pieces.get(key);
             String name = piece.shortName();
             string.append(name);
@@ -564,7 +604,7 @@ class Board extends Observable {
 //            );
 
     /** Added by Wayne, standard initial game board. */
-    private final String _initPieces =
+    private static final String INIT_PIECES =
             "  w w w w w\n  w w w w w\n  b b - w w\n  b b b b b\n  b b b b b";
 //            "  b b b b b\n  b b b b b\n  b b - w w\n  w w w w w\n  w w w w w";
 
