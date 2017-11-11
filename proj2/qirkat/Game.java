@@ -2,6 +2,8 @@ package qirkat;
 
 /* Author: P. N. Hilfinger */
 
+import graph.B;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -299,11 +301,18 @@ class Game {
 
     /** Report the outcome of the current game. */
     void reportWinner() {
-        String msg;
-        msg = "Game over.";
-        // FIXME
-        // Waiting
-        _reporter.outcomeMsg(msg);
+        StringBuilder msg = new StringBuilder();
+        String winner = "";
+        _winner = _board.winner();
+        if (_winner.equals(WHITE)) {
+            winner = "white";
+        } else if (_winner.equals(BLACK)) {
+            winner = "black";
+        }
+        msg.append("Game over. ");
+        msg.append(winner);
+
+        _reporter.outcomeMsg(msg.toString());
     }
 
     /** Mapping of command types to methods that process them. */
@@ -348,6 +357,9 @@ class Game {
 
     /** Added by Wayne, show if there was a move. */
     private boolean _moved;
+
+    /** Added by Wayne, winner. */
+    private PieceColor _winner;
 
     /** Added by Wayne, take turn for _whoseMove. */
     private void takeTurn() {

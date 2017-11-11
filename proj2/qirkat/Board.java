@@ -622,7 +622,7 @@ class Board extends Observable {
         takeTurn();
 
         // Check gameOver
-        // FIXME
+        checkGameOver();
 
         setChanged();
         notifyObservers();
@@ -641,6 +641,7 @@ class Board extends Observable {
                 }
             }
             _gameOver = true;
+            _winner = WHITE;
             return;
         } else if (_whoseMove.equals(BLACK)) {
             for (Move mov : moves) {
@@ -649,6 +650,7 @@ class Board extends Observable {
                 }
             }
             _gameOver = true;
+            _winner = BLACK;
             return;
         }
     }
@@ -852,6 +854,14 @@ class Board extends Observable {
 
     /** Added by Wayne, indicating board state.*/
     private String _state;
+
+    /** Added by Wayne, winner. */
+    private PieceColor _winner;
+
+    /** Added by Wayne, show winner. */
+    public PieceColor winner() {
+        return _winner;
+    }
 
     /** Added by Wayne, get board map.
      * @return */
