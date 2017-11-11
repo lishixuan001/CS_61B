@@ -392,7 +392,7 @@ class Board extends Observable {
                             idx = true;
                             Move next = move(col0, row0, col1, row1);
                             getMoves(moves, tempcol1, temprow1, move(move, next)
-                                    , movePieces( ));
+                                    , movePieces(col0, row0, col1, row1, pieces));
                         }
                     }
                 }
