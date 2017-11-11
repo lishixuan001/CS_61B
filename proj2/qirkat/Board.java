@@ -354,21 +354,13 @@ class Board extends Observable {
                     if (!_pieces.get(k1).isPiece()) {
                         if (isLegalMove(col0, row0, col1, row1, pieces)) {
                             idx = true;
-                            Move next = move(col0, row0, col1, row1);
-                            getMoves(moves, tempcol1, temprow1, move(move, next)
-                                    , movePieces(col0, row0, col1, row1, pieces));
+                            Move mov = move(col0, row0, col1, row1);
+                            moves.add(mov);
                         }
                     }
                 }
             }
         }
-        // if not change
-        if (!idx) {
-            if (move != null) {
-                moves.add(move);
-            }
-        }
-
     }
 
     /** Move on pieces. */
@@ -387,14 +379,15 @@ class Board extends Observable {
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
             return false;
         }
-        // start piece, end empty
+        // get index
         int k0 = index(col0, row0);
         int k1 = index(col1, row1);
+        // start piece, end empty
         if (!pieces.get(k0).isPiece() || pieces.get(k1).isPiece()) {
             return false;
         }
         // not going back
-        if (pieces.get(k0).opposite().equals(BLACK)) {
+        if (pieces.get(k0).equals(WHITE)) {
             int introw0 = _axisIndex.get(row0);
             int introw1 = _axisIndex.get(row1);
             if (introw1 < introw0) {
@@ -404,7 +397,7 @@ class Board extends Observable {
             if (introw0 == 5) {
                 return false;
             }
-        } else if (pieces.get(k1).opposite().equals(WHITE)) {
+        } else if (pieces.get(k0).equals(BLACK)) {
             int introw0 = _axisIndex.get(row0);
             int introw1 = _axisIndex.get(row1);
             if (introw1 > introw0) {
@@ -414,6 +407,10 @@ class Board extends Observable {
             if (introw0 == 1) {
                 return false;
             }
+        }
+        // diagonal check
+        if (k0 % 2 == 1 && k1 % 2 == 1) {
+            return false;
         }
         return true;
     }
@@ -587,8 +584,8 @@ class Board extends Observable {
 //        // Check gameOver
 //        checkGameOver();
 
-//        // Change player
-//        takeTurn();
+        // Change player
+        takeTurn();
 
         setChanged();
         notifyObservers();
@@ -602,21 +599,21 @@ class Board extends Observable {
         }
         if (_whoseMove.equals(WHITE)) {
             for (Move mov : moves) {
-                if (moveBy(mov).equals(BLACK)) {
-                    return;
-                }
-            }
-            _gameOver = true;
-            _winner = WHITE;
-            return;
-        } else if (_whoseMove.equals(BLACK)) {
-            for (Move mov : moves) {
                 if (moveBy(mov).equals(WHITE)) {
                     return;
                 }
             }
             _gameOver = true;
             _winner = BLACK;
+            return;
+        } else if (_whoseMove.equals(BLACK)) {
+            for (Move mov : moves) {
+                if (moveBy(mov).equals(BLACK)) {
+                    return;
+                }
+            }
+            _gameOver = true;
+            _winner = WHITE;
             return;
         }
     }
@@ -693,7 +690,7 @@ class Board extends Observable {
     }
 
     /** Added by Wayne, take turn for _whoseMove. */
-    public void takeTurn() {
+    private void takeTurn() {
         if (_whoseMove.equals(WHITE)) {
             _whoseMove = BLACK;
         } else if (_whoseMove.equals(BLACK)) {

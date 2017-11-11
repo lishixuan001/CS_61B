@@ -53,12 +53,13 @@ class Game {
                 }
             }
 
-            // FIXME
+            _board.checkGameOver();
 
             while (_state != SETUP && !_board.gameOver()) {
+
+                _board.checkGameOver();
                 Move move = null;
-                // FIXME
-                // -- Fixed
+
                 if (_whoseMove.equals(WHITE)) {
                     // if its white turn
                     if (_whiteIsManual) {
@@ -93,8 +94,6 @@ class Game {
 
                 if (_state == PLAYING) {
                     _board.makeMove(move);
-                    _board.checkGameOver();
-                    _board.takeTurn();
                 }
 
                 if (_moved) {
@@ -263,7 +262,6 @@ class Game {
         String string = operands[0];
         Move mov = Move.parseMove(string);
         _board.makeMove(mov);
-        _board.takeTurn();
         _moved = true;
     }
 
@@ -308,12 +306,12 @@ class Game {
         String winner = "";
         _winner = _board.winner();
         if (_winner.equals(WHITE)) {
-            winner = "white";
+            winner = "White";
         } else if (_winner.equals(BLACK)) {
-            winner = "black";
+            winner = "Black";
         }
-        msg.append("Game over. ");
         msg.append(winner);
+        msg.append(" wins.");
 
         _reporter.outcomeMsg(msg.toString());
     }
