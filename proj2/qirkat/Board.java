@@ -584,18 +584,18 @@ class Board extends Observable {
             mov = mov.jumpTail();
         }
 
-        // Check gameOver
-        checkGameOver();
+//        // Check gameOver
+//        checkGameOver();
 
-        // Change player
-        takeTurn();
+//        // Change player
+//        takeTurn();
 
         setChanged();
         notifyObservers();
     }
 
     /** checkGameOver. */
-    private void checkGameOver() {
+    public void checkGameOver() {
         List<Move> moves = getMoves();
         if (moves.isEmpty()) {
             _gameOver = true;
@@ -693,7 +693,7 @@ class Board extends Observable {
     }
 
     /** Added by Wayne, take turn for _whoseMove. */
-    private void takeTurn() {
+    public void takeTurn() {
         if (_whoseMove.equals(WHITE)) {
             _whoseMove = BLACK;
         } else if (_whoseMove.equals(BLACK)) {

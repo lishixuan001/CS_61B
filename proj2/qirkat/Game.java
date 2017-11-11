@@ -93,6 +93,8 @@ class Game {
 
                 if (_state == PLAYING) {
                     _board.makeMove(move);
+                    _board.checkGameOver();
+                    _board.takeTurn();
                 }
 
                 if (_moved) {
