@@ -319,7 +319,6 @@ class Game {
     /** Mapping of command types to methods that process them. */
     private final HashMap<Command.Type, Consumer<String[]>> _commands =
         new HashMap<>();
-
     {
         _commands.put(AUTO, this::doAuto);
         _commands.put(CLEAR, this::doClear);

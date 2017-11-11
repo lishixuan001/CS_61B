@@ -556,10 +556,6 @@ class Board extends Observable {
         if (mov == null) {
             return;
         }
-        // FIXME
-        // -- Fixed -- Legal Jump/Move -- isMove()?
-
-        // Check if the move if for the correct, if not, report.
 
         boardList.add(board());
         while (mov != null) {
@@ -572,17 +568,18 @@ class Board extends Observable {
                 insertPiece(position1, type0);
                 removePiece(position0);
                 removePiece(jumped);
+                _movedNotJumped = new ArrayList<>();
             } else {
                 assert legalMove(mov);
-                PieceColor type0 = _pieces.get(position0);
-                insertPiece(position1, type0);
-                removePiece(position0);
+                if (!_movedNotJumped.contains(position1)) {
+                    PieceColor type0 = _pieces.get(position0);
+                    insertPiece(position1, type0);
+                    removePiece(position0);
+                    _movedNotJumped.add(position0);
+                }
             }
             mov = mov.jumpTail();
         }
-
-//        // Check gameOver
-//        checkGameOver();
 
         // Change player
         takeTurn();
@@ -590,6 +587,9 @@ class Board extends Observable {
         setChanged();
         notifyObservers();
     }
+
+    /** Record not-retrievable move targets. */
+    private List<Integer> _movedNotJumped = new ArrayList<>();
 
     /** checkGameOver. */
     public void checkGameOver() {
