@@ -179,17 +179,17 @@ class Board extends Observable {
             return;
         }
         if (jumpPossible()) {
-            HashMap<Integer, PieceColor> record = _pieces;
             for (int k = 0; k <= MAX_INDEX; k += 1) {
+                HashMap<Integer, PieceColor> record = pieces();
                 getJumps(moves, k);
+                _pieces = record;
             }
-            _pieces = record;
         } else {
-            HashMap<Integer, PieceColor> record = _pieces;
             for (int k = 0; k <= MAX_INDEX; k += 1) {
+                HashMap<Integer, PieceColor> record = pieces();
                 getMoves(moves, k);
+                _pieces = record;
             }
-            _pieces = record;
         }
     }
 
@@ -201,8 +201,7 @@ class Board extends Observable {
             char temprow0 = row(k);
             int col0 = _axisIndex.get(tempcol0);
             int row0 = _axisIndex.get(temprow0);
-            HashMap<Integer, PieceColor> pieces = new HashMap<>();
-            pieces = _pieces;
+            HashMap<Integer, PieceColor> pieces = new HashMap<>(pieces());
             getJumps(moves, col0, row0, null, pieces);
         }
     }
@@ -210,16 +209,8 @@ class Board extends Observable {
     /** Helper function for getJumps. */
     private void getJumps(ArrayList<Move> moves, int tempcol0, int temprow0, Move move, HashMap<Integer, PieceColor> pieces) {
 
-//        // if valid
-//        if (!validPiece(tempcol0, temprow0)) {
-//            if (move != null) {
-//                moves.add(move);
-//            }
-//        }
-
         char col0 = _colIndex.get(tempcol0);
         char row0 = _rowIndex.get(temprow0);
-//        int k0 = index(col0, row0);
 
         boolean idx = false;
 
@@ -247,37 +238,11 @@ class Board extends Observable {
         }
         // if not change
         if (!idx) {
-            moves.add(move);
+            if (move != null) {
+                moves.add(move);
+            }
         }
 
-
-//        // if empty
-//        if (_pieces.get(k0).isPiece()) {
-//            if (move != null) {
-//                moves.add(move);
-//            }
-//        } else {
-//            for (int i : rowFactors) {
-//                for (int j : colFactors) {
-//                    boolean con = i == 0 && j == 0;
-//                    int tempcol1 = tempcol0 + j;
-//                    int temprow1 = temprow0 + i;
-//                    if (!con && validPiece(tempcol1, temprow1)) {
-//                        char col1 = _colIndex.get(tempcol1);
-//                        char row1 = _rowIndex.get(temprow1);
-//                        int k1 = index(col1, row1);
-//                        if (!_pieces.get(k1).isPiece()) {
-//                            idx = true;
-//                            Move next = move(col0, row0, col1, row1);
-//                            move = move(move, next);
-//                            getJumps(moves, tempcol1, temprow1, move);
-//                        }
-//                    }
-//                }
-//            }
-//            // if not change
-//
-//        }
     }
 
     /** Jump on pieces. */
@@ -361,8 +326,7 @@ class Board extends Observable {
             char temprow0 = row(k);
             int col0 = _axisIndex.get(tempcol0);
             int row0 = _axisIndex.get(temprow0);
-            HashMap<Integer, PieceColor> pieces = new HashMap<>();
-            pieces = _pieces;
+            HashMap<Integer, PieceColor> pieces = new HashMap<>(pieces());
             getMoves(moves, col0, row0, null, pieces);
         }
     }
@@ -400,7 +364,9 @@ class Board extends Observable {
         }
         // if not change
         if (!idx) {
-            moves.add(move);
+            if (move != null) {
+                moves.add(move);
+            }
         }
 
     }
@@ -455,12 +421,12 @@ class Board extends Observable {
     /** Helper parameters for getJumps. */
     private List<Integer> rFactors = new ArrayList<>();
     {
-        rowFactors.add(-1);
-        rowFactors.add(0);
-        rowFactors.add(1);
+        rFactors.add(-1);
+        rFactors.add(0);
+        rFactors.add(1);
     }
     /** Helper parameters for getMoves. */
-    private List<Integer> cFactors = rowFactors;
+    private List<Integer> cFactors = rFactors;
 
 
     /** Return true iff MOV is a valid jump sequence on the current board.
@@ -618,11 +584,11 @@ class Board extends Observable {
             mov = mov.jumpTail();
         }
 
-        // Change player
-        takeTurn();
-
         // Check gameOver
         checkGameOver();
+
+        // Change player
+        takeTurn();
 
         setChanged();
         notifyObservers();
@@ -658,7 +624,8 @@ class Board extends Observable {
     /** Determine move by. */
     private PieceColor moveBy(Move mov) {
         int k0 = mov.fromIndex();
-        return _pieces.get(k0);
+        PieceColor result = _pieces.get(k0);
+        return result;
     }
 
     /** Remove a piece.

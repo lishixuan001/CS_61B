@@ -26,8 +26,27 @@ class AI extends Player {
         Move move = findMove();
         Main.endTiming();
 
-        // FIXME
+        StringBuilder msg = new StringBuilder();
+        msg.append(PieceColorToString(myColor()));
+        msg.append(" moves ");
+
+        String mov = move.toString();
+        msg.append(mov);
+        msg.append(".");
+
+        game().reportMove(msg.toString());
         return move;
+    }
+
+    /** PieceColor to String. */
+    private String PieceColorToString(PieceColor piececolor) {
+        String string = "";
+        if (piececolor.equals(WHITE)) {
+            string = "White";
+        } else if (piececolor.equals(BLACK)) {
+            string = "Black";
+        }
+        return string;
     }
 
     /** Return a move for me from the current position, assuming there

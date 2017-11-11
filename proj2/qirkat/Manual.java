@@ -17,8 +17,6 @@ class Manual extends Player {
 
     @Override
     Move myMove(Command cmnd) {
-         // FIXME
-        // Fixed
         String string = cmnd.operands()[0];
         Move move = Move.parseMove(string);
         return move;
