@@ -21,7 +21,7 @@ class AI extends Player {
     }
 
     @Override
-    Move myMove() {
+    Move myMove(Command cmnd) {
         Main.startTiming();
         Move move = findMove();
         Main.endTiming();

@@ -16,8 +16,18 @@ class Manual extends Player {
     }
 
     @Override
-    Move myMove() {
-        return null; // FIXME
+    Move myMove(Command cmnd) {
+         // FIXME
+        // Fixed
+        String string = cmnd.operands()[0];
+        Move move = Move.parseMove(string);
+        return move;
+    }
+
+    @Override
+    /** Added by Wayne, show prompt. */
+    public String myPrompt() {
+        return _prompt;
     }
 
     /** Identifies the player serving as a source of input commands. */

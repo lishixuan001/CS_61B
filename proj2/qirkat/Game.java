@@ -37,24 +37,65 @@ class Game {
 
     /** Run a session of Qirkat gaming. */
     void process() {
-        Player white, black;
 
-        white = black = null;
         doClear(null);
 
         while (true) {
             while (_state == SETUP) {
                 doCommand();
+                // FIXME
+                // Added
+                if (_moved) {
+                    takeTurn();
+                    _moved = false;
+                }
             }
 
             // FIXME
 
             while (_state != SETUP && !_board.gameOver()) {
-                Move move;
-                move = null; // FIXME
+                Move move = null;
+                // FIXME
+                // -- Fixed
+                if (_whoseMove.equals(WHITE)) {
+                    // if its white turn
+                    if (_whiteIsManual) {
+                        // if white is manual
+                        Command cmnd = getMoveCmnd(_white.myPrompt());
+                        if (cmnd == null) {
+                            _moved = false;
+                        } else {
+                            move = _white.myMove(cmnd);
+                            _moved = true;
+                        }
+                    } else {
+                        // if white is auto
+//                        move = _white.myMove();
+                    }
+                } else if (_whoseMove.equals(BLACK)) {
+                    // if its black turn
+                    if (_blackIsManual) {
+                        // if black is manual
+                        Command cmnd = getMoveCmnd(_black.myPrompt());
+                        if (cmnd == null) {
+                            _moved = false;
+                        } else {
+                            move = _black.myMove(cmnd);
+                            _moved = true;
+                        }
+                    } else {
+                        // if black is auto
+//                        move = _black.myMove();
+                    }
+                }
 
                 if (_state == PLAYING) {
                     _board.makeMove(move);
+                }
+
+                if (_moved) {
+                    takeTurn();
+                    _moved = false;
                 }
             }
 
@@ -127,7 +168,29 @@ class Game {
     /** Perform the command 'auto OPERANDS[0]'. */
     void doAuto(String[] operands) {
         _state = SETUP;
-        // FIXME
+        String player = operands[0].toUpperCase();
+
+        if (player.equals("WHITE")) {
+            _white = new AI(this, WHITE);
+            _whiteIsManual = false;
+        } else if (player.equals("BLACK")) {
+            _black = new AI(this, BLACK);
+            _blackIsManual = false;
+        } else {
+            throw error("Invalid command while setting player to AI. --Game.doAuto()");
+        }
+    }
+
+    /** Perform the command 'clear'. */
+    void doClear(String[] unused) {
+        _state = SETUP;
+        _white = new Manual(this, WHITE);
+        _whiteIsManual = true;
+        _black = new AI(this, BLACK);
+        _blackIsManual = false;
+        _whoseMove = WHITE;
+        _moved = false;
+        _board.clear();
     }
 
     /** Perform a 'help' command. */
@@ -167,7 +230,17 @@ class Game {
     /** Perform the command 'manual OPERANDS[0]'. */
     void doManual(String[] operands) {
         _state = SETUP;
-        // FIXME
+        String player = operands[0].toUpperCase();
+
+        if (player.equals("WHITE")) {
+            _white = new Manual(this, WHITE);
+            _whiteIsManual = true;
+        } else if (player.equals("BLACK")) {
+            _black = new Manual(this, BLACK);
+            _blackIsManual = true;
+        } else {
+            throw error("Invalid command while setting player to Manual. --Game.doManual()");
+        }
     }
 
     /** Exit the program. */
@@ -183,17 +256,10 @@ class Game {
 
     /** Perform the move OPERANDS[0]. */
     void doMove(String[] operands) {
-        // FIXME
-        // -- Fixing -- Not Complete
         String string = operands[0];
         Move mov = Move.parseMove(string);
         _board.makeMove(mov);
-    }
-
-    /** Perform the command 'clear'. */
-    void doClear(String[] unused) {
-        _state = SETUP;
-        _board.clear();
+        _moved = true;
     }
 
     /** Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
@@ -234,7 +300,9 @@ class Game {
     /** Report the outcome of the current game. */
     void reportWinner() {
         String msg;
-        msg = "Game over."; // FIXME
+        msg = "Game over.";
+        // FIXME
+        // Waiting
         _reporter.outcomeMsg(msg);
     }
 
@@ -271,4 +339,24 @@ class Game {
     private Reporter _reporter;
     /** Source of pseudo-random numbers (used by AIs). */
     private Random _randoms = new Random();
+
+    /** Added by Wayne, create players. */
+    private Player _white, _black;
+
+    /** Added by Wayne, show whose turn. */
+    private PieceColor _whoseMove;
+
+    /** Added by Wayne, show if there was a move. */
+    private boolean _moved;
+
+    /** Added by Wayne, take turn for _whoseMove. */
+    private void takeTurn() {
+        if (_whoseMove.equals(WHITE)) {
+            _whoseMove = BLACK;
+        } else if (_whoseMove.equals(BLACK)) {
+            _whoseMove = WHITE;
+        } else {
+            throw new Error("The Player is neither white or black. --Game.takeTurn()");
+        }
+    }
 }

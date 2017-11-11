@@ -5,7 +5,6 @@ import java.util.Observable;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Observer;
-import java.util.Formatter;
 
 
 import static qirkat.PieceColor.*;
@@ -105,7 +104,6 @@ class Board extends Observable {
             }
         }
 
-
         _whoseMove = nextMove;
 
         setChanged();
@@ -181,29 +179,289 @@ class Board extends Observable {
             return;
         }
         if (jumpPossible()) {
+            HashMap<Integer, PieceColor> record = _pieces;
             for (int k = 0; k <= MAX_INDEX; k += 1) {
                 getJumps(moves, k);
             }
+            _pieces = record;
         } else {
+            HashMap<Integer, PieceColor> record = _pieces;
             for (int k = 0; k <= MAX_INDEX; k += 1) {
                 getMoves(moves, k);
             }
+            _pieces = record;
         }
     }
 
-    /** Add all legal non-capturing moves from the position
+    /** Add all legal capturing moves from the position
      *  with linearized index K to MOVES. */
-    private void getMoves(ArrayList<Move> moves, int k) {
-        // FIXME
-        // Waiting
+    private void getJumps(ArrayList<Move> moves, int k) {
+        if (validSquare(k) && _pieces.get(k).isPiece()) {
+            char tempcol0 = col(k);
+            char temprow0 = row(k);
+            int col0 = _axisIndex.get(tempcol0);
+            int row0 = _axisIndex.get(temprow0);
+            HashMap<Integer, PieceColor> pieces = new HashMap<>();
+            pieces = _pieces;
+            getJumps(moves, col0, row0, null, pieces);
+        }
     }
 
-    /** Add all legal captures from the position with linearized index K
-     *  to MOVES. */
-    private void getJumps(ArrayList<Move> moves, int k) {
-        // FIXME
-        // Waiting
+    /** Helper function for getJumps. */
+    private void getJumps(ArrayList<Move> moves, int tempcol0, int temprow0, Move move, HashMap<Integer, PieceColor> pieces) {
+
+//        // if valid
+//        if (!validPiece(tempcol0, temprow0)) {
+//            if (move != null) {
+//                moves.add(move);
+//            }
+//        }
+
+        char col0 = _colIndex.get(tempcol0);
+        char row0 = _rowIndex.get(temprow0);
+//        int k0 = index(col0, row0);
+
+        boolean idx = false;
+
+        for (int i : rowFactors) {
+            for (int j : colFactors) {
+                boolean con = i == 0 && j == 0;
+                int tempcol1 = tempcol0 + j;
+                int temprow1 = temprow0 + i;
+                // Target is valid
+                if (!con && validPiece(tempcol1, temprow1)) {
+                    char col1 = _colIndex.get(tempcol1);
+                    char row1 = _rowIndex.get(temprow1);
+                    int k1 = index(col1, row1);
+                    // Target is empty
+                    if (!_pieces.get(k1).isPiece()) {
+                        if (isLegalJump(col0, row0, col1, row1, pieces)) {
+                            idx = true;
+                            Move next = move(col0, row0, col1, row1);
+                            getJumps(moves, tempcol1, temprow1, move(move, next)
+                                    , jumpPieces(col0, row0, col1, row1, pieces));
+                        }
+                    }
+                }
+            }
+        }
+        // if not change
+        if (!idx) {
+            moves.add(move);
+        }
+
+
+//        // if empty
+//        if (_pieces.get(k0).isPiece()) {
+//            if (move != null) {
+//                moves.add(move);
+//            }
+//        } else {
+//            for (int i : rowFactors) {
+//                for (int j : colFactors) {
+//                    boolean con = i == 0 && j == 0;
+//                    int tempcol1 = tempcol0 + j;
+//                    int temprow1 = temprow0 + i;
+//                    if (!con && validPiece(tempcol1, temprow1)) {
+//                        char col1 = _colIndex.get(tempcol1);
+//                        char row1 = _rowIndex.get(temprow1);
+//                        int k1 = index(col1, row1);
+//                        if (!_pieces.get(k1).isPiece()) {
+//                            idx = true;
+//                            Move next = move(col0, row0, col1, row1);
+//                            move = move(move, next);
+//                            getJumps(moves, tempcol1, temprow1, move);
+//                        }
+//                    }
+//                }
+//            }
+//            // if not change
+//
+//        }
     }
+
+    /** Jump on pieces. */
+    private HashMap<Integer, PieceColor> jumpPieces(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+        int k0 = index(col0, row0);
+        int k1 = index(col1, row1);
+        Move mov = move(col0, row0, col1, row1);
+        int km = mov.jumpedIndex();
+        PieceColor temp = pieces.get(k0);
+        pieces.put(k1, temp);
+        pieces.put(k0, EMPTY);
+        pieces.put(km,EMPTY);
+        return pieces;
+    }
+
+    /** If a jump is legal. */
+    private boolean isLegalJump(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+        // if valid square
+        if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
+            return false;
+        }
+        // start piece, middle piece(diff), end empty
+        int intcol0 = _axisIndex.get(col0);
+        int intcol1 = _axisIndex.get(col1);
+        int introw0 = _axisIndex.get(row0);
+        int introw1 = _axisIndex.get(row1);
+        // is jump?
+        Move mov = move(col0, row0, col1, row1);
+        if (!mov.isJump()) {
+            return false;
+        }
+        // mid valid?
+        int intmidcol = (intcol0 + intcol1) / 2;
+        int intmidrow = (introw0 + introw1) / 2;
+        if (!validPiece(intmidcol, intmidrow)) {
+            return false;
+        }
+
+        int k0 = index(col0, row0);
+        int k1 = index(col1, row1);
+        char midcol = _colIndex.get(intmidcol);
+        char midrow = _rowIndex.get(intmidrow);
+        int km = index(midcol, midrow);
+        // start piece
+        if (!pieces.get(k0).isPiece()) {
+            return false;
+        }
+        // middle opposite
+        if (!pieces.get(k0).opposite().equals(pieces.get(km))) {
+            return false;
+        }
+        // end empty
+        if (pieces.get(k1).isPiece()) {
+            return false;
+        }
+        return true;
+    }
+
+    /** Helper determining validity. */
+    private boolean validPiece(int c, int r) {
+        boolean con1 = c >= 1 && c <= 5;
+        boolean con2 = r >= 1 && r <= 5;
+        return con1 && con2;
+    }
+
+    /** Helper parameters for getJumps. */
+    private List<Integer> rowFactors = new ArrayList<>();
+    {
+        rowFactors.add(-2);
+        rowFactors.add(0);
+        rowFactors.add(2);
+    }
+    /** Helper parameters for getMoves. */
+    private List<Integer> colFactors = rowFactors;
+
+    /** Add all legal non-captures from the position with linearized index K
+     *  to MOVES. */
+    private void getMoves(ArrayList<Move> moves, int k) {
+        if (validSquare(k) && _pieces.get(k).isPiece()) {
+            char tempcol0 = col(k);
+            char temprow0 = row(k);
+            int col0 = _axisIndex.get(tempcol0);
+            int row0 = _axisIndex.get(temprow0);
+            HashMap<Integer, PieceColor> pieces = new HashMap<>();
+            pieces = _pieces;
+            getMoves(moves, col0, row0, null, pieces);
+        }
+    }
+
+
+    /** Helper function for getMoves. */
+    private void getMoves(ArrayList<Move> moves, int tempcol0, int temprow0, Move move, HashMap<Integer, PieceColor> pieces) {
+
+        char col0 = _colIndex.get(tempcol0);
+        char row0 = _rowIndex.get(temprow0);
+
+        boolean idx = false;
+
+        for (int i : rFactors) {
+            for (int j : cFactors) {
+                boolean con = i == 0 && j == 0;
+                int tempcol1 = tempcol0 + j;
+                int temprow1 = temprow0 + i;
+                // Target is valid
+                if (!con && validPiece(tempcol1, temprow1)) {
+                    char col1 = _colIndex.get(tempcol1);
+                    char row1 = _rowIndex.get(temprow1);
+                    int k1 = index(col1, row1);
+                    // Target is empty
+                    if (!_pieces.get(k1).isPiece()) {
+                        if (isLegalMove(col0, row0, col1, row1, pieces)) {
+                            idx = true;
+                            Move next = move(col0, row0, col1, row1);
+                            getMoves(moves, tempcol1, temprow1, move(move, next)
+                                    , movePieces( ));
+                        }
+                    }
+                }
+            }
+        }
+        // if not change
+        if (!idx) {
+            moves.add(move);
+        }
+
+    }
+
+    /** Move on pieces. */
+    private HashMap<Integer, PieceColor> movePieces(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+        int k0 = index(col0, row0);
+        int k1 = index(col1, row1);
+        PieceColor temp = pieces.get(k0);
+        pieces.put(k1, temp);
+        pieces.put(k0, EMPTY);
+        return pieces;
+    }
+
+    /** If a move is legal. */
+    private boolean isLegalMove(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+        // valid square?
+        if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
+            return false;
+        }
+        // start piece, end empty
+        int k0 = index(col0, row0);
+        int k1 = index(col1, row1);
+        if (!pieces.get(k0).isPiece() || pieces.get(k1).isPiece()) {
+            return false;
+        }
+        // not going back
+        if (pieces.get(k0).opposite().equals(BLACK)) {
+            int introw0 = _axisIndex.get(row0);
+            int introw1 = _axisIndex.get(row1);
+            if (introw1 < introw0) {
+                return false;
+            }
+            // not move at line
+            if (introw0 == 5) {
+                return false;
+            }
+        } else if (pieces.get(k1).opposite().equals(WHITE)) {
+            int introw0 = _axisIndex.get(row0);
+            int introw1 = _axisIndex.get(row1);
+            if (introw1 > introw0) {
+                return false;
+            }
+            // not move at line
+            if (introw0 == 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Helper parameters for getJumps. */
+    private List<Integer> rFactors = new ArrayList<>();
+    {
+        rowFactors.add(-1);
+        rowFactors.add(0);
+        rowFactors.add(1);
+    }
+    /** Helper parameters for getMoves. */
+    private List<Integer> cFactors = rowFactors;
+
 
     /** Return true iff MOV is a valid jump sequence on the current board.
      *  MOV must be a jump or null.  If ALLOWPARTIAL, allow jumps that
@@ -332,8 +590,14 @@ class Board extends Observable {
     /** Make the Move MOV on this Board, assuming it is legal. */
     void makeMove(Move mov) {
 
+        if (mov == null) {
+            return;
+        }
         // FIXME
-        // -- Fixed -- Legal Jump/Move -- isMove()? -- gameOver()?
+        // -- Fixed -- Legal Jump/Move -- isMove()?
+
+        // Check if the move if for the correct, if not, report.
+
         boardList.add(board());
         while (mov != null) {
             int position0 = mov.fromIndex();
@@ -352,14 +616,47 @@ class Board extends Observable {
                 removePiece(position0);
             }
             mov = mov.jumpTail();
-
-//            System.out.println(position0 + "  " + position1);
-//            System.out.println(toString());
         }
 
+        // Change player
+        takeTurn();
+
+        // Check gameOver
+        // FIXME
 
         setChanged();
         notifyObservers();
+    }
+
+    /** checkGameOver. */
+    private void checkGameOver() {
+        List<Move> moves = getMoves();
+        if (moves.isEmpty()) {
+            _gameOver = true;
+        }
+        if (_whoseMove.equals(WHITE)) {
+            for (Move mov : moves) {
+                if (moveBy(mov).equals(BLACK)) {
+                    return;
+                }
+            }
+            _gameOver = true;
+            return;
+        } else if (_whoseMove.equals(BLACK)) {
+            for (Move mov : moves) {
+                if (moveBy(mov).equals(WHITE)) {
+                    return;
+                }
+            }
+            _gameOver = true;
+            return;
+        }
+    }
+
+    /** Determine move by. */
+    private PieceColor moveBy(Move mov) {
+        int k0 = mov.fromIndex();
+        return _pieces.get(k0);
     }
 
     /** Remove a piece.
@@ -421,9 +718,21 @@ class Board extends Observable {
 
     /** Return true iff there is a move for the current player. */
     private boolean isMove() {
-        return false;  // FIXME
+        return false;
+        // FIXME
+        // Waiting
     }
 
+    /** Added by Wayne, take turn for _whoseMove. */
+    private void takeTurn() {
+        if (_whoseMove.equals(WHITE)) {
+            _whoseMove = BLACK;
+        } else if (_whoseMove.equals(BLACK)) {
+            _whoseMove = WHITE;
+        } else {
+            throw new Error("The Player is neither white or black. --Board.takeTurn()");
+        }
+    }
 
     /** Player that is on move. */
     private PieceColor _whoseMove;
@@ -449,7 +758,7 @@ class Board extends Observable {
      * @param row1 -- input 'row1'
      * @return */
     private boolean isDistanceUnit(char col0, char col1, char row0, char row1) {
-        int colDistance = Math.abs(_colIndex.get(col0) - _colIndex.get(col1));
+        int colDistance = Math.abs(_axisIndex.get(col0) - _axisIndex.get(col1));
         int rowDistance = Math.abs(row0 - row1);
         boolean colZero = colDistance == 0;
         boolean rowZero = rowDistance == 0;
@@ -464,15 +773,44 @@ class Board extends Observable {
         return con1 || con2 || con3 || con4;
     }
 
-    /** Added by Wayne, convert column expression into int. */
+    /** Added by Wayne, convert axis expression into int. */
     @SuppressWarnings("unchecked")
-    private HashMap<Character, Integer> _colIndex = new HashMap() {
+    private HashMap<Character, Integer> _axisIndex = new HashMap() {
         {
             put('a', 1);
             put('b', 2);
             put('c', 3);
             put('d', 4);
             put('e', 5);
+            put('1', 1);
+            put('2', 2);
+            put('3', 3);
+            put('4', 4);
+            put('5', 5);
+        }
+    };
+
+    /** Added by Wayne, convert column expression into char. */
+    @SuppressWarnings("unchecked")
+    private HashMap<Integer, Character> _colIndex = new HashMap() {
+        {
+            put(1, 'a');
+            put(2, 'b');
+            put(3, 'c');
+            put(4, 'd');
+            put(5, 'e');
+        }
+    };
+
+    /** Added by Wayne, convert row expression into char. */
+    @SuppressWarnings("unchecked")
+    private HashMap<Integer, Character> _rowIndex = new HashMap() {
+        {
+            put(1, '1');
+            put(2, '2');
+            put(3, '3');
+            put(4, '4');
+            put(5, '5');
         }
     };
 

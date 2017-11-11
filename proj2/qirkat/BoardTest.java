@@ -79,4 +79,10 @@ public class BoardTest {
         assertEquals("'testUndo' problem", b2.gameOver(), b0.gameOver());
     }
 
+//    @Test
+//    public void testGetJump() {
+//        Board b0 = new Board();
+//
+//    }
+
 }

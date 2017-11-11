@@ -20,6 +20,14 @@ public class MoveTest {
     }
 
     @Test
+    public void testCRI() {
+        char c = col(index('d', '2'));
+        char r = row(index('d', '2'));
+        assertEquals(r, '2');
+        assertEquals(c, 'd');
+    }
+
+    @Test
     public void testMove2() {
         Move m = move('a', '2', 'a', '4');
         Move n = move('a', '4', 'c', '4');
