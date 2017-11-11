@@ -263,6 +263,7 @@ class Game {
         String string = operands[0];
         Move mov = Move.parseMove(string);
         _board.makeMove(mov);
+        _board.takeTurn();
         _moved = true;
     }
 
