@@ -26,8 +26,6 @@ class Board extends Observable {
 
     /** A new, cleared board at the start of the game. */
     Board() {
-        // FIXME
-        // -- Not Changed
         clear();
     }
 
@@ -48,8 +46,6 @@ class Board extends Observable {
         _whoseMove = WHITE;
         _gameOver = false;
 
-        // FIXME
-        // -- Fixed
         setPieces(INIT_PIECES, WHITE);
         _board = board();
         _state = "set_up";
@@ -66,8 +62,6 @@ class Board extends Observable {
     /** Copy B into me. */
     private void internalCopy(Board b) {
 
-        // FIXME
-        // -- Fixed
         _board = b.board();
         _pieces = b.pieces();
         _state = b.state();
@@ -94,13 +88,8 @@ class Board extends Observable {
             throw new IllegalArgumentException("bad board description");
         }
 
-        // FIXME
-        // -- Set '_pieces' -- Changed index
-
-//        for (int k = 0; k < str.length(); k += 1) {
         for (int i = 0; i < str.length(); i += 1) {
             int k = i;
-//            int k = changeLeftRight(i);
             switch (str.charAt(i)) {
             case '-':
                 set(k, EMPTY);
@@ -132,8 +121,6 @@ class Board extends Observable {
     /** Return the current contents of square C R, where 'a' <= C <= 'e',
      *  and '1' <= R <= '5'.  */
     PieceColor get(char c, char r) {
-        // FIXME
-        // -- Not Changed
         assert validSquare(c, r);
         return get(index(c, r));
     }
@@ -141,8 +128,6 @@ class Board extends Observable {
     /** Return the current contents of the square at linearized index K. */
     PieceColor get(int k) {
         assert validSquare(k);
-        // FIXME
-        // -- Fixed
         return _pieces.get(k);
     }
 
@@ -150,23 +135,17 @@ class Board extends Observable {
      *  '1' <= R <= '5'. */
     private void set(char c, char r, PieceColor v) {
         assert validSquare(c, r);
-        // FIXME
-        // -- Not Changed
         set(index(c, r), v);
     }
 
     /** Set get(K) to V, where K is the linearized index of a square. */
     private void set(int k, PieceColor v) {
         assert validSquare(k);
-        // FIXME
-        // -- Fixed
         _pieces.put(k, v);
     }
 
     /** Return true iff MOV is legal on the current board. */
     boolean legalMove(Move mov) {
-        // FIXME
-        // -- Fixed
         char col0 = mov.col0();
         char col1 = mov.col1();
         char row0 = mov.row0();
@@ -246,8 +225,6 @@ class Board extends Observable {
     /** Return true iff a jump is possible for a piece at position with
      *  linearized index K. */
     boolean jumpPossible(int k) {
-        // FIXME
-        // -- Fixed -- Not Tested
         if (!validSquare(k)
                 || !_pieces.get(k).isPiece()
                 || !(k % 2 == 0)) {
@@ -326,25 +303,6 @@ class Board extends Observable {
         makeMove(Move.move(c0, r0, c1, r1, next));
     }
 
-//    /** Added by Wayne, if makeMove has input String[]. */
-//    void makeMove(String[] strings) {
-//        // FIXME
-//        // -- Created -- Fixed -- Abandoned
-//        assert strings.length > 0;
-//
-//        String last = strings[strings.length - 1];
-//        Move moves = stringToMove(last);
-//
-//        for (int k = strings.length - 1; k >= 0; k -= 1) {
-//            String string = strings[k];
-//            string = string.replaceAll("-", "");
-//            // FIXME
-//            // -- Fixed -- "a3c5c3" -- Abandoned
-//            Move mov = stringToMove(string);
-//            moves = Move.move(mov, moves);
-//        }
-//    }
-
     /** Added by Wayne, generate Move from String.
      * @param string -- input 'string'
      * @return */
@@ -419,8 +377,6 @@ class Board extends Observable {
 
     /** Undo the last move, if any. */
     void undo() {
-        // FIXME
-        // -- Fixing -- WhoseTurn
         String string = boardList.get(boardList.size() - 1);
         setPieces(string, WHITE);
         boardList.remove(boardList.size() - 1);
@@ -437,17 +393,27 @@ class Board extends Observable {
     /** Return a text depiction of the board.  If LEGEND, supply row and
      *  column numbers around the edges. */
     private String toString(boolean legend) {
-        Formatter out = new Formatter();
-        // FIXME
-        // -- Fixed -- Fixing "legend"
+
         StringBuilder string = new StringBuilder();
+        int rowIndex = 5;
+
+        if (legend) { string.append(rowIndex); }
         string.append(" ");
+
         for (int i = 0; i <= MAX_INDEX; i++) {
             Character name = board().charAt(i);
             if (i % 5 == 0 && i != 0) {
-                string.append("\n ");
+                string.append("\n");
+                rowIndex -= 1;
+                if (legend) { string.append(rowIndex); }
+                string.append(" ");
             }
             string.append(" " + name);
+        }
+
+        if (legend) {
+            string.append("\n");
+            string.append("   a b c d e");
         }
         String result = string.toString();
         return result;
@@ -471,13 +437,6 @@ class Board extends Observable {
     /** One cannot create arrays of ArrayList<Move>, so we introduce
      *  a specialized private list type for this purpose. */
     private static class MoveList extends ArrayList<Move> {
-    }
-
-    /** Correct the index in _pieces.
-     * @param k -- input 'k'
-     * @return */
-    static int keyword(int k) {
-        return MAX_INDEX - k;
     }
 
     /** Added by Wayne, track moves' changes by remembering the board. */
@@ -559,8 +518,6 @@ class Board extends Observable {
     /** Added by Wayne, get board map.
      * @return */
     public String board() {
-        // FIXME
-        // - Fixed
         StringBuilder string = new StringBuilder();
         for (int key = 4 * SIDE; key <= MAX_INDEX; key++) {
             PieceColor piece = _pieces.get(key);
@@ -594,20 +551,9 @@ class Board extends Observable {
     /** Added by Wayne, variable showing board map. */
     private String _board;
 
-//    /** Added by Wayne, standard initial game board. */
-//    private final List<Character> INIT_PIECES = Arrays.asList(
-//            'b', 'b', 'b', 'b', 'b',
-//            'b', 'b', 'b', 'b', 'b',
-//            'b', 'b', '-', 'w', 'w',
-//            'w', 'w', 'w', 'w', 'w',
-//            'w', 'w', 'w', 'w', 'w'
-//            );
-
     /** Added by Wayne, standard initial game board. */
     private static final String INIT_PIECES =
             "  w w w w w\n  w w w w w\n  b b - w w\n  b b b b b\n  b b b b b";
-//            "  b b b b b\n  b b b b b\n  b b - w w\n  w w w w w\n  w w w w w";
-
 
     /** A read-only view of a Board. */
     private class ConstantBoard extends Board implements Observer {

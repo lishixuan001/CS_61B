@@ -54,8 +54,6 @@ public class BoardTest {
         makeMoves(b0, GAME2);
         assertTrue(b0.jumpPossible('b', '2'));
         makeMoves(b0, new String[]{"a3-c1"});
-        System.out.println(b0.toString());
-        System.out.println(Move.index('b', '3'));
         assertFalse(b0.jumpPossible('b', '3'));
     }
 

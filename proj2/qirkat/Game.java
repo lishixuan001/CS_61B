@@ -192,16 +192,12 @@ class Game {
 
     /** Perform the command 'clear'. */
     void doClear(String[] unused) {
-        // FIXME
-        // -- Fixed
         _state = SETUP;
         _board.clear();
     }
 
     /** Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
     void doSet(String[] operands) {
-        // FIXME
-        // -- Fixed -- Not Tested
         String string = operands[0].toUpperCase();
         if (string.equals("WHITE")) {
             _board.setPieces(operands[1], WHITE);
@@ -214,8 +210,6 @@ class Game {
 
     /** Perform the command 'dump'. */
     void doDump(String[] unused) {
-        // FIXME
-        // -- Fixed -- Not Tested
         System.out.println("===");
         System.out.println(_board.toString());
         System.out.println("===");
