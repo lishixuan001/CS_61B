@@ -165,6 +165,10 @@ class Board extends Observable {
         if (!isSquareEmpty(destination)) {
             return false;
         }
+        // legal diagonal
+        if (start % 2 == 1 && destination % 2 == 1) {
+            return false;
+        }
         return true;
     }
 
@@ -600,7 +604,6 @@ class Board extends Observable {
         if (mov == null) {
             return;
         }
-
 //        System.out.println(reverseBoard());
         boardList.add(reverseBoard());
         while (mov != null) {
@@ -615,8 +618,8 @@ class Board extends Observable {
                 removePiece(jumped);
                 _movedNotJumped = new ArrayList<>();
             } else {
-                assert legalMove(mov);
-                if (!_movedNotJumped.contains(position1)) {
+
+                if (!_movedNotJumped.contains(position1) && legalMove(mov)) {
                     PieceColor type0 = _pieces.get(position0);
                     insertPiece(position1, type0);
                     removePiece(position0);
