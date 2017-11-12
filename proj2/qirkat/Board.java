@@ -67,6 +67,7 @@ class Board extends Observable {
         _state = b.state();
         _whoseMove = b.whoseMove();
         _gameOver = b.gameOver();
+        _movedNotJumped = b._movedNotJumped;
 
         setChanged();
         notifyObservers();
@@ -344,6 +345,7 @@ class Board extends Observable {
         if (k0 % 2 == 1 && k1 % 2 == 1 && km % 2 == 1) {
             return false;
         }
+
         return true;
     }
 
@@ -393,8 +395,6 @@ class Board extends Observable {
         char col0 = _colIndex.get(tempcol0);
         char row0 = _rowIndex.get(temprow0);
 
-        boolean idx = false;
-
         for (int i : rFactors) {
             for (int j : cFactors) {
                 boolean con = i == 0 && j == 0;
@@ -408,7 +408,6 @@ class Board extends Observable {
 
                     if (!_pieces.get(k1).isPiece()) {
                         if (isLegalMove(col0, row0, col1, row1, pieces)) {
-                            idx = true;
                             Move mov = move(col0, row0, col1, row1);
                             moves.add(mov);
                         }
@@ -418,23 +417,6 @@ class Board extends Observable {
         }
     }
 
-    /** Move on pieces.
-     * @param pieces --input
-     * @param col0 --input
-     * @param col1 --input
-     * @param row0 --input
-     * @param row1 --input
-     * @return */
-    private HashMap<Integer, PieceColor> movePieces(char col0, char row0
-            , char col1, char row1, HashMap<Integer, PieceColor> pieces) {
-        int k0 = index(col0, row0);
-        int k1 = index(col1, row1);
-        PieceColor temp = pieces.get(k0);
-        pieces.put(k1, temp);
-        pieces.put(k0, EMPTY);
-        return pieces;
-    }
-
     /** If a move is legal.
      * @param row1 --input
      * @param row0 --input
@@ -442,6 +424,7 @@ class Board extends Observable {
      * @param col0 --input
      * @param pieces --input
      * @return */
+    @SuppressWarnings("unchecked")
     private boolean isLegalMove(char col0, char row0, char col1, char row1
             , HashMap<Integer, PieceColor> pieces) {
 
@@ -481,6 +464,14 @@ class Board extends Observable {
         if (k0 % 2 == 1 && k1 % 2 == 1) {
             return false;
         }
+
+        List pair = new ArrayList();
+        pair.add(k0);
+        pair.add(k1);
+        if (_movedNotJumped.contains(pair)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -683,6 +674,18 @@ class Board extends Observable {
         notifyObservers();
     }
 
+    /** Add walked path from outside.
+     * @param move --input */
+    @SuppressWarnings("unchecked")
+    public void addWalkedPath(Move move) {
+        int k0 = move.fromIndex();
+        int k1 = move.toIndex();
+        List pair = new ArrayList();
+        pair.add(k1);
+        pair.add(k0);
+        _movedNotJumped.add(pair);
+    }
+
     /** Record not-retrievable move targets. */
     private List<List> _movedNotJumped = new ArrayList<>();
 
@@ -733,12 +736,18 @@ class Board extends Observable {
      * @param moves --input
      * @param player --input
      * @return */
+    @SuppressWarnings("unchecked")
     public ArrayList<Move> getMyMoves(ArrayList<Move> moves
             , PieceColor player) {
         ArrayList<Move> result = new ArrayList<>();
         for (Move mov : moves) {
             if (moveBy(mov).equals(player)) {
-                result.add(mov);
+                List pair = new ArrayList();
+                pair.add(mov.fromIndex());
+                pair.add(mov.toIndex());
+                if (!_movedNotJumped.contains(pair)) {
+                    result.add(mov);
+                }
             }
         }
         return result;

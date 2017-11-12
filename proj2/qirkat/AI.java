@@ -1,7 +1,6 @@
 package qirkat;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static qirkat.PieceColor.*;
 

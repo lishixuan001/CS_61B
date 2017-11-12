@@ -84,6 +84,7 @@ class Game {
                 }
                 if (_state == PLAYING) {
                     _board.makeMove(move);
+                    _board.addWalkedPath(move);
                     System.out.println(_board.toString());
                 }
                 if (_moved) {
