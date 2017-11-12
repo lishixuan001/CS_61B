@@ -28,10 +28,13 @@ abstract class Player {
 
 
     /** Return a legal move for me. Assumes that
-     *  board.whoseMove() == myColor and that !board.gameOver(). */
+     *  board.whoseMove() == myColor and that !board.gameOver().
+     *  @param cmnd --input
+     *  @return */
     abstract Move myMove(Command cmnd);
 
-    /** Added by Wayne, show prompt. */
+    /** Added by Wayne, show prompt.
+     * @return */
     public String myPrompt() {
         return _prompt;
     }

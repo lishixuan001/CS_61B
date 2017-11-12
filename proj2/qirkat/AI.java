@@ -29,7 +29,7 @@ class AI extends Player {
         Main.endTiming();
 
         StringBuilder msg = new StringBuilder();
-        msg.append(PieceColorToString(myColor()));
+        msg.append(pieceColorToString(myColor()));
         msg.append(" moves ");
 
         String mov = move.toString();
@@ -40,8 +40,10 @@ class AI extends Player {
         return move;
     }
 
-    /** PieceColor to String. */
-    private String PieceColorToString(PieceColor piececolor) {
+    /** PieceColor to String.
+     * @param piececolor --input
+     * @return */
+    private String pieceColorToString(PieceColor piececolor) {
         String string = "";
         if (piececolor.equals(WHITE)) {
             string = "White";
@@ -89,7 +91,6 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-        // FIXME
         myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
@@ -112,7 +113,12 @@ class AI extends Player {
         return bestScore;
     }
 
-    /** Find the minimum. */
+    /** Find the minimum.
+     * @param alpha --input
+     * @param beta --input
+     * @param board --input
+     * @param depth --input
+     * @return */
     private int findMin(Board board, int depth, int alpha, int beta) {
         Move best = null;
         int bestScore = INFTY;
@@ -129,7 +135,6 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-        // FIXME
         myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
@@ -152,9 +157,12 @@ class AI extends Player {
     }
 
 
-    /** Last condition for finding maximized possible move/jump. */
+    /** Last condition for finding maximized possible move/jump.
+     * @param board --input
+     * @param beta --input
+     * @param alpha --input
+     * @return */
     private int flatMax(Board board, int alpha, int beta) {
-        // check gameover
         board.checkGameOver();
         PieceColor winner = board.winner();
         Move best = null;
@@ -172,7 +180,6 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-        // FIXME
         myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {
@@ -193,7 +200,11 @@ class AI extends Player {
         return bestScore;
     }
 
-    /** Last condition for finding maximized possible move/jump. */
+    /** Last condition for finding maximized possible move/jump.
+     * @param alpha --input
+     * @param beta --input
+     * @param board --input
+     * @return */
     private int flatMin(Board board, int alpha, int beta) {
 
         board.checkGameOver();
@@ -214,7 +225,6 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-        // FIXME
         myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {
@@ -235,7 +245,7 @@ class AI extends Player {
         return bestScore;
     }
 
-    /** Return a heuristic value for BOARD. */
+    /** Return a heuristic value for BOARD.*/
     private int staticScore(Board board) {
         String string = board.board();
         int black = 0;
@@ -251,7 +261,9 @@ class AI extends Player {
         return white - black;
     }
 
-    /** Filter the moves. */
+    /** Filter the moves.
+     * @param moves --input
+     * @return */
     private ArrayList<Move> filter(ArrayList<Move> moves) {
         ArrayList<Move> result = new ArrayList<>();
         Move first = null;

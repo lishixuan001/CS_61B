@@ -6,7 +6,7 @@ import java.io.PipedReader;
 import java.io.PipedWriter;
 
 /** The main program for Qirkat.
- *  @author P. N. Hilfinger */
+ *  @author P. N. Hilfinger [Remove 41&42 if extra credit] */
 public class Main {
 
     /** Run Qirkat game.  Use display if ARGS[k] is '--display', timing
@@ -36,8 +36,6 @@ public class Main {
         game = null;
         if (useGUI) {
             try {
-                // Remove this comment.  Also remove the next two lines if
-                // you do the extra credit.
                 System.err.printf("Sorry, --display not implemented.%n");
                 System.exit(2);
 

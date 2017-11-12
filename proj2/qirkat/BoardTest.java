@@ -86,23 +86,4 @@ public class BoardTest {
         assertEquals("'testUndo' problem", b2.gameOver(), b0.gameOver());
     }
 
-//    private static final String[] GAME3 = { "c2-c3", "c4-c2"};
-//    @Test
-//    public void testUndo2() {
-//        Board b0 = new Board();
-//        makeMoves(b0, GAME3);
-//        System.out.println(b0.toString());
-//        b0.undo();
-//        System.out.println();
-//        System.out.println(b0.toString());
-//    }
-
-
-//    @Test
-//    public void test() {
-//        Board b0 = new Board();
-//        b0.setPieces("--b-w ----w ---ww b---- bbbbb", PieceColor.BLACK);
-//        System.out.println(b0.staticScore());
-//    }
-
 }

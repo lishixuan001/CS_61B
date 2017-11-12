@@ -412,15 +412,8 @@ class Move {
     private final List<Character> _rows =
             Arrays.asList('1', '2', '3', '4', '5');
 
-    /** Give the move a score. */
-    private int _score;
-
-    /** Get the score. */
-    public int score() {
-        return _score;
-    }
-
-    /** Length of the move. */
+    /** Length of the move.
+     * @return */
     public int length() {
         int count = 0;
         String string = this.toString();
@@ -433,8 +426,4 @@ class Move {
         return count;
     }
 
-    /** Set the score. */
-    public void setScore(int k) {
-        _score = k;
-    }
 }

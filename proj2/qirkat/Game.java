@@ -2,8 +2,6 @@ package qirkat;
 
 /* Author: P. N. Hilfinger */
 
-import graph.B;
-
 import java.io.File;
 import java.io.Reader;
 import java.io.InputStream;
@@ -21,7 +19,7 @@ import static qirkat.Command.Type.*;
 import static qirkat.GameException.error;
 
 /** Controls the play of the game.
- *  @author Shixuan (Wayne) Li
+ *  @author Shixuan (Wayne) Li [import graph.B;]
  */
 class Game {
 
@@ -41,9 +39,7 @@ class Game {
 
     /** Run a session of Qirkat gaming. */
     void process() {
-
         doClear(null);
-
         while (true) {
             while (_state == SETUP) {
                 doCommand();
@@ -52,21 +48,15 @@ class Game {
                     _moved = false;
                 }
             }
-
             _board.checkGameOver();
-
             while (_state != SETUP && !_board.gameOver()) {
-
                 _board.checkGameOver();
                 if (_board.winner().isPiece()) {
                     break;
                 }
                 Move move = null;
-
                 if (_whoseMove.equals(WHITE)) {
-                    // if its white turn
                     if (_whiteIsManual) {
-                        // if white is manual
                         Command cmnd = getMoveCmnd(_white.myPrompt());
                         if (cmnd == null) {
                             _moved = false;
@@ -75,14 +65,11 @@ class Game {
                             _moved = true;
                         }
                     } else {
-                        // if white is auto
                         move = _white.myMove(null);
                         _moved = true;
                     }
                 } else if (_whoseMove.equals(BLACK)) {
-                    // if its black turn
                     if (_blackIsManual) {
-                        // if black is manual
                         Command cmnd = getMoveCmnd(_black.myPrompt());
                         if (cmnd == null) {
                             _moved = false;
@@ -91,32 +78,24 @@ class Game {
                             _moved = true;
                         }
                     } else {
-//                        // if black is auto
                         move = _black.myMove(null);
                         _moved = true;
                     }
                 }
-
                 if (_state == PLAYING) {
-                    // FIXME
-//                    System.out.println(_board);
                     _board.makeMove(move);
 
                 }
-
                 if (_moved) {
                     takeTurn();
                     _moved = false;
                 }
             }
-
             if (_state == PLAYING) {
                 reportWinner();
             }
-
             _state = SETUP;
         }
-
     }
 
     /** Return a read-only view of my game board. */
@@ -174,8 +153,6 @@ class Game {
         _reporter.errMsg(format, args);
     }
 
-    /* Command Processors */
-
     /** Perform the command 'auto OPERANDS[0]'. */
     void doAuto(String[] operands) {
         _state = SETUP;
@@ -188,7 +165,8 @@ class Game {
             _black = new AI(this, BLACK);
             _blackIsManual = false;
         } else {
-            throw error("Invalid command while setting player to AI. --Game.doAuto()");
+            throw error("Invalid command "
+                    + "while setting player to AI. --Game.doAuto()");
         }
     }
 
@@ -223,7 +201,7 @@ class Game {
                 }
                 r.close();
             } catch (IOException e) {
-                /* Ignore IOException */
+                return;
             }
         }
     }
@@ -231,7 +209,6 @@ class Game {
     /** Perform the command 'load OPERANDS[0]'. */
     void doLoad(String[] operands) {
         try {
-//            FileReader reader = new FileReader(operands[0]);
             File file = new File(operands[0]);
             Reader reader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(reader);
@@ -257,7 +234,8 @@ class Game {
             _black = new Manual(this, BLACK);
             _blackIsManual = true;
         } else {
-            throw error("Invalid command while setting player to Manual. --Game.doManual()");
+            throw error("Invalid command while"
+                    + " setting player to Manual. --Game.doManual()");
         }
     }
 
@@ -383,7 +361,8 @@ class Game {
         } else if (_whoseMove.equals(BLACK)) {
             _whoseMove = WHITE;
         } else {
-            throw new Error("The Player is neither white or black. --Game.takeTurn()");
+            throw new Error("The Player is neither "
+                    + "white or black. --Game.takeTurn()");
         }
     }
 }

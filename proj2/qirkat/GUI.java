@@ -16,7 +16,7 @@ import java.io.IOException;
 import static qirkat.PieceColor.*;
 
 /** The GUI for the Qirkat game.
- *  @author Shixuan (Wayne) Li
+ *  @author Shixuan (Wayne) Li [108/113/123/125/131]
  */
 class GUI extends TopLevel implements Observer, Reporter {
 
@@ -105,12 +105,12 @@ class GUI extends TopLevel implements Observer, Reporter {
 
     @Override
     public void errMsg(String format, Object... args) {
-        // FIXME
+
     }
 
     @Override
     public void outcomeMsg(String format, Object... args) {
-        // FIXME
+
     }
 
     @Override
@@ -120,15 +120,15 @@ class GUI extends TopLevel implements Observer, Reporter {
     @Override
     public void update(Observable obs, Object arg) {
         if (obs == _model) {
-            // FIXME (if needed)
+            return;
         } else if (obs == _widget) {
-            // FIXME (if needed)
+            return;
         }
     }
 
     /** Respond to a click on SQ. */
     private void movePiece(String sq) {
-        // FIXME
+
     }
 
     /** Make MOV the user-selected move (no move if null). */

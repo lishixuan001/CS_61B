@@ -153,23 +153,22 @@ class Board extends Observable {
         int start = index(col0, row0);
         int destination = index(col1, row1);
 
-        // Check if start/end is in scale
         if (!validSquare(start) || !validSquare(destination)) {
             return false;
         }
-        // Check if moved for 1 scale
+
         if (!isDistanceUnit(col0, col1, row0, row1)) {
             return false;
         }
-        // Check if the end is empty
+
         if (!isSquareEmpty(destination)) {
             return false;
         }
-        // legal diagonal
+
         if (start % 2 == 1 && destination % 2 == 1) {
             return false;
         }
-        // reach end cannot move
+
         if (_pieces.get(start).equals(WHITE)) {
             if (start >= 4 * SIDE && start <= MAX_INDEX) {
                 return false;
@@ -218,8 +217,15 @@ class Board extends Observable {
         }
     }
 
-    /** Helper function for getJumps. */
-    private void getJumps(ArrayList<Move> moves, int tempcol0, int temprow0, Move move, HashMap<Integer, PieceColor> pieces) {
+    /** Helper function for getJumps.
+     * @param moves --input
+     * @param move --input
+     * @param pieces --input
+     * @param tempcol0 --input
+     * @param temprow0 --input
+     * */
+    private void getJumps(ArrayList<Move> moves, int tempcol0, int temprow0
+            , Move move, HashMap<Integer, PieceColor> pieces) {
 
         char col0 = _colIndex.get(tempcol0);
         char row0 = _rowIndex.get(temprow0);
@@ -231,24 +237,24 @@ class Board extends Observable {
                 boolean con = i == 0 && j == 0;
                 int tempcol1 = tempcol0 + j;
                 int temprow1 = temprow0 + i;
-                // Target is valid
+
                 if (!con && validPiece(tempcol1, temprow1)) {
                     char col1 = _colIndex.get(tempcol1);
                     char row1 = _rowIndex.get(temprow1);
                     int k1 = index(col1, row1);
-                    // Target is empty
+
                     if (!_pieces.get(k1).isPiece()) {
                         if (isLegalJump(col0, row0, col1, row1, pieces)) {
                             idx = true;
                             Move next = move(col0, row0, col1, row1);
                             getJumps(moves, tempcol1, temprow1, move(move, next)
-                                    , jumpPieces(col0, row0, col1, row1, pieces));
+                                    , jumpPieces(col0, row0, col1, row1
+                                            , pieces));
                         }
                     }
                 }
             }
         }
-        // if not change
         if (!idx) {
             if (move != null) {
                 moves.add(move);
@@ -257,8 +263,15 @@ class Board extends Observable {
 
     }
 
-    /** Jump on pieces. */
-    private HashMap<Integer, PieceColor> jumpPieces(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+    /** Jump on pieces.
+     * @param pieces --input
+     * @param col0 --input
+     * @param col1 --input
+     * @param row0 --input
+     * @param row1 --input
+     * @return */
+    private HashMap<Integer, PieceColor> jumpPieces(char col0, char row0
+            , char col1, char row1, HashMap<Integer, PieceColor> pieces) {
         int k0 = index(col0, row0);
         int k1 = index(col1, row1);
         Move mov = move(col0, row0, col1, row1);
@@ -266,27 +279,34 @@ class Board extends Observable {
         PieceColor temp = pieces.get(k0);
         pieces.put(k1, temp);
         pieces.put(k0, EMPTY);
-        pieces.put(km,EMPTY);
+        pieces.put(km, EMPTY);
         return pieces;
     }
 
-    /** If a jump is legal. */
-    private boolean isLegalJump(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
-        // if valid square
+    /** If a jump is legal.
+     * @param row1 --input
+     * @param row0 --input
+     * @param col1 --input
+     * @param col0 --input
+     * @param pieces --input
+     * @return */
+    private boolean isLegalJump(char col0, char row0, char col1, char row1
+            , HashMap<Integer, PieceColor> pieces) {
+
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
             return false;
         }
-        // start piece, middle piece(diff), end empty
+
         int intcol0 = _axisIndex.get(col0);
         int intcol1 = _axisIndex.get(col1);
         int introw0 = _axisIndex.get(row0);
         int introw1 = _axisIndex.get(row1);
-        // is jump?
+
         Move mov = move(col0, row0, col1, row1);
         if (!mov.isJump()) {
             return false;
         }
-        // mid valid?
+
         int intmidcol = (intcol0 + intcol1) / 2;
         int intmidrow = (introw0 + introw1) / 2;
         if (!validPiece(intmidcol, intmidrow)) {
@@ -298,26 +318,29 @@ class Board extends Observable {
         char midcol = _colIndex.get(intmidcol);
         char midrow = _rowIndex.get(intmidrow);
         int km = index(midcol, midrow);
-        // start piece
+
         if (!pieces.get(k0).isPiece()) {
             return false;
         }
-        // middle opposite
+
         if (!pieces.get(k0).opposite().equals(pieces.get(km))) {
             return false;
         }
-        // end empty
+
         if (pieces.get(k1).isPiece()) {
             return false;
         }
-        // diagonal check
+
         if (k0 % 2 == 1 && k1 % 2 == 1 && km % 2 == 1) {
             return false;
         }
         return true;
     }
 
-    /** Helper determining validity. */
+    /** Helper determining validity.
+     * @param c --input
+     * @param r --input
+     * @return */
     private boolean validPiece(int c, int r) {
         boolean con1 = c >= 1 && c <= 5;
         boolean con2 = r >= 1 && r <= 5;
@@ -348,8 +371,14 @@ class Board extends Observable {
     }
 
 
-    /** Helper function for getMoves. */
-    private void getMoves(ArrayList<Move> moves, int tempcol0, int temprow0, Move move, HashMap<Integer, PieceColor> pieces) {
+    /** Helper function for getMoves.
+     * @param pieces --input
+     * @param temprow0 --input
+     * @param tempcol0 --input
+     * @param moves --input
+     * @param move --input*/
+    private void getMoves(ArrayList<Move> moves, int tempcol0, int temprow0
+            , Move move, HashMap<Integer, PieceColor> pieces) {
 
         char col0 = _colIndex.get(tempcol0);
         char row0 = _rowIndex.get(temprow0);
@@ -361,12 +390,12 @@ class Board extends Observable {
                 boolean con = i == 0 && j == 0;
                 int tempcol1 = tempcol0 + j;
                 int temprow1 = temprow0 + i;
-                // Target is valid
+
                 if (!con && validPiece(tempcol1, temprow1)) {
                     char col1 = _colIndex.get(tempcol1);
                     char row1 = _rowIndex.get(temprow1);
                     int k1 = index(col1, row1);
-                    // Target is empty
+
                     if (!_pieces.get(k1).isPiece()) {
                         if (isLegalMove(col0, row0, col1, row1, pieces)) {
                             idx = true;
@@ -379,8 +408,15 @@ class Board extends Observable {
         }
     }
 
-    /** Move on pieces. */
-    private HashMap<Integer, PieceColor> movePieces(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
+    /** Move on pieces.
+     * @param pieces --input
+     * @param col0 --input
+     * @param col1 --input
+     * @param row0 --input
+     * @param row1 --input
+     * @return */
+    private HashMap<Integer, PieceColor> movePieces(char col0, char row0
+            , char col1, char row1, HashMap<Integer, PieceColor> pieces) {
         int k0 = index(col0, row0);
         int k1 = index(col1, row1);
         PieceColor temp = pieces.get(k0);
@@ -389,27 +425,34 @@ class Board extends Observable {
         return pieces;
     }
 
-    /** If a move is legal. */
-    private boolean isLegalMove(char col0, char row0, char col1, char row1, HashMap<Integer, PieceColor> pieces) {
-        // valid square?
+    /** If a move is legal.
+     * @param row1 --input
+     * @param row0 --input
+     * @param col1 --input
+     * @param col0 --input
+     * @param pieces --input
+     * @return */
+    private boolean isLegalMove(char col0, char row0, char col1, char row1
+            , HashMap<Integer, PieceColor> pieces) {
+
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
             return false;
         }
-        // get index
+
         int k0 = index(col0, row0);
         int k1 = index(col1, row1);
-        // start piece, end empty
+
         if (!pieces.get(k0).isPiece() || pieces.get(k1).isPiece()) {
             return false;
         }
-        // not going back
+
         if (pieces.get(k0).equals(WHITE)) {
             int introw0 = _axisIndex.get(row0);
             int introw1 = _axisIndex.get(row1);
             if (introw1 < introw0) {
                 return false;
             }
-            // not move at line
+
             if (introw0 == 5) {
                 return false;
             }
@@ -419,12 +462,12 @@ class Board extends Observable {
             if (introw1 > introw0) {
                 return false;
             }
-            // not move at line
+
             if (introw0 == 1) {
                 return false;
             }
         }
-        // diagonal check
+
         if (k0 % 2 == 1 && k1 % 2 == 1) {
             return false;
         }
@@ -449,8 +492,6 @@ class Board extends Observable {
         if (mov == null) {
             return true;
         }
-        // FIXME
-        // Waiting
         return false;
     }
 
@@ -490,65 +531,48 @@ class Board extends Observable {
         int ruintrow = introw + 1;
         int rdintrow = introw - 1;
 
-        // left and right
-        if (validPiece(lintcol, lintrow) && validPiece(rintcol, rintrow)) {
-            char lcol = _colIndex.get(lintcol);
-            char rcol = _colIndex.get(rintcol);
-            char lrow = _rowIndex.get(lintrow);
-            char rrow = _rowIndex.get(rintrow);
-            int l = index(lcol, lrow);
-            int r = index(rcol, rrow);
-            boolean con1 = _pieces.get(l).isPiece() && _pieces.get(l).opposite().equals(_pieces.get(k)) && !_pieces.get(r).isPiece();
-            boolean con2 = _pieces.get(r).isPiece() && _pieces.get(r).opposite().equals(_pieces.get(k)) && !_pieces.get(l).isPiece();
-            if (con1 || con2) {
-                return true;
-            }
+        if (checkPossible(k, lintcol, lintrow, rintcol, rintrow)) {
+            return true;
         }
-
-        // up and down
-        if (validPiece(uintcol, uintrow) && validPiece(dintcol, dintrow)) {
-            char ucol = _colIndex.get(uintcol);
-            char dcol = _colIndex.get(dintcol);
-            char urow = _rowIndex.get(uintrow);
-            char drow = _rowIndex.get(dintrow);
-            int u = index(ucol, urow);
-            int d = index(dcol, drow);
-            boolean con1 = _pieces.get(u).isPiece() && _pieces.get(u).opposite().equals(_pieces.get(k)) && !_pieces.get(d).isPiece();
-            boolean con2 = _pieces.get(d).isPiece() && _pieces.get(d).opposite().equals(_pieces.get(k)) && !_pieces.get(u).isPiece();
-            if (con1 || con2) {
-                return true;
-            }
+        if (checkPossible(k, uintcol, uintrow, dintcol, dintrow)) {
+            return true;
         }
 
         if (k % 2 == 0) {
-            // lu and rd
-            if (validPiece(luintcol, luintrow) && validPiece(rdintcol, rdintrow)) {
-                char lucol = _colIndex.get(luintcol);
-                char rdcol = _colIndex.get(rdintcol);
-                char lurow = _rowIndex.get(luintrow);
-                char rdrow = _rowIndex.get(rdintrow);
-                int lu = index(lucol, lurow);
-                int rd = index(rdcol, rdrow);
-                boolean con1 = _pieces.get(lu).isPiece() &&  _pieces.get(lu).opposite().equals(_pieces.get(k)) && !_pieces.get(rd).isPiece();
-                boolean con2 = _pieces.get(rd).isPiece() && _pieces.get(rd).opposite().equals(_pieces.get(k)) && !_pieces.get(lu).isPiece();
-                if (con1 || con2) {
-                    return true;
-                }
+            if (checkPossible(k, luintcol, luintrow, rdintcol, rdintrow)) {
+                return true;
             }
+            if (checkPossible(k, ruintcol, ruintrow, ldintcol, ldintrow)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-            // ld and ru
-            if (validPiece(ruintcol, ruintrow) && validPiece(ldintcol, ldintrow)) {
-                char rucol = _colIndex.get(ruintcol);
-                char ldcol = _colIndex.get(ldintcol);
-                char rurow = _rowIndex.get(ruintrow);
-                char ldrow = _rowIndex.get(ldintrow);
-                int ru = index(rucol, rurow);
-                int ld = index(ldcol, ldrow);
-                boolean con1 = _pieces.get(ru).isPiece() && _pieces.get(ru).opposite().equals(_pieces.get(k)) && !_pieces.get(ld).isPiece();
-                boolean con2 = _pieces.get(ld).isPiece() && _pieces.get(ld).opposite().equals(_pieces.get(k)) && !_pieces.get(ru).isPiece();
-                if (con1 || con2) {
-                    return true;
-                }
+    /** Helper jumpPossible. Check Possible.
+     * @param col0 --input
+     * @param col1 --input
+     * @param row1 --input
+     * @param row0 --input
+     * @param k --input
+     * @return */
+    private boolean checkPossible(int k, int col0, int row0
+            , int col1, int row1) {
+        if (validPiece(col0, row0) && validPiece(col1, row1)) {
+            char lcol = _colIndex.get(col0);
+            char rcol = _colIndex.get(col1);
+            char lrow = _rowIndex.get(row0);
+            char rrow = _rowIndex.get(row1);
+            int l = index(lcol, lrow);
+            int r = index(rcol, rrow);
+            boolean con1 = _pieces.get(l).isPiece()
+                    && _pieces.get(l).opposite().equals(_pieces.get(k))
+                    && !_pieces.get(r).isPiece();
+            boolean con2 = _pieces.get(r).isPiece()
+                    && _pieces.get(r).opposite().equals(_pieces.get(k))
+                    && !_pieces.get(l).isPiece();
+            if (con1 || con2) {
+                return true;
             }
         }
         return false;
@@ -615,7 +639,6 @@ class Board extends Observable {
         if (mov == null) {
             return;
         }
-//        System.out.println(reverseBoard());
         boardList.add(reverseBoard());
         while (mov != null) {
             int position0 = mov.fromIndex();
@@ -645,9 +668,6 @@ class Board extends Observable {
             mov = mov.jumpTail();
         }
 
-//        System.out.println(toString());
-
-        // Change player
         takeTurn();
 
         setChanged();
@@ -657,7 +677,7 @@ class Board extends Observable {
     /** Record not-retrievable move targets. */
     private List<List> _movedNotJumped = new ArrayList<>();
 
-    /** checkGameOver. */
+    /** checkGameOver.*/
     public void checkGameOver() {
         List<Move> moves = getMoves();
         if (moves.isEmpty()) {
@@ -684,8 +704,12 @@ class Board extends Observable {
         }
     }
 
-    /** Get moves for current player. */
-    public ArrayList<Move> getMyMoves(ArrayList<Move> moves, PieceColor player) {
+    /** Get moves for current player.
+     * @param moves --input
+     * @param player --input
+     * @return */
+    public ArrayList<Move> getMyMoves(ArrayList<Move> moves
+            , PieceColor player) {
         ArrayList<Move> result = new ArrayList<>();
         for (Move mov : moves) {
             if (moveBy(mov).equals(player)) {
@@ -695,7 +719,9 @@ class Board extends Observable {
         return result;
     }
 
-    /** Determine move by. */
+    /** Determine move by.
+     * @param mov --input
+     * @return */
     private PieceColor moveBy(Move mov) {
         int k0 = mov.fromIndex();
         PieceColor result = _pieces.get(k0);
@@ -737,7 +763,9 @@ class Board extends Observable {
         StringBuilder string = new StringBuilder();
         int rowIndex = 5;
 
-        if (legend) { string.append(rowIndex); }
+        if (legend) {
+            string.append(rowIndex);
+        }
         string.append(" ");
 
         for (int i = 0; i <= MAX_INDEX; i++) {
@@ -745,7 +773,9 @@ class Board extends Observable {
             if (i % 5 == 0 && i != 0) {
                 string.append("\n");
                 rowIndex -= 1;
-                if (legend) { string.append(rowIndex); }
+                if (legend) {
+                    string.append(rowIndex);
+                }
                 string.append(" ");
             }
             string.append(" " + name);
@@ -762,8 +792,6 @@ class Board extends Observable {
     /** Return true iff there is a move for the current player. */
     private boolean isMove() {
         return false;
-        // FIXME
-        // Waiting
     }
 
     /** Added by Wayne, take turn for _whoseMove. */
@@ -773,7 +801,8 @@ class Board extends Observable {
         } else if (_whoseMove.equals(BLACK)) {
             _whoseMove = WHITE;
         } else {
-            throw new Error("The Player is neither white or black. --Board.takeTurn()");
+            throw new Error("The Player is neither"
+                    + " white or black. --Board.takeTurn()");
         }
     }
 
@@ -899,7 +928,8 @@ class Board extends Observable {
     /** Added by Wayne, winner. */
     private PieceColor _winner = EMPTY;
 
-    /** Added by Wayne, show winner. */
+    /** Added by Wayne, show winner.
+     * @return */
     public PieceColor winner() {
         return _winner;
     }
@@ -937,7 +967,8 @@ class Board extends Observable {
         return _board;
     }
 
-    /** Reversed board. */
+    /** Reversed board.
+     * @return */
     private String reverseBoard() {
         StringBuilder string = new StringBuilder();
         for (int key = 0 * SIDE; key < 1 * SIDE; key++) {
@@ -967,22 +998,6 @@ class Board extends Observable {
         }
         return string.toString();
     }
-
-//    /** Return a heuristic value for BOARD. */
-//    public int staticScore() {
-//        String string = board();
-//        int black = 0;
-//        int white = 0;
-//        for (int i = 0; i < string.length(); i++) {
-//            char piece = string.charAt(i);
-//            if (piece == 'b') {
-//                black += 1;
-//            } else if (piece == 'w') {
-//                white += 1;
-//            }
-//        }
-//        return white - black;
-//    }
 
     /** Added by Wayne, variable showing board map. */
     private String _board;
