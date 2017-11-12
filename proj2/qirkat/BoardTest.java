@@ -54,7 +54,14 @@ public class BoardTest {
         makeMoves(b0, GAME2);
         assertTrue(b0.jumpPossible('b', '2'));
         makeMoves(b0, new String[]{"a3-c1"});
-        assertFalse(b0.jumpPossible('b', '3'));
+        assertTrue(b0.jumpPossible('b', '3'));
+
+        b0.setPieces("-b--- --w-- ----- ----- -----", PieceColor.WHITE);
+        assertFalse(b0.jumpPossible('c', '2'));
+
+        b0.setPieces("----- -b--- --w-- ----- -----", PieceColor.WHITE);
+        assertTrue(b0.jumpPossible('c', '3'));
+
     }
 
     @Test
@@ -79,10 +86,23 @@ public class BoardTest {
         assertEquals("'testUndo' problem", b2.gameOver(), b0.gameOver());
     }
 
+//    private static final String[] GAME3 = { "c2-c3", "c4-c2"};
 //    @Test
-//    public void testGetJump() {
+//    public void testUndo2() {
 //        Board b0 = new Board();
-//
+//        makeMoves(b0, GAME3);
+//        System.out.println(b0.toString());
+//        b0.undo();
+//        System.out.println();
+//        System.out.println(b0.toString());
+//    }
+
+
+//    @Test
+//    public void test() {
+//        Board b0 = new Board();
+//        b0.setPieces("--b-w ----w ---ww b---- bbbbb", PieceColor.BLACK);
+//        System.out.println(b0.staticScore());
 //    }
 
 }

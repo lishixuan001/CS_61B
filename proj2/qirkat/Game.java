@@ -45,8 +45,6 @@ class Game {
         while (true) {
             while (_state == SETUP) {
                 doCommand();
-                // FIXME
-                // Added
                 if (_moved) {
                     takeTurn();
                     _moved = false;
@@ -73,7 +71,8 @@ class Game {
                         }
                     } else {
                         // if white is auto
-//                        move = _white.myMove();
+                        move = _white.myMove(null);
+                        _moved = true;
                     }
                 } else if (_whoseMove.equals(BLACK)) {
                     // if its black turn
@@ -87,13 +86,17 @@ class Game {
                             _moved = true;
                         }
                     } else {
-                        // if black is auto
-//                        move = _black.myMove();
+//                        // if black is auto
+                        move = _black.myMove(null);
+                        _moved = true;
                     }
                 }
 
                 if (_state == PLAYING) {
+                    // FIXME
+//                    System.out.println(_board);
                     _board.makeMove(move);
+
                 }
 
                 if (_moved) {

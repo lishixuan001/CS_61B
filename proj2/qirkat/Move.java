@@ -411,4 +411,17 @@ class Move {
     /** All possible rows. */
     private final List<Character> _rows =
             Arrays.asList('1', '2', '3', '4', '5');
+
+    /** Give the move a score. */
+    private int _score;
+
+    /** Get the score. */
+    public int score() {
+        return _score;
+    }
+
+    /** Set the score. */
+    public void setScore(int k) {
+        _score = k;
+    }
 }

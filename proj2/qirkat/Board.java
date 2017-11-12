@@ -180,15 +180,11 @@ class Board extends Observable {
         }
         if (jumpPossible()) {
             for (int k = 0; k <= MAX_INDEX; k += 1) {
-                HashMap<Integer, PieceColor> record = pieces();
                 getJumps(moves, k);
-                _pieces = record;
             }
         } else {
             for (int k = 0; k <= MAX_INDEX; k += 1) {
-                HashMap<Integer, PieceColor> record = pieces();
                 getMoves(moves, k);
-                _pieces = record;
             }
         }
     }
@@ -296,6 +292,10 @@ class Board extends Observable {
         }
         // end empty
         if (pieces.get(k1).isPiece()) {
+            return false;
+        }
+        // diagonal check
+        if (k0 % 2 == 1 && k1 % 2 == 1 && km % 2 == 1) {
             return false;
         }
         return true;
@@ -447,49 +447,91 @@ class Board extends Observable {
      *  linearized index K. */
     boolean jumpPossible(int k) {
         if (!validSquare(k)
-                || !_pieces.get(k).isPiece()
-                || !(k % 2 == 0)) {
+                || !_pieces.get(k).isPiece()) {
             return false;
         }
-        int l, r, u, d, lu, ld, ru, rd;
-        List<Integer> lst1 = new ArrayList<>();
-        List<Integer> lst2 = new ArrayList<>();
-        l = k - 1;
-        r = k + 1;
-        u = k - 5;
-        d = k + 5;
-        lu = u - 1;
-        ld = d - 1;
-        ru = u + 1;
-        rd = d + 1;
-        lst1.add(0, l);
-        lst1.add(1, u);
-        lst1.add(2, lu);
-        lst1.add(3, ld);
-        lst2.add(0, r);
-        lst2.add(1, d);
-        lst2.add(2, rd);
-        lst2.add(3, ru);
-        for (int i = 0; i < lst1.size(); i++) {
-            int first = lst1.get(i);
-            int second = lst2.get(i);
-            if (validSquare(first) && validSquare(second)) {
-                boolean condition1 =
-                        (_pieces.get(first).isPiece()
-                                && _pieces.get(first) != EMPTY)
-                                && _pieces.get(second) == EMPTY;
-                boolean condition2 =
-                        (_pieces.get(second).isPiece()
-                                || _pieces.get(second) != EMPTY)
-                                && _pieces.get(first) == EMPTY;
-                if (condition1) {
-                    if (_pieces.get(first).opposite() == _pieces.get(k)) {
-                        return true;
-                    }
-                } else if (condition2) {
-                    if (_pieces.get(second).opposite() == _pieces.get(k)) {
-                        return true;
-                    }
+        char col0 = col(k);
+        char row0 = row(k);
+        int intcol = _axisIndex.get(col0);
+        int introw = _axisIndex.get(row0);
+
+        int lintcol = intcol - 1;
+        int luintcol = intcol - 1;
+        int ldintcol = intcol - 1;
+        int lintrow = introw;
+        int luintrow = introw + 1;
+        int ldintrow = introw - 1;
+
+        int uintcol = intcol;
+        int dintcol = intcol;
+        int uintrow = introw + 1;
+        int dintrow = introw - 1;
+
+        int rintcol = intcol + 1;
+        int ruintcol = intcol + 1;
+        int rdintcol = intcol + 1;
+        int rintrow = introw;
+        int ruintrow = introw + 1;
+        int rdintrow = introw - 1;
+
+        // left and right
+        if (validPiece(lintcol, lintrow) && validPiece(rintcol, rintrow)) {
+            char lcol = _colIndex.get(lintcol);
+            char rcol = _colIndex.get(rintcol);
+            char lrow = _rowIndex.get(lintrow);
+            char rrow = _rowIndex.get(rintrow);
+            int l = index(lcol, lrow);
+            int r = index(rcol, rrow);
+            boolean con1 = _pieces.get(l).isPiece() && _pieces.get(l).opposite().equals(_pieces.get(k)) && !_pieces.get(r).isPiece();
+            boolean con2 = _pieces.get(r).isPiece() && _pieces.get(r).opposite().equals(_pieces.get(k)) && !_pieces.get(l).isPiece();
+            if (con1 || con2) {
+                return true;
+            }
+        }
+
+        // up and down
+        if (validPiece(uintcol, uintrow) && validPiece(dintcol, dintrow)) {
+            char ucol = _colIndex.get(uintcol);
+            char dcol = _colIndex.get(dintcol);
+            char urow = _rowIndex.get(uintrow);
+            char drow = _rowIndex.get(dintrow);
+            int u = index(ucol, urow);
+            int d = index(dcol, drow);
+            boolean con1 = _pieces.get(u).isPiece() && _pieces.get(u).opposite().equals(_pieces.get(k)) && !_pieces.get(d).isPiece();
+            boolean con2 = _pieces.get(d).isPiece() && _pieces.get(d).opposite().equals(_pieces.get(k)) && !_pieces.get(u).isPiece();
+            if (con1 || con2) {
+                return true;
+            }
+        }
+
+        if (k % 2 == 0) {
+            // lu and rd
+            if (validPiece(luintcol, luintrow) && validPiece(rdintcol, rdintrow)) {
+                char lucol = _colIndex.get(luintcol);
+                char rdcol = _colIndex.get(rdintcol);
+                char lurow = _rowIndex.get(luintrow);
+                char rdrow = _rowIndex.get(rdintrow);
+                int lu = index(lucol, lurow);
+                int rd = index(rdcol, rdrow);
+                boolean con1 = _pieces.get(lu).isPiece() &&  _pieces.get(lu).opposite().equals(_pieces.get(k)) && !_pieces.get(rd).isPiece();
+                boolean con2 = _pieces.get(rd).isPiece() && _pieces.get(rd).opposite().equals(_pieces.get(k)) && !_pieces.get(lu).isPiece();
+                if (con1 || con2) {
+                    return true;
+                }
+            }
+
+            // ld and ru
+            if (validPiece(ruintcol, ruintrow) && validPiece(ldintcol, ldintrow)) {
+                char rucol = _colIndex.get(ruintcol);
+                char ldcol = _colIndex.get(ldintcol);
+                char rurow = _rowIndex.get(ruintrow);
+                char ldrow = _rowIndex.get(ldintrow);
+                int ru = index(rucol, rurow);
+                int ld = index(ldcol, ldrow);
+                boolean con1 = _pieces.get(ru).isPiece() && _pieces.get(ru).opposite().equals(_pieces.get(k)) && !_pieces.get(ld).isPiece();
+                boolean con2 = _pieces.get(ld).isPiece() && _pieces.get(ld).opposite().equals(_pieces.get(k)) && !_pieces.get(ru).isPiece();
+                if (con1 || con2) {
+                    return true;
                 }
             }
         }
@@ -557,7 +599,8 @@ class Board extends Observable {
             return;
         }
 
-        boardList.add(board());
+//        System.out.println(reverseBoard());
+        boardList.add(reverseBoard());
         while (mov != null) {
             int position0 = mov.fromIndex();
             int position1 = mov.toIndex();
@@ -618,6 +661,17 @@ class Board extends Observable {
         }
     }
 
+    /** Get moves for current player. */
+    public ArrayList<Move> getMyMoves(ArrayList<Move> moves, PieceColor player) {
+        ArrayList<Move> result = new ArrayList<>();
+        for (Move mov : moves) {
+            if (moveBy(mov).equals(player)) {
+                result.add(mov);
+            }
+        }
+        return result;
+    }
+
     /** Determine move by. */
     private PieceColor moveBy(Move mov) {
         int k0 = mov.fromIndex();
@@ -641,7 +695,7 @@ class Board extends Observable {
     /** Undo the last move, if any. */
     void undo() {
         String string = boardList.get(boardList.size() - 1);
-        setPieces(string, WHITE);
+        setPieces(string, whoseMove().opposite());
         boardList.remove(boardList.size() - 1);
 
         setChanged();
@@ -820,7 +874,7 @@ class Board extends Observable {
     private String _state;
 
     /** Added by Wayne, winner. */
-    private PieceColor _winner;
+    private PieceColor _winner = EMPTY;
 
     /** Added by Wayne, show winner. */
     public PieceColor winner() {
@@ -859,6 +913,53 @@ class Board extends Observable {
         _board = string.toString();
         return _board;
     }
+
+    /** Reversed board. */
+    private String reverseBoard() {
+        StringBuilder string = new StringBuilder();
+        for (int key = 0 * SIDE; key < 1 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 1 * SIDE; key < 2 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 2 * SIDE; key < 3 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 3 * SIDE; key < 4 * SIDE; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        for (int key = 4 * SIDE; key <= MAX_INDEX; key++) {
+            PieceColor piece = _pieces.get(key);
+            String name = piece.shortName();
+            string.append(name);
+        }
+        return string.toString();
+    }
+
+//    /** Return a heuristic value for BOARD. */
+//    public int staticScore() {
+//        String string = board();
+//        int black = 0;
+//        int white = 0;
+//        for (int i = 0; i < string.length(); i++) {
+//            char piece = string.charAt(i);
+//            if (piece == 'b') {
+//                black += 1;
+//            } else if (piece == 'w') {
+//                white += 1;
+//            }
+//        }
+//        return white - black;
+//    }
 
     /** Added by Wayne, variable showing board map. */
     private String _board;
