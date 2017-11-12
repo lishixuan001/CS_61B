@@ -618,7 +618,6 @@ class Board extends Observable {
                 removePiece(jumped);
                 _movedNotJumped = new ArrayList<>();
             } else {
-
                 if (!_movedNotJumped.contains(position1) && legalMove(mov)) {
                     PieceColor type0 = _pieces.get(position0);
                     insertPiece(position1, type0);

@@ -77,11 +77,9 @@ class AI extends Player {
         Move best = null;
         int bestScore = -INFTY;
 
-        // check gameover
         board.checkGameOver();
         PieceColor winner = board.winner();
 
-        // condition gameover | depth
         if (depth == 0 || winner.isPiece()) {
             Board next = new Board(board);
             return flatMax(next, alpha, beta);
@@ -90,11 +88,15 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
+
+        // FIXME
+        myMoves = filter(myMoves);
+
         for (Move mov : myMoves) {
             Board next = new Board(board);
             next.makeMove(mov);
             int response = findMin(next, depth - 1, alpha, beta);
-            // FIXME
+
             next.undo();
             if (response >= bestScore) {
                 best = mov;
@@ -115,11 +117,9 @@ class AI extends Player {
         Move best = null;
         int bestScore = INFTY;
 
-        // check gameover
         board.checkGameOver();
         PieceColor winner = board.winner();
 
-        // condition gameover | depth
         if (depth == 0 || winner.isPiece()) {
             Board next = new Board(board);
             return flatMin(next, alpha, beta);
@@ -128,11 +128,14 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
+
+        // FIXME
+        myMoves = filter(myMoves);
+
         for (Move mov : myMoves) {
             Board next = new Board(board);
             next.makeMove(mov);
             int response = findMax(next, depth - 1, alpha, beta);
-            // FIXME
             next.undo();
             if (response <= bestScore) {
                 best = mov;
@@ -158,25 +161,24 @@ class AI extends Player {
         int bestScore = -INFTY;
 
         if (winner.isPiece()) {
-            // if someone winning
             if (winner.equals(WHITE)) {
-                // white win -> max score
                 bestScore = INFTY;
             } else if (winner.equals(BLACK)) {
-                // black win -> min score
                 bestScore = -INFTY;
             }
             return bestScore;
         }
-        // continue finding a around;
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
+
+        // FIXME
+        myMoves = filter(myMoves);
+
         for (Move mv : myMoves) {
             Board bd = new Board(board);
             bd.makeMove(mv);
             int score = staticScore(bd);
-            // FIXME
             bd.undo();
             if (score >= bestScore) {
                 best = mv;
@@ -193,32 +195,32 @@ class AI extends Player {
 
     /** Last condition for finding maximized possible move/jump. */
     private int flatMin(Board board, int alpha, int beta) {
-        // check gameover
+
         board.checkGameOver();
         PieceColor winner = board.winner();
         Move best = null;
         int bestScore = INFTY;
 
         if (winner.isPiece()) {
-            // if someone winning
             if (winner.equals(WHITE)) {
-                // white win -> max score
                 bestScore = INFTY;
             } else if (winner.equals(BLACK)) {
-                // black win -> min score
                 bestScore = -INFTY;
             }
             return bestScore;
         }
-        // continue finding a around;
+
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
+
+        // FIXME
+        myMoves = filter(myMoves);
+
         for (Move mv : myMoves) {
             Board bd = new Board(board);
             bd.makeMove(mv);
             int score = staticScore(bd);
-            // FIXME
             bd.undo();
             if (score <= bestScore) {
                 best = mv;
@@ -247,5 +249,35 @@ class AI extends Player {
             }
         }
         return white - black;
+    }
+
+    /** Filter the moves. */
+    private ArrayList<Move> filter(ArrayList<Move> moves) {
+        ArrayList<Move> result = new ArrayList<>();
+        Move first = null;
+        Move second = null;
+        for (Move mov : moves) {
+            int s = mov.length();
+            if (first == null) {
+                first = mov;
+            } else if (second == null) {
+                second = mov;
+            } else {
+                if (s >= first.length()) {
+                    Move temp = first;
+                    first = mov;
+                    second = temp;
+                } else if (s >= second.length()) {
+                    second = mov;
+                }
+            }
+        }
+        if (first != null) {
+            result.add(first);
+        }
+        if (second != null) {
+            result.add(second);
+        }
+        return result;
     }
 }

@@ -420,6 +420,19 @@ class Move {
         return _score;
     }
 
+    /** Length of the move. */
+    public int length() {
+        int count = 0;
+        String string = this.toString();
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (c == '-') {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
     /** Set the score. */
     public void setScore(int k) {
         _score = k;
