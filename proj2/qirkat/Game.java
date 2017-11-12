@@ -4,6 +4,8 @@ package qirkat;
 
 import graph.B;
 
+import java.io.File;
+import java.io.Reader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -56,6 +58,9 @@ class Game {
             while (_state != SETUP && !_board.gameOver()) {
 
                 _board.checkGameOver();
+                if (_board.winner().isPiece()) {
+                    break;
+                }
                 Move move = null;
 
                 if (_whoseMove.equals(WHITE)) {
@@ -226,8 +231,15 @@ class Game {
     /** Perform the command 'load OPERANDS[0]'. */
     void doLoad(String[] operands) {
         try {
-            FileReader reader = new FileReader(operands[0]);
-            // FIXME
+//            FileReader reader = new FileReader(operands[0]);
+            File file = new File(operands[0]);
+            Reader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                Command cmnd = Command.parseCommand(line);
+                _commands.get(cmnd.commandType()).accept(cmnd.operands());
+            }
         } catch (IOException e) {
             throw error("Cannot open file %s", operands[0]);
         }

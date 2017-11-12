@@ -609,6 +609,7 @@ class Board extends Observable {
     }
 
     /** Make the Move MOV on this Board, assuming it is legal. */
+    @SuppressWarnings("unchecked")
     void makeMove(Move mov) {
 
         if (mov == null) {
@@ -644,7 +645,7 @@ class Board extends Observable {
             mov = mov.jumpTail();
         }
 
-        System.out.println(toString());
+//        System.out.println(toString());
 
         // Change player
         takeTurn();
