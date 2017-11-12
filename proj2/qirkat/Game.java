@@ -84,7 +84,7 @@ class Game {
                 }
                 if (_state == PLAYING) {
                     _board.makeMove(move);
-
+                    System.out.println(_board.toString());
                 }
                 if (_moved) {
                     takeTurn();
@@ -263,8 +263,10 @@ class Game {
         String string = operands[0].toUpperCase();
         if (string.equals("WHITE")) {
             _board.setPieces(operands[1], WHITE);
+            _whoseMove = WHITE;
         } else if (string.equals("BLACK")) {
             _board.setPieces(operands[1], BLACK);
+            _whoseMove = BLACK;
         } else {
             throw new Error("Wrong Input for 'doSet'.'");
         }

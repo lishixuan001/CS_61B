@@ -1,6 +1,7 @@
 package qirkat;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static qirkat.PieceColor.*;
 
@@ -90,7 +91,12 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
-
+        if (myMoves.isEmpty()) {
+            if (board.jumpPossible()) {
+                moves = board.getJustMoves();
+                myMoves = board.getMyMoves(moves, currentPlayer);
+            }
+        }
         myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
@@ -134,7 +140,12 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
-
+        if (myMoves.isEmpty()) {
+            if (board.jumpPossible()) {
+                moves = board.getJustMoves();
+                myMoves = board.getMyMoves(moves, currentPlayer);
+            }
+        }
         myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
@@ -179,7 +190,12 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
-
+        if (myMoves.isEmpty()) {
+            if (board.jumpPossible()) {
+                moves = board.getJustMoves();
+                myMoves = board.getMyMoves(moves, currentPlayer);
+            }
+        }
         myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {
@@ -224,7 +240,12 @@ class AI extends Player {
         ArrayList<Move> moves = board.getMoves();
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
-
+        if (myMoves.isEmpty()) {
+            if (board.jumpPossible()) {
+                moves = board.getJustMoves();
+                myMoves = board.getMyMoves(moves, currentPlayer);
+            }
+        }
         myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {

@@ -204,6 +204,16 @@ class Board extends Observable {
         }
     }
 
+    /** Just get moves, not jumps.
+     * @return */
+    ArrayList<Move> getJustMoves() {
+        ArrayList<Move> moves = new ArrayList<>();
+        for (int k = 0; k <= MAX_INDEX; k += 1) {
+            getMoves(moves, k);
+        }
+        return moves;
+    }
+
     /** Add all legal capturing moves from the position
      *  with linearized index K to MOVES. */
     private void getJumps(ArrayList<Move> moves, int k) {
@@ -667,7 +677,6 @@ class Board extends Observable {
             }
             mov = mov.jumpTail();
         }
-
         takeTurn();
 
         setChanged();
@@ -689,6 +698,14 @@ class Board extends Observable {
                     return;
                 }
             }
+            if (jumpPossible()) {
+                List<Move> movs = getJustMoves();
+                for (Move mv : movs) {
+                    if (moveBy(mv).equals(WHITE)) {
+                        return;
+                    }
+                }
+            }
             _gameOver = true;
             _winner = BLACK;
             return;
@@ -696,6 +713,14 @@ class Board extends Observable {
             for (Move mov : moves) {
                 if (moveBy(mov).equals(BLACK)) {
                     return;
+                }
+            }
+            if (jumpPossible()) {
+                List<Move> movs = getJustMoves();
+                for (Move mv : movs) {
+                    if (moveBy(mv).equals(BLACK)) {
+                        return;
+                    }
                 }
             }
             _gameOver = true;
