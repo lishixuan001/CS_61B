@@ -48,6 +48,7 @@ class Board extends Observable {
         setPieces(INIT_PIECES, WHITE);
         _board = board();
         _state = "set_up";
+        _movedNotJumped = new ArrayList<>();
 
         setChanged();
         notifyObservers();
@@ -105,6 +106,7 @@ class Board extends Observable {
         }
 
         _whoseMove = nextMove;
+        _movedNotJumped = new ArrayList<>();
 
         setChanged();
         notifyObservers();
