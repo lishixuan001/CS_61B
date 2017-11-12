@@ -618,15 +618,23 @@ class Board extends Observable {
                 removePiece(jumped);
                 _movedNotJumped = new ArrayList<>();
             } else {
-                if (!_movedNotJumped.contains(position1) && legalMove(mov)) {
+                List pair = new ArrayList();
+                pair.add(position0);
+                pair.add(position1);
+                if (!_movedNotJumped.contains(pair) && legalMove(mov)) {
                     PieceColor type0 = _pieces.get(position0);
                     insertPiece(position1, type0);
                     removePiece(position0);
-                    _movedNotJumped.add(position0);
+                    List newpair = new ArrayList();
+                    newpair.add(position1);
+                    newpair.add(position0);
+                    _movedNotJumped.add(newpair);
                 }
             }
             mov = mov.jumpTail();
         }
+
+        System.out.println(toString());
 
         // Change player
         takeTurn();
@@ -636,7 +644,7 @@ class Board extends Observable {
     }
 
     /** Record not-retrievable move targets. */
-    private List<Integer> _movedNotJumped = new ArrayList<>();
+    private List<List> _movedNotJumped = new ArrayList<>();
 
     /** checkGameOver. */
     public void checkGameOver() {
