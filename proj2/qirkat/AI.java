@@ -91,7 +91,7 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-
+        myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
             Board next = new Board(board);
@@ -135,7 +135,7 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-
+        myMoves = filter(myMoves);
 
         for (Move mov : myMoves) {
             Board next = new Board(board);
@@ -180,7 +180,7 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-
+        myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {
             Board bd = new Board(board);
@@ -225,7 +225,7 @@ class AI extends Player {
         PieceColor currentPlayer = board.whoseMove();
         ArrayList<Move> myMoves = board.getMyMoves(moves, currentPlayer);
 
-
+        myMoves = filter(myMoves);
 
         for (Move mv : myMoves) {
             Board bd = new Board(board);
