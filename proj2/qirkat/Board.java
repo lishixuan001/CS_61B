@@ -169,6 +169,16 @@ class Board extends Observable {
         if (start % 2 == 1 && destination % 2 == 1) {
             return false;
         }
+        // reach end cannot move
+        if (_pieces.get(start).equals(WHITE)) {
+            if (start >= 4 * SIDE && start <= MAX_INDEX) {
+                return false;
+            }
+        } else if (_pieces.get(start).equals(BLACK)) {
+            if (start >= 0 && start < SIDE) {
+                return false;
+            }
+        }
         return true;
     }
 
