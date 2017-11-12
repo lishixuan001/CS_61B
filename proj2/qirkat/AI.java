@@ -287,9 +287,6 @@ class AI extends Player {
         if (first != null) {
             result.add(first);
         }
-        if (second != null) {
-            result.add(second);
-        }
         return result;
     }
 }
