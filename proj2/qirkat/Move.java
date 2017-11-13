@@ -76,9 +76,11 @@ class Move {
         }
         _staged.set(col0, row0, col1, row1, nextJump);
         if (_staged.isJump() && nextJump != null && !nextJump.isJump()) {
-            throw new IllegalArgumentException("bad jump");
+//            throw new IllegalArgumentException("bad jump");
+            return null;
         } else if (!_staged.isJump() && nextJump != null) {
-            throw new IllegalArgumentException("bad jump");
+//            throw new IllegalArgumentException("bad jump");
+            return null;
         }
         Move result = _internedMoves.computeIfAbsent(_staged, IDENTITY);
         if (result == _staged) {
@@ -141,24 +143,6 @@ class Move {
         assert 0 <= k && k <= MAX_INDEX;
         return k;
     }
-
-    /** Added by Wayne, change Left & Right.
-     * @param i -- input 'i'
-     * @return */
-    static int changeLeftRight(int i) {
-        int k = i;
-        if (i == 0 || i % SIDE == 0) {
-            k = i + 4;
-        } else if ((i + 4) % SIDE == 0) {
-            k = i + 2;
-        } else if ((i + 2) % SIDE == 0) {
-            k = i - 2;
-        } else if ((i + 1) % SIDE == 0) {
-            k = i - 4;
-        }
-        return k;
-    }
-
 
     /** Return the column letter of linearized index K. */
     static char col(int k) {
@@ -225,7 +209,7 @@ class Move {
 
     /** For a jump, returns the row of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as row1(). */
-    char jumpedRow() {
+    private char jumpedRow() {
         if (isJump()) {
             for (char row : _rows) {
                 boolean condition1 = row < _row1 && row > _row0;
@@ -242,7 +226,7 @@ class Move {
 
     /** For a jump, returns the column of the jumped-over square for the
      *  first leg of the jump.  For a non-capturing move, same as col1(). */
-    char jumpedCol() {
+    private char jumpedCol() {
         if (isJump()) {
             for (char col : _columns) {
                 boolean condition1 = col < _col1 && col > _col0;
@@ -314,13 +298,14 @@ class Move {
             end = mat.end(2);
         }
         if (result == null) {
-            throw new IllegalArgumentException("bad move denotation");
+//            throw new IllegalArgumentException("bad move denotation");
+            System.out.println("Illegal Move!");
+            return null;
         }
         return result;
     }
 
-    /** Added by Wayne, check if the 'Move' stays.
-     * @return */
+    /** Added by Wayne, check if the 'Move' stays. */
     private boolean isStay() {
         return _row0 == _row1 && _col0 == _col1;
     }
@@ -412,9 +397,9 @@ class Move {
     private final List<Character> _rows =
             Arrays.asList('1', '2', '3', '4', '5');
 
-    /** Length of the move.
-     * @return */
-    public int length() {
+    /** Length of the move .
+     * @return --move steps conuts*/
+    int length() {
         int count = 0;
         String string = this.toString();
         for (int i = 0; i < string.length(); i++) {

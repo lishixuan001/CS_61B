@@ -1,6 +1,6 @@
 package qirkat;
 
-/* Author: P. N. Hilfinger */
+import graph.B;
 
 import java.io.File;
 import java.io.Reader;
@@ -19,7 +19,7 @@ import static qirkat.Command.Type.*;
 import static qirkat.GameException.error;
 
 /** Controls the play of the game.
- *  @author Shixuan (Wayne) Li [import graph.B;]
+ *  @author Shixuan (Wayne) Li
  */
 class Game {
 
@@ -41,6 +41,7 @@ class Game {
     void process() {
         doClear(null);
         while (true) {
+            // SetUp state, free moves
             while (_state == SETUP) {
                 doCommand();
                 if (_moved) {
@@ -48,15 +49,28 @@ class Game {
                     _moved = false;
                 }
             }
+
+            // Start the game by checking gameOver
             _board.checkGameOver();
+            System.out.println(_board.toString());
+
+            // Start state
             while (_state != SETUP && !_board.gameOver()) {
+
+                // Check gameOver
                 _board.checkGameOver();
-                if (_board.winner().isPiece()) {
+                if (_board.winner().isPiece() || _board.tieGame()) {
                     break;
                 }
+
+                // Get move from Player
                 Move move = null;
                 if (_whoseMove.equals(WHITE)) {
+
+                    // If White Player
                     if (_whiteIsManual) {
+
+                        // If Manual, get Command
                         Command cmnd = getMoveCmnd(_white.myPrompt());
                         if (cmnd == null) {
                             _moved = false;
@@ -65,11 +79,17 @@ class Game {
                             _moved = true;
                         }
                     } else {
+
+                        // If auto, get move
                         move = _white.myMove(null);
                         _moved = true;
                     }
                 } else if (_whoseMove.equals(BLACK)) {
+
+                    // If Black Player
                     if (_blackIsManual) {
+
+                        // If Manual, get Command
                         Command cmnd = getMoveCmnd(_black.myPrompt());
                         if (cmnd == null) {
                             _moved = false;
@@ -78,23 +98,46 @@ class Game {
                             _moved = true;
                         }
                     } else {
+
+                        // If auto, get move
                         move = _black.myMove(null);
                         _moved = true;
                     }
                 }
+
+                // Make the move, and show the map
                 if (_state == PLAYING) {
-                    _board.makeMove(move);
-                    _board.addWalkedPath(move);
-                    System.out.println(_board.toString());
+
+                    // Check if move piece of current player's
+                    if (!_board.checkMoveMyPiece(move)) {
+                        _moved = false;
+                        System.out.println("Note! Please move your own piece!");
+                    }
+
+                    // Check if illegal move
+                    if (!(_board.isLegalMove(move) || _board.isLegalJump(move))) {
+                        _moved = false;
+                        System.out.println("Note! Illegal Move!");
+                    } else {
+                        _board.makeMove(move);
+                        System.out.println(_board.toString());
+                    }
                 }
+
+                // If a move is made, takeTurn
                 if (_moved) {
+
                     takeTurn();
                     _moved = false;
                 }
             }
+
+            // If gameOver, report Winner
             if (_state == PLAYING) {
                 reportWinner();
             }
+
+            // Get state back to SetUp
             _state = SETUP;
         }
     }
@@ -107,8 +150,10 @@ class Game {
     /** Perform the next command from our input source. */
     void doCommand() {
         try {
+            // Get command from Player
             Command cmnd =
                 Command.parseCommand(_inputs.getLine("qirkat: "));
+            // Acknowledge and run command
             _commands.get(cmnd.commandType()).accept(cmnd.operands());
         } catch (GameException excp) {
             _reporter.errMsg(excp.getMessage());
@@ -121,9 +166,12 @@ class Game {
      *  of playing mode. If appropriate to the current input source, use
      *  PROMPT to prompt for input. */
     Command getMoveCmnd(String prompt) {
+        // Work for getting command from user, when started game
         while (_state == PLAYING) {
             try {
+                // Get command from Player
                 Command cmnd = Command.parseCommand(_inputs.getLine(prompt));
+                // Acknowledge command type and run
                 switch (cmnd.commandType()) {
                 case PIECEMOVE:
                     return cmnd;
@@ -154,9 +202,27 @@ class Game {
         _reporter.errMsg(format, args);
     }
 
-    /** Perform the command 'auto OPERANDS[0]'. */
-    void doAuto(String[] operands) {
+    /** Perform the command 'clear'. */
+    void doClear(String[] unused) {
+        // Clear the game
         _state = SETUP;
+        _whiteIsManual = true;
+        _blackIsManual = false;
+        _whoseMove = WHITE;
+        _moved = false;
+        _board.clear();
+        _winner = null;
+        _constBoard = _board.constantView();
+        _white = new Manual(this, WHITE);
+        _black = new AI(this, BLACK);
+    }
+
+    /** Set some Player to Manual mode.
+     * Perform the command 'auto OPERANDS[0]'. */
+    void doAuto(String[] operands) {
+        // Keep game state to SetUp
+        _state = SETUP;
+        // Get Player name
         String player = operands[0].toUpperCase();
 
         if (player.equals("WHITE")) {
@@ -171,61 +237,12 @@ class Game {
         }
     }
 
-    /** Perform the command 'clear'. */
-    void doClear(String[] unused) {
-        _state = SETUP;
-        _white = new Manual(this, WHITE);
-        _whiteIsManual = true;
-        _black = new AI(this, BLACK);
-        _blackIsManual = false;
-        _whoseMove = WHITE;
-        _moved = false;
-        _board.clear();
-    }
-
-    /** Perform a 'help' command. */
-    void doHelp(String[] unused) {
-        InputStream helpIn =
-            Game.class.getClassLoader().getResourceAsStream("qirkat/help.txt");
-        if (helpIn == null) {
-            System.err.println("No help available.");
-        } else {
-            try {
-                BufferedReader r
-                    = new BufferedReader(new InputStreamReader(helpIn));
-                while (true) {
-                    String line = r.readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    System.out.println(line);
-                }
-                r.close();
-            } catch (IOException e) {
-                return;
-            }
-        }
-    }
-
-    /** Perform the command 'load OPERANDS[0]'. */
-    void doLoad(String[] operands) {
-        try {
-            File file = new File(operands[0]);
-            Reader reader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(reader);
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                Command cmnd = Command.parseCommand(line);
-                _commands.get(cmnd.commandType()).accept(cmnd.operands());
-            }
-        } catch (IOException e) {
-            throw error("Cannot open file %s", operands[0]);
-        }
-    }
-
-    /** Perform the command 'manual OPERANDS[0]'. */
+    /** Set some Player to Manual mode.
+     * Perform the command 'manual OPERANDS[0]'. */
     void doManual(String[] operands) {
+        // Keep game state in SetUp
         _state = SETUP;
+        // Get Player name
         String player = operands[0].toUpperCase();
 
         if (player.equals("WHITE")) {
@@ -240,18 +257,16 @@ class Game {
         }
     }
 
-    /** Exit the program. */
-    void doQuit(String[] unused) {
-        Main.reportTotalTimes();
-        System.exit(0);
+    /** Print the game map.
+     * Perform the command 'dump'. */
+    void doDump(String[] unused) {
+        System.out.println("===");
+        System.out.println(_board.toString());
+        System.out.println("===");
     }
 
-    /** Perform the command 'start'. */
-    void doStart(String[] unused) {
-        _state = PLAYING;
-    }
-
-    /** Perform the move OPERANDS[0]. */
+    /** Works only in SetUp state, make moves.
+     * Perform the move OPERANDS[0]. */
     void doMove(String[] operands) {
         String string = operands[0];
         Move mov = Move.parseMove(string);
@@ -259,8 +274,14 @@ class Game {
         _moved = true;
     }
 
-    /** Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
+    /** Set the game map. "set white ----- ---w- ---b- ---bb --w--"
+     * Perform the command 'set OPERANDS[0] OPERANDS[1]'. */
     void doSet(String[] operands) {
+
+        // first clear, set back all parameters
+        _board.clear();
+
+        // then do setting
         String string = operands[0].toUpperCase();
         if (string.equals("WHITE")) {
             _board.setPieces(operands[1], WHITE);
@@ -273,11 +294,35 @@ class Game {
         }
     }
 
-    /** Perform the command 'dump'. */
-    void doDump(String[] unused) {
-        System.out.println("===");
-        System.out.println(_board.toString());
-        System.out.println("===");
+    /** Run commands in the file.
+     * Perform the command 'load OPERANDS[0]'. */
+    void doLoad(String[] operands) {
+        try {
+            // Read the file and get commands
+            File file = new File(operands[0]);
+            Reader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            String line;
+            // Run each command
+            while ((line = bufferedReader.readLine()) != null) {
+                Command cmnd = Command.parseCommand(line);
+                _commands.get(cmnd.commandType()).accept(cmnd.operands());
+            }
+        } catch (IOException e) {
+            throw error("Cannot open file %s", operands[0]);
+        }
+    }
+
+    /** Start the game.
+     * Perform the command 'start'. */
+    void doStart(String[] unused) {
+        _state = PLAYING;
+    }
+
+    /** Exit the program. */
+    void doQuit(String[] unused) {
+        Main.reportTotalTimes();
+        System.exit(0);
     }
 
     /** Execute 'seed OPERANDS[0]' command, where the operand is a string
@@ -291,23 +336,53 @@ class Game {
         }
     }
 
+    /** Perform a 'help' command. */
+    void doHelp(String[] unused) {
+        InputStream helpIn =
+                Game.class.getClassLoader().getResourceAsStream("qirkat/help.txt");
+        if (helpIn == null) {
+            System.err.println("No help available.");
+        } else {
+            try {
+                BufferedReader r
+                        = new BufferedReader(new InputStreamReader(helpIn));
+                while (true) {
+                    String line = r.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    System.out.println(line);
+                }
+                r.close();
+            } catch (IOException e) {
+                return;
+            }
+        }
+    }
+
     /** Execute the artificial 'error' command. */
     void doError(String[] unused) {
         throw error("Command not understood");
     }
 
-    /** Report the outcome of the current game. */
+    /** Report "White wins." or "Black wins."
+     * Report the outcome of the current game. */
     void reportWinner() {
         StringBuilder msg = new StringBuilder();
-        String winner = "";
-        _winner = _board.winner();
-        if (_winner.equals(WHITE)) {
-            winner = "White";
-        } else if (_winner.equals(BLACK)) {
-            winner = "Black";
+
+        if (!_board.tieGame()) {
+            String winner = "";
+            _winner = _board.winner();
+            if (_winner.equals(WHITE)) {
+                winner = "White";
+            } else if (_winner.equals(BLACK)) {
+                winner = "Black";
+            }
+            msg.append(winner);
+            msg.append(" wins.");
+        } else {
+            msg.append("Tie Game.");
         }
-        msg.append(winner);
-        msg.append(" wins.");
 
         _reporter.outcomeMsg(msg.toString());
     }
@@ -336,12 +411,16 @@ class Game {
 
     /** My board and its read-only view. */
     private Board _board, _constBoard;
+
     /** Indicate which players are manual players (as opposed to AIs). */
     private boolean _whiteIsManual, _blackIsManual;
+
     /** Current game state. */
     private State _state;
+
     /** Used to send messages to the user. */
     private Reporter _reporter;
+
     /** Source of pseudo-random numbers (used by AIs). */
     private Random _randoms = new Random();
 

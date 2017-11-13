@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Observer;
 
-
 import static qirkat.PieceColor.*;
 import static qirkat.Move.*;
 
@@ -44,11 +43,13 @@ class Board extends Observable {
     void clear() {
         _whoseMove = WHITE;
         _gameOver = false;
-
+        boardList = new ArrayList<>();
         setPieces(INIT_PIECES, WHITE);
         _board = board();
         _state = "set_up";
+        _winner = EMPTY;
         _movedNotJumped = new ArrayList<>();
+        _tieGame = false;
 
         setChanged();
         notifyObservers();
@@ -68,6 +69,7 @@ class Board extends Observable {
         _whoseMove = b.whoseMove();
         _gameOver = b.gameOver();
         _movedNotJumped = b._movedNotJumped;
+        _winner = b.winner();
 
         setChanged();
         notifyObservers();
@@ -145,43 +147,6 @@ class Board extends Observable {
         _pieces.put(k, v);
     }
 
-    /** Return true iff MOV is legal on the current board. */
-    boolean legalMove(Move mov) {
-        char col0 = mov.col0();
-        char col1 = mov.col1();
-        char row0 = mov.row0();
-        char row1 = mov.row1();
-        int start = index(col0, row0);
-        int destination = index(col1, row1);
-
-        if (!validSquare(start) || !validSquare(destination)) {
-            return false;
-        }
-
-        if (!isDistanceUnit(col0, col1, row0, row1)) {
-            return false;
-        }
-
-        if (!isSquareEmpty(destination)) {
-            return false;
-        }
-
-        if (start % 2 == 1 && destination % 2 == 1) {
-            return false;
-        }
-
-        if (_pieces.get(start).equals(WHITE)) {
-            if (start >= 4 * SIDE && start <= MAX_INDEX) {
-                return false;
-            }
-        } else if (_pieces.get(start).equals(BLACK)) {
-            if (start >= 0 && start < SIDE) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /** Return a list of all legal moves from the current position. */
     ArrayList<Move> getMoves() {
         ArrayList<Move> result = new ArrayList<>();
@@ -206,7 +171,7 @@ class Board extends Observable {
     }
 
     /** Just get moves, not jumps.
-     * @return */
+     * @return --ArrayList with just all possible moves(no jumps) */
     ArrayList<Move> getJustMoves() {
         ArrayList<Move> moves = new ArrayList<>();
         for (int k = 0; k <= MAX_INDEX; k += 1) {
@@ -218,6 +183,7 @@ class Board extends Observable {
     /** Add all legal capturing moves from the position
      *  with linearized index K to MOVES. */
     private void getJumps(ArrayList<Move> moves, int k) {
+        // run only if piece is valid, and piece is White/Black
         if (validSquare(k) && _pieces.get(k).isPiece()) {
             char tempcol0 = col(k);
             char temprow0 = row(k);
@@ -241,20 +207,26 @@ class Board extends Observable {
         char col0 = _colIndex.get(tempcol0);
         char row0 = _rowIndex.get(temprow0);
 
+        // index to check if any around piece support possible jumps
         boolean idx = false;
 
+        // check every piece that is 2-steps away
         for (int i : rowFactors) {
             for (int j : colFactors) {
                 boolean con = i == 0 && j == 0;
                 int tempcol1 = tempcol0 + j;
                 int temprow1 = temprow0 + i;
 
+                // check if the piece is valid
                 if (!con && validPiece(tempcol1, temprow1)) {
                     char col1 = _colIndex.get(tempcol1);
                     char row1 = _rowIndex.get(temprow1);
                     int k1 = index(col1, row1);
 
+                    // check if the target piece is White/Black
                     if (!_pieces.get(k1).isPiece()) {
+
+                        // check if the two points support legal jump
                         if (isLegalJump(col0, row0, col1, row1, pieces)) {
                             idx = true;
                             Move next = move(col0, row0, col1, row1);
@@ -266,6 +238,7 @@ class Board extends Observable {
                 }
             }
         }
+        // if no around piece support legal jump, add input move(if not null)
         if (!idx) {
             if (move != null) {
                 moves.add(move);
@@ -294,7 +267,51 @@ class Board extends Observable {
         return pieces;
     }
 
-    /** If a jump is legal.
+    /** Recursively test legal Jump. */
+    boolean isLegalJump(Move mov) {
+        boolean result = true;
+        HashMap<Integer, PieceColor> pieces = new HashMap<>(_pieces);
+
+        // We need to recursively check legal jump
+        while(mov != null) {
+            char col0 = mov.col0();
+            char row0 = mov.row0();
+            char col1 = mov.col1();
+            char row1 = mov.row1();
+
+            int intcol0 = _axisIndex.get(col0);
+            int intcol1 = _axisIndex.get(col1);
+            int introw0 = _axisIndex.get(row0);
+            int introw1 = _axisIndex.get(row1);
+
+            result = result && isLegalJump(col0, row0, col1, row1, pieces);
+
+            if (result) {
+                int intmidcol = (intcol0 + intcol1) / 2;
+                int intmidrow = (introw0 + introw1) / 2;
+
+                char midcol = _colIndex.get(intmidcol);
+                char midrow = _rowIndex.get(intmidrow);
+
+                int k0 = index(col0, row0);
+                int k1 = index(col1, row1);
+                int km = index(midcol, midrow);
+
+                pieces.put(k1, pieces.get(k0));
+                pieces.put(k0, EMPTY);
+                pieces.put(km, EMPTY);
+
+                mov = mov.jumpTail();
+            } else {
+                return result;
+            }
+
+        }
+
+        return result;
+    }
+
+    /** If one jump is legal.
      * @param row1 --input
      * @param row0 --input
      * @param col1 --input
@@ -304,6 +321,7 @@ class Board extends Observable {
     private boolean isLegalJump(char col0, char row0, char col1, char row1
             , HashMap<Integer, PieceColor> pieces) {
 
+        // if start/end pieces are valid
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
             return false;
         }
@@ -313,11 +331,24 @@ class Board extends Observable {
         int introw0 = _axisIndex.get(row0);
         int introw1 = _axisIndex.get(row1);
 
+        // false if it's not a jump
         Move mov = move(col0, row0, col1, row1);
         if (!mov.isJump()) {
             return false;
         }
 
+        // check if the jump jumps over exactly one piece
+        int diffcol = Math.abs(intcol0 - intcol1);
+        int diffrow = Math.abs(introw0 - introw1);
+        boolean con1 = diffcol == 2 && diffrow == 0;
+        boolean con2 = diffcol == 0 && diffrow == 2;
+        boolean con3 = diffcol == 2 && diffrow == 2;
+        boolean condition = con1 || con2 || con3;
+        if (!condition) {
+            return false;
+        }
+
+        // false if the jumped middle piece is not valid
         int intmidcol = (intcol0 + intcol1) / 2;
         int intmidrow = (introw0 + introw1) / 2;
         if (!validPiece(intmidcol, intmidrow)) {
@@ -330,18 +361,22 @@ class Board extends Observable {
         char midrow = _rowIndex.get(intmidrow);
         int km = index(midcol, midrow);
 
+        // false if start piece is Empty
         if (!pieces.get(k0).isPiece()) {
             return false;
         }
 
+        // false if jumped piece not have opposite as start
         if (!pieces.get(k0).opposite().equals(pieces.get(km))) {
             return false;
         }
 
+        // false if end piece is not Empty
         if (pieces.get(k1).isPiece()) {
             return false;
         }
 
+        // false if illegal diagonal jump
         if (k0 % 2 == 1 && k1 % 2 == 1 && km % 2 == 1) {
             return false;
         }
@@ -417,31 +452,60 @@ class Board extends Observable {
         }
     }
 
+    /** Return true iff MOV is legal on the current board. */
+    boolean isLegalMove(Move mov) {
+        char col0 = mov.col0();
+        char col1 = mov.col1();
+        char row0 = mov.row0();
+        char row1 = mov.row1();
+        return isLegalMove(col0, row0, col1, row1, _pieces);
+    }
+
     /** If a move is legal.
      * @param row1 --input
      * @param row0 --input
      * @param col1 --input
      * @param col0 --input
      * @param pieces --input
-     * @return */
+     * @return --boolean */
     @SuppressWarnings("unchecked")
     private boolean isLegalMove(char col0, char row0, char col1, char row1
             , HashMap<Integer, PieceColor> pieces) {
 
+        // false if invalid start/end
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
             return false;
         }
 
+        // get start/end index
         int k0 = index(col0, row0);
         int k1 = index(col1, row1);
 
+        // false if start is not White/Black
         if (!pieces.get(k0).isPiece() || pieces.get(k1).isPiece()) {
             return false;
         }
 
+        int intcol0 = _axisIndex.get(col0);
+        int intcol1 = _axisIndex.get(col1);
+        int introw0 = _axisIndex.get(row0);
+        int introw1 = _axisIndex.get(row1);
+
+        // false if not move by one unit step
+        int diffcol = Math.abs(intcol0 - intcol1);
+        int diffrow = Math.abs(introw0 - introw1);
+        boolean con1 = diffcol == 1 && diffrow == 0;
+        boolean con2 = diffcol == 0 && diffrow == 1;
+        boolean con3 = diffcol == 1 && diffrow == 1;
+        boolean condition = con1 || con2 || con3;
+        if (!condition) {
+            return false;
+        }
+
+        // false if move back, or, move at very end line
         if (pieces.get(k0).equals(WHITE)) {
-            int introw0 = _axisIndex.get(row0);
-            int introw1 = _axisIndex.get(row1);
+            introw0 = _axisIndex.get(row0);
+            introw1 = _axisIndex.get(row1);
             if (introw1 < introw0) {
                 return false;
             }
@@ -450,8 +514,8 @@ class Board extends Observable {
                 return false;
             }
         } else if (pieces.get(k0).equals(BLACK)) {
-            int introw0 = _axisIndex.get(row0);
-            int introw1 = _axisIndex.get(row1);
+            introw0 = _axisIndex.get(row0);
+            introw1 = _axisIndex.get(row1);
             if (introw1 > introw0) {
                 return false;
             }
@@ -461,10 +525,12 @@ class Board extends Observable {
             }
         }
 
+        // false if illegal diagonal move
         if (k0 % 2 == 1 && k1 % 2 == 1) {
             return false;
         }
 
+        // false if illegally move between two points
         List pair = new ArrayList();
         pair.add(k0);
         pair.add(k1);
@@ -484,17 +550,6 @@ class Board extends Observable {
     }
     /** Helper parameters for getMoves. */
     private List<Integer> cFactors = rFactors;
-
-
-    /** Return true iff MOV is a valid jump sequence on the current board.
-     *  MOV must be a jump or null.  If ALLOWPARTIAL, allow jumps that
-     *  could be continued and are valid as far as they go.  */
-    boolean checkJump(Move mov, boolean allowPartial) {
-        if (mov == null) {
-            return true;
-        }
-        return false;
-    }
 
     /** Return true iff a jump is possible for a piece at position C R. */
     boolean jumpPossible(char c, char r) {
@@ -532,18 +587,20 @@ class Board extends Observable {
         int ruintrow = introw + 1;
         int rdintrow = introw - 1;
 
-        if (checkPossible(k, lintcol, lintrow, rintcol, rintrow)) {
+        // check horizontal/vertical jumps
+        if (checkJumpPossible(k, lintcol, lintrow, rintcol, rintrow)) {
             return true;
         }
-        if (checkPossible(k, uintcol, uintrow, dintcol, dintrow)) {
+        if (checkJumpPossible(k, uintcol, uintrow, dintcol, dintrow)) {
             return true;
         }
 
+        // if at allow-diagonal place, consider diagonals
         if (k % 2 == 0) {
-            if (checkPossible(k, luintcol, luintrow, rdintcol, rdintrow)) {
+            if (checkJumpPossible(k, luintcol, luintrow, rdintcol, rdintrow)) {
                 return true;
             }
-            if (checkPossible(k, ruintcol, ruintrow, ldintcol, ldintrow)) {
+            if (checkJumpPossible(k, ruintcol, ruintrow, ldintcol, ldintrow)) {
                 return true;
             }
         }
@@ -556,16 +613,21 @@ class Board extends Observable {
      * @param row1 --input
      * @param row0 --input
      * @param k --input
-     * @return */
-    private boolean checkPossible(int k, int col0, int row0
+     * @return --if two pieces have can-jump relation */
+    private boolean checkJumpPossible(int k, int col0, int row0
             , int col1, int row1) {
+
+        // false if invalid two pieces
         if (validPiece(col0, row0) && validPiece(col1, row1)) {
             char lcol = _colIndex.get(col0);
             char rcol = _colIndex.get(col1);
             char lrow = _rowIndex.get(row0);
             char rrow = _rowIndex.get(row1);
+
             int l = index(lcol, lrow);
             int r = index(rcol, rrow);
+
+            // conditions if two pieces have can-jump relations
             boolean con1 = _pieces.get(l).isPiece()
                     && _pieces.get(l).opposite().equals(_pieces.get(k))
                     && !_pieces.get(r).isPiece();
@@ -607,63 +669,59 @@ class Board extends Observable {
         makeMove(Move.move(c0, r0, c1, r1, next));
     }
 
-    /** Added by Wayne, generate Move from String.
-     * @param string -- input 'string'
-     * @return */
-    private Move stringToMove(String string) {
-        assert string.length() >= 2;
-        int indicator = 0;
-        char r1 = string.charAt(string.length() - 1);
-        char c1 = string.charAt(string.length() - 2);
-        char c0 = c1;
-        char r0 = r1;
-        Move mov = Move.move(c1, r1);
-        for (int i = string.length() - 1; i >= 0; i -= 2) {
-            if (indicator == 0) {
-                r1 = string.charAt(i);
-                c1 = string.charAt(i - 1);
-                mov = Move.move(c1, r1, c0, r0, mov);
-            } else {
-                r0 = string.charAt(i);
-                c0 = string.charAt(i - 1);
-                mov = Move.move(c0, r0, c1, r1, mov);
-            }
-            indicator = Math.abs(indicator - 1);
-        }
-        return mov;
-    }
-
     /** Make the Move MOV on this Board, assuming it is legal. */
     @SuppressWarnings("unchecked")
     void makeMove(Move mov) {
 
+        // ignore "null" moves
         if (mov == null) {
             return;
         }
+
+        // record current map for further "undo"
         boardList.add(reverseBoard());
+
+        // assert mov is not null since we further have things
+        // like takeTurn that don't want to run for any "null" move.
         while (mov != null) {
             int position0 = mov.fromIndex();
             int position1 = mov.toIndex();
 
+            // isJump, or, isMove?
             if (mov.isJump()) {
-                int jumped = mov.jumpedIndex();
-                PieceColor type0 = _pieces.get(position0);
-                insertPiece(position1, type0);
-                removePiece(position0);
-                removePiece(jumped);
-                _movedNotJumped = new ArrayList<>();
-            } else {
-                List pair = new ArrayList();
-                pair.add(position0);
-                pair.add(position1);
-                if (!_movedNotJumped.contains(pair) && legalMove(mov)) {
+
+                // recursively check if legal jump
+                if (isLegalJump(mov)) {
+                    int jumped = mov.jumpedIndex();
                     PieceColor type0 = _pieces.get(position0);
+
+                    // operate the move
                     insertPiece(position1, type0);
                     removePiece(position0);
-                    List newpair = new ArrayList();
-                    newpair.add(position1);
-                    newpair.add(position0);
-                    _movedNotJumped.add(newpair);
+                    removePiece(jumped);
+                    _movedNotJumped = new ArrayList<>();
+                } else {
+                    System.out.println("This is an illegal move.");
+                    return;
+                }
+            } else {
+
+                // check if legal move
+                if (isLegalMove(mov)) {
+                    PieceColor type0 = _pieces.get(position0);
+
+                    // operate the move
+                    insertPiece(position1, type0);
+                    removePiece(position0);
+
+                    // add the move to forbidden list(_movedNotJumped)
+                    List pair = new ArrayList();
+                    pair.add(position1);
+                    pair.add(position0);
+                    _movedNotJumped.add(pair);
+                } else {
+                    System.out.println("This is an illegal move.");
+                    return;
                 }
             }
             mov = mov.jumpTail();
@@ -674,27 +732,28 @@ class Board extends Observable {
         notifyObservers();
     }
 
-    /** Add walked path from outside.
-     * @param move --input */
-    @SuppressWarnings("unchecked")
-    public void addWalkedPath(Move move) {
-        int k0 = move.fromIndex();
-        int k1 = move.toIndex();
-        List pair = new ArrayList();
-        pair.add(k1);
-        pair.add(k0);
-        _movedNotJumped.add(pair);
-    }
-
     /** Record not-retrievable move targets. */
     private List<List> _movedNotJumped = new ArrayList<>();
 
     /** checkGameOver.*/
-    public void checkGameOver() {
+    void checkGameOver() {
         List<Move> moves = getMoves();
-        if (moves.isEmpty()) {
+        List<Move> movs = getJustMoves();
+
+        // Check if there's any possible jumps or moves
+        // If the map cannot move at all, gameOver.
+        // This condition is actually a "tie" game, it is really
+        // unlikely to happen so we don't define such result
+        if (moves.isEmpty() && movs.isEmpty()) {
             _gameOver = true;
+            _tieGame = true;
         }
+
+        if (checkTieGame()) {
+            _gameOver = true;
+            _tieGame = true;
+        }
+
         if (_whoseMove.equals(WHITE)) {
             for (Move mov : moves) {
                 if (moveBy(mov).equals(WHITE)) {
@@ -702,7 +761,7 @@ class Board extends Observable {
                 }
             }
             if (jumpPossible()) {
-                List<Move> movs = getJustMoves();
+
                 for (Move mv : movs) {
                     if (moveBy(mv).equals(WHITE)) {
                         return;
@@ -719,7 +778,6 @@ class Board extends Observable {
                 }
             }
             if (jumpPossible()) {
-                List<Move> movs = getJustMoves();
                 for (Move mv : movs) {
                     if (moveBy(mv).equals(BLACK)) {
                         return;
@@ -732,12 +790,40 @@ class Board extends Observable {
         }
     }
 
+    /** Return true if current game is a tie game. */
+    private boolean checkTieGame() {
+
+        // tie game if the down-most White and up-most Black
+        // have 1 piece between them.
+        String string = reverseBoard();
+        int lowestWhite = string.indexOf("w");
+        int uppestBlack = string.lastIndexOf("b");
+        int wrow = _axisIndex.get(row(lowestWhite));
+        int brow = _axisIndex.get(row(uppestBlack));
+
+        int diff = wrow - brow;
+        if (diff >= 2) {
+            return true;
+        }
+        return false;
+    }
+
+    /** Check if moves the right piece (piece of current player's) */
+    boolean checkMoveMyPiece(Move mov) {
+
+        // true if start piece is current player's
+        int k0 = mov.fromIndex();
+        PieceColor start = _pieces.get(k0);
+
+        return start.equals(_whoseMove);
+    }
+
     /** Get moves for current player.
      * @param moves --input
      * @param player --input
      * @return */
     @SuppressWarnings("unchecked")
-    public ArrayList<Move> getMyMoves(ArrayList<Move> moves
+    ArrayList<Move> getMyMoves(ArrayList<Move> moves
             , PieceColor player) {
         ArrayList<Move> result = new ArrayList<>();
         for (Move mov : moves) {
@@ -823,11 +909,6 @@ class Board extends Observable {
         return result;
     }
 
-    /** Return true iff there is a move for the current player. */
-    private boolean isMove() {
-        return false;
-    }
-
     /** Added by Wayne, take turn for _whoseMove. */
     private void takeTurn() {
         if (_whoseMove.equals(WHITE)) {
@@ -849,35 +930,8 @@ class Board extends Observable {
     /** Convenience value giving values of pieces at each ordinal position. */
     static final PieceColor[] PIECE_VALUES = PieceColor.values();
 
-    /** One cannot create arrays of ArrayList<Move>, so we introduce
-     *  a specialized private list type for this purpose. */
-    private static class MoveList extends ArrayList<Move> {
-    }
-
     /** Added by Wayne, track moves' changes by remembering the board. */
     private List<String> boardList = new ArrayList<>();
-
-    /** Added by Wayne, check if move is valid in distance.
-     * @param col0 -- input 'col0'
-     * @param col1 -- input 'col1'
-     * @param row0 -- input 'row0'
-     * @param row1 -- input 'row1'
-     * @return */
-    private boolean isDistanceUnit(char col0, char col1, char row0, char row1) {
-        int colDistance = Math.abs(_axisIndex.get(col0) - _axisIndex.get(col1));
-        int rowDistance = Math.abs(row0 - row1);
-        boolean colZero = colDistance == 0;
-        boolean rowZero = rowDistance == 0;
-        boolean colOne = colDistance == 1;
-        boolean rowOne = rowDistance == 1;
-
-        boolean con1 = colZero && rowZero;
-        boolean con2 = colZero && rowOne;
-        boolean con3 = colOne && rowZero;
-        boolean con4 = colOne && rowOne;
-
-        return con1 || con2 || con3 || con4;
-    }
 
     /** Added by Wayne, convert axis expression into int. */
     @SuppressWarnings("unchecked")
@@ -920,38 +974,16 @@ class Board extends Observable {
         }
     };
 
-    /** Added by Wayne, check if piece in scale.
-     * @param k -- input 'k'
-     * @return */
-    private boolean isSquareEmpty(int k) {
-        String status = _pieces.get(k).shortName();
-        return status.equals("-");
-    }
-
     /** Added by Wayne, create HashMap for convenience tracking
      *  piece content. */
     private HashMap<Integer, PieceColor> _pieces = new HashMap<>();
 
-    /** Added by Wayne, get _pieces.
-     * @return */
+    /** Added by Wayne, get _pieces.*/
     private HashMap<Integer, PieceColor> pieces() {
         return _pieces;
     }
 
-    /** Added by Wayne, True if board is "set_up" state.
-     * @return */
-    private boolean isSetUp() {
-        return _state.equals("set_up");
-    }
-
-    /** Added by Wayne, True if board is "playing" state.
-     * @return */
-    private boolean isPlaying() {
-        return _state.equals("playing");
-    }
-
-    /** Added by Wayne, get current state.
-     * @return */
+    /** Added by Wayne, get current state.*/
     private String state() {
         return _state;
     }
@@ -962,14 +994,20 @@ class Board extends Observable {
     /** Added by Wayne, winner. */
     private PieceColor _winner = EMPTY;
 
-    /** Added by Wayne, show winner.
-     * @return */
+    /** Added by Wayne, show winner.*/
     public PieceColor winner() {
         return _winner;
     }
 
-    /** Added by Wayne, get board map.
-     * @return */
+    /** Added by Wayne, tieGame. */
+    private boolean _tieGame = false;
+
+    /** Added by Wayne, show winner.*/
+    public boolean tieGame() {
+        return _tieGame;
+    }
+
+    /** Added by Wayne, get board map.*/
     public String board() {
         StringBuilder string = new StringBuilder();
         for (int key = 4 * SIDE; key <= MAX_INDEX; key++) {
@@ -1001,8 +1039,8 @@ class Board extends Observable {
         return _board;
     }
 
-    /** Reversed board.
-     * @return */
+    /** Reversed board. For better fitting undo need
+     * for setPiece in correct direction. */
     private String reverseBoard() {
         StringBuilder string = new StringBuilder();
         for (int key = 0 * SIDE; key < 1 * SIDE; key++) {
