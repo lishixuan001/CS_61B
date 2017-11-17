@@ -3,7 +3,6 @@ package qirkat;
 import java.util.ArrayList;
 
 import static qirkat.PieceColor.*;
-import static qirkat.Move.*;
 
 /** A Player that computes its own moves.
  *  @author Shixuan (Wayne) Li
@@ -14,8 +13,6 @@ class AI extends Player {
     private static final int MAX_DEPTH = 8;
     /** A magnitude greater than a normal value. */
     private static final int INFTY = Integer.MAX_VALUE;
-    /** Winning line. */
-    private static final int WINNING_POINT = INFTY / 2;
 
     /** A new AI for GAME that will play MYCOLOR. */
     AI(Game game, PieceColor myColor) {
@@ -44,7 +41,7 @@ class AI extends Player {
 
     /** Transform PieceColor to String.
      * @param piececolor --input
-     * @return */
+     * @return --change PieceColor to a string */
     private String pieceColorToString(PieceColor piececolor) {
         String string = "";
         if (piececolor.equals(WHITE)) {
@@ -84,7 +81,6 @@ class AI extends Player {
     private int findMax(Board board, int depth, int alpha, int beta) {
         Move best = null;
         int bestScore = -INFTY;
-        int bestDepth = MAX_DEPTH + 1;
         int response;
 
         board.checkGameOver();
@@ -92,7 +88,7 @@ class AI extends Player {
 
         // If end of depth searching |or| gameOver
         if (depth == 0 || winner.isPiece()) {
-            return flatMax(board, alpha, beta);
+            return flatMax(board, alpha, beta, depth);
         }
 
         // Get all possible moves on board
@@ -127,7 +123,9 @@ class AI extends Player {
             response = findMin(board, depth - 1, alpha, beta);
             board.undo();
 
-            // Pruning
+            // Pruning. If know there is winning possibility, do the winning one.
+            // If know guaranteed lost, try to do the most-step one.
+
             if (response >= bestScore) {
                 best = mov;
                 bestScore = response;
@@ -147,11 +145,10 @@ class AI extends Player {
      * @param beta --input
      * @param board --input
      * @param depth --input
-     * @return */
+     * @return --Return minimum possible score */
     private int findMin(Board board, int depth, int alpha, int beta) {
         Move best = null;
         int bestScore = INFTY;
-        int bestDepth = MAX_DEPTH + 1;
         int response;
 
         board.checkGameOver();
@@ -159,7 +156,7 @@ class AI extends Player {
 
         // If end of depth searching |or| gameOver
         if (depth == 0 || winner.isPiece()) {
-            return flatMin(board, alpha, beta);
+            return flatMin(board, alpha, beta, depth);
         }
 
         // Get all possible moves on board
@@ -203,7 +200,6 @@ class AI extends Player {
                     break;
                 }
             }
-
         }
 
         _lastFoundMove = best;
@@ -215,8 +211,8 @@ class AI extends Player {
      * @param board --input
      * @param beta --input
      * @param alpha --input
-     * @return */
-    private int flatMax(Board board, int alpha, int beta) {
+     * @return --Maximum return for an end of search */
+    private int flatMax(Board board, int alpha, int beta, int depth) {
         board.checkGameOver();
         PieceColor winner = board.winner();
         Move best = null;
@@ -226,9 +222,9 @@ class AI extends Player {
         // "White wins." -> Maximum | "Black wins." -> Minimum
         if (winner.isPiece()) {
             if (winner.equals(WHITE)) {
-                bestScore = INFTY;
+                bestScore = INFTY / (9 - depth);
             } else if (winner.equals(BLACK)) {
-                bestScore = -INFTY;
+                bestScore = -INFTY / (9 - depth);
             }
             return bestScore;
         }
@@ -262,7 +258,7 @@ class AI extends Player {
 
             // Do the move, get score, them undo back
             board.makeMove(mov);
-            int score = staticScore(board);
+            int score = staticScore(board, depth);
             board.undo();
 
             // Pruning
@@ -270,7 +266,7 @@ class AI extends Player {
                 best = mov;
                 bestScore = score;
                 alpha = Math.max(alpha, bestScore);
-                if (beta <= alpha) {
+                if (alpha >= beta) {
                     break;
                 }
             }
@@ -283,8 +279,8 @@ class AI extends Player {
      * @param alpha --input
      * @param beta --input
      * @param board --input
-     * @return */
-    private int flatMin(Board board, int alpha, int beta) {
+     * @return --Minimum return for an end of search */
+    private int flatMin(Board board, int alpha, int beta, int depth) {
 
         board.checkGameOver();
         PieceColor winner = board.winner();
@@ -295,9 +291,9 @@ class AI extends Player {
         // "White wins." -> Maximum | "Black wins." -> Minimum
         if (winner.isPiece()) {
             if (winner.equals(WHITE)) {
-                bestScore = INFTY;
+                bestScore = INFTY / (9 - depth);
             } else if (winner.equals(BLACK)) {
-                bestScore = -INFTY;
+                bestScore = -INFTY / (9 - depth);
             }
             return bestScore;
         }
@@ -331,7 +327,7 @@ class AI extends Player {
 
             // Do the move, get score, them undo back
             board.makeMove(mov);
-            int score = staticScore(board);
+            int score = staticScore(board, depth);
             board.undo();
 
             // Pruning
@@ -339,7 +335,7 @@ class AI extends Player {
                 best = mov;
                 bestScore = score;
                 beta = Math.min(alpha, bestScore);
-                if (beta <= alpha) {
+                if (alpha >= beta) {
                     break;
                 }
             }
@@ -349,28 +345,22 @@ class AI extends Player {
     }
 
     /** Return a heuristic value for BOARD.*/
-    private int staticScore(Board board) {
-        int result = 0;
+    private int staticScore(Board board, int depth) {
+        int result;
 
         ArrayList<Integer> arrayDiffAmount;
         ArrayList<Integer> arrayDiffJumpLength;
         ArrayList<Integer> arrayPositionScores;
 
-        int whiteAmount = 0;
-        int blackAmount = 0;
-        int diffAmount = 0;
-
         int whiteLongest = 0;
         int blackLongest = 0;
-        int diffJumpLength = 0;
-
-        int scoreWhitePosition = 0;
-        int scoreBlackPosition = 0;
-
-        int scoreAmount = 0;
         int scoreJumpLength = 0;
         int scoreExpectedNext = 0;
-        int scorePositions = 0;
+
+        int diffJumpLength;
+        int scoreAmount, scorePositions;
+        int whiteAmount, blackAmount, diffAmount;
+        int scoreWhitePosition, scoreBlackPosition;
 
         // Scoring by piece amount difference
         arrayDiffAmount = diffWhiteBlackPiece(board);
@@ -391,9 +381,9 @@ class AI extends Player {
 
         // if jumps eliminate amount difference (expected next step)
         if (whiteLongest == blackAmount && board.whoseMove().equals(WHITE)) {
-            scoreExpectedNext = INFTY / 2;
+            scoreExpectedNext = INFTY / (9 - depth);
         } else if (blackLongest == whiteAmount && board.whoseMove().equals(BLACK)) {
-            scoreExpectedNext = -INFTY / 2;
+            scoreExpectedNext = -INFTY / (9 - depth);
         }
 
         // Position Points, the more to the middle, the higher the score
@@ -493,23 +483,11 @@ class AI extends Player {
         // get board string
         String string = board.board();
 
-        // for pieces on 1&2, 4&5 rows, half points
-        for (int i = 0; i < 2 * SIDE; i++) {
-            char piece = string.charAt(i);
-            if (piece == 'w') { wscore += POSITION_POINT / 2; }
-            else if (piece == 'b') { bscore += POSITION_POINT / 2; }
-        }
-        for (int i = 3 * SIDE; i < MAX_INDEX; i++) {
-            char piece = string.charAt(i);
-            if (piece == 'w') { wscore += POSITION_POINT / 2; }
-            else if (piece == 'b') { bscore += POSITION_POINT / 2; }
-        }
-
-        // for pieces on 3rd row, full points
-        for (int i = 2 * SIDE; i < 3 * SIDE; i++) {
+        // for pieces on odd index points, add points
+        for (int i = 0; i < string.length(); i += 2) {
             char piece = string.charAt(i);
             if (piece == 'w') { wscore += POSITION_POINT; }
-            else if (piece == 'b') { bscore += POSITION_POINT; }
+            else if (piece == 'b') { bscore -= POSITION_POINT; }
         }
 
         // collect scores in format, and return
@@ -562,10 +540,10 @@ class AI extends Player {
     }
 
     /** Point value for Piece Count Difference. */
-    static final int PIECE_POINT = 100;
+    private static final int PIECE_POINT = 100;
     /** Point value for Piece Count Difference. */
-    static final int JUMPABLE_POINT = 100;
+    private static final int JUMPABLE_POINT = 100;
     /** Point value for Piece Position on board. */
-    static final int POSITION_POINT = 20;
+    private static final int POSITION_POINT = 10;
 
 }

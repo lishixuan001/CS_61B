@@ -25,7 +25,7 @@ class Command {
         PIECEMOVE("([a-e][1-5](?:-[a-e][1-5])+)"),
         /* Valid at any time. */
         LOAD("load\\s+(\\S+)"),
-        QUIT, CLEAR, DUMP, HELP,
+        QUIT, CLEAR, DUMP, HELP, SURRENDER,
         /* Special "commands" internally generated. */
         /** Syntax error in command. */
         ERROR(".*"),

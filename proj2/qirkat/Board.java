@@ -49,7 +49,6 @@ class Board extends Observable {
         _state = "set_up";
         _winner = EMPTY;
         _movedNotJumped = new ArrayList<>();
-        _tieGame = false;
 
         setChanged();
         notifyObservers();
@@ -286,6 +285,7 @@ class Board extends Observable {
 
             result = result && isLegalJump(col0, row0, col1, row1, pieces);
 
+            // if this step is legal jump, then do makeMove operation
             if (result) {
                 int intmidcol = (intcol0 + intcol1) / 2;
                 int intmidrow = (introw0 + introw1) / 2;
@@ -740,19 +740,8 @@ class Board extends Observable {
         List<Move> moves = getMoves();
         List<Move> movs = getJustMoves();
 
-        // Check if there's any possible jumps or moves
-        // If the map cannot move at all, gameOver.
-        // This condition is actually a "tie" game, it is really
-        // unlikely to happen so we don't define such result
-        if (moves.isEmpty() && movs.isEmpty()) {
-            _gameOver = true;
-            _tieGame = true;
-        }
-
-        if (checkTieGame()) {
-            _gameOver = true;
-            _tieGame = true;
-        }
+        // Check if the current player can jump or move,
+        // if cannot, gameOver and the other wins.
 
         if (_whoseMove.equals(WHITE)) {
             for (Move mov : moves) {
@@ -788,24 +777,6 @@ class Board extends Observable {
             _winner = WHITE;
             return;
         }
-    }
-
-    /** Return true if current game is a tie game. */
-    private boolean checkTieGame() {
-
-        // tie game if the down-most White and up-most Black
-        // have 1 piece between them.
-        String string = reverseBoard();
-        int lowestWhite = string.indexOf("w");
-        int uppestBlack = string.lastIndexOf("b");
-        int wrow = _axisIndex.get(row(lowestWhite));
-        int brow = _axisIndex.get(row(uppestBlack));
-
-        int diff = wrow - brow;
-        if (diff >= 2) {
-            return true;
-        }
-        return false;
     }
 
     /** Check if moves the right piece (piece of current player's) */
@@ -997,14 +968,6 @@ class Board extends Observable {
     /** Added by Wayne, show winner.*/
     public PieceColor winner() {
         return _winner;
-    }
-
-    /** Added by Wayne, tieGame. */
-    private boolean _tieGame = false;
-
-    /** Added by Wayne, show winner.*/
-    public boolean tieGame() {
-        return _tieGame;
     }
 
     /** Added by Wayne, get board map.*/

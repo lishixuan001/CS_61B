@@ -59,7 +59,7 @@ class Game {
 
                 // Check gameOver
                 _board.checkGameOver();
-                if (_board.winner().isPiece() || _board.tieGame()) {
+                if (_board.winner().isPiece()) {
                     break;
                 }
 
@@ -325,6 +325,13 @@ class Game {
         System.exit(0);
     }
 
+    /** One player surrender. */
+    void doSurrender(String[] unused) {
+        PieceColor currentPlayer = _whoseMove;
+        reportWinnerBySurrender(currentPlayer.opposite());
+        doClear(null);
+    }
+
     /** Execute 'seed OPERANDS[0]' command, where the operand is a string
      *  of decimal digits. Silently substitutes another value if
      *  too large. */
@@ -365,26 +372,45 @@ class Game {
         throw error("Command not understood");
     }
 
+    /** Report the assigned winner when one player "surrender". */
+    void reportWinnerBySurrender(PieceColor player) {
+        StringBuilder msg = new StringBuilder();
+
+        String winner = pieceColorToString(player);
+        String loser = pieceColorToString(player.opposite());
+
+        msg.append(loser);
+        msg.append(" surrendered.");
+        msg.append("\n");
+        msg.append(winner);
+        msg.append(" wins!");
+        _reporter.outcomeMsg(msg.toString());
+    }
+
     /** Report "White wins." or "Black wins."
      * Report the outcome of the current game. */
     void reportWinner() {
         StringBuilder msg = new StringBuilder();
 
-        if (!_board.tieGame()) {
-            String winner = "";
-            _winner = _board.winner();
-            if (_winner.equals(WHITE)) {
-                winner = "White";
-            } else if (_winner.equals(BLACK)) {
-                winner = "Black";
-            }
-            msg.append(winner);
-            msg.append(" wins.");
-        } else {
-            msg.append("Tie Game.");
-        }
+        _winner = _board.winner();
+        String winner = pieceColorToString(_winner);
+        msg.append(winner);
+        msg.append(" wins!");
 
         _reporter.outcomeMsg(msg.toString());
+    }
+
+    /** Transform PieceColor to String.
+     * @param piececolor --input
+     * @return --change PieceColor to a string */
+    private String pieceColorToString(PieceColor piececolor) {
+        String string = "";
+        if (piececolor.equals(WHITE)) {
+            string = "White";
+        } else if (piececolor.equals(BLACK)) {
+            string = "Black";
+        }
+        return string;
     }
 
     /** Mapping of command types to methods that process them. */
@@ -404,6 +430,7 @@ class Game {
         _commands.put(QUIT, this::doQuit);
         _commands.put(ERROR, this::doError);
         _commands.put(EOF, this::doQuit);
+        _commands.put(SURRENDER, this::doSurrender);
     }
 
     /** Input source. */
