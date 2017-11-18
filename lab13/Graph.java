@@ -4,6 +4,7 @@ public class Graph {
 
     private LinkedList<Edge>[] adjLists;
     private int vertexCount;
+    private static final int INFTY = Integer.MAX_VALUE;
 
     // Initialize a graph with the given number of vertices and no edges.
     @SuppressWarnings("unchecked")
@@ -65,8 +66,36 @@ public class Graph {
     // an integer array consisting of the shortest distances from 'startVertex'
     // to all other vertices.
     public int[] dijkstras(int startVertex) {
-        // TODO: Your code here!
-        return null;
+        int[] result = new int[vertexCount];
+
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < vertexCount; i++) {
+            map.put(i, INFTY);
+        }
+        map.put(startVertex, 0);
+
+        helper(startVertex, map);
+
+        for (int i = 0; i < vertexCount; i++) {
+            result[i] = map.get(i);
+        }
+
+        return result;
+    }
+
+    private void helper(int start, HashMap<Integer, Integer> map) {
+
+        if (adjLists[start].isEmpty()) {
+            return;
+        }
+
+        for (Edge e : adjLists[start]) {
+            int value = map.get(e.from) + e.edgeWeight;
+            if (value < map.get(e.to)) {
+                map.put(e.to, value);
+                helper(e.to, map);
+            }
+        }
     }
 
     // Returns the Edge object corresponding to the listed vertices, v1 and v2.
@@ -120,5 +149,17 @@ public class Graph {
         g2.addEdge(1, 2, 1);
         g2.addEdge(2, 3, 1);
         g2.addEdge(4, 3, 1);
+
+        System.out.println("test1");
+        int[] test1 = g1.dijkstras(1);
+        for (int i : test1) {
+            System.out.println(i);
+        }
+
+        System.out.println("test2");
+        int[] test2 = g1.dijkstras(0);
+        for (int i : test2) {
+            System.out.println(i);
+        }
     }
 }
