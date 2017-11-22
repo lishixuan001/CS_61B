@@ -38,7 +38,16 @@ public class MySortingAlgorithms {
     public static class InsertionSort implements SortingAlgorithm {
         @Override
         public void sort(int[] array, int k) {
-            // FIXME
+            for (int i = 0; i < k - 1; i++) {
+                for (int j = i + 1; j > 0; j--) {
+                    if (array[j - 1] < array[j]) {
+                        break;
+                    }
+                    int temp = array[j];
+                    array[j] = array[j - 1];
+                    array[j - 1] = temp;
+                }
+            }
         }
 
         @Override
@@ -56,7 +65,17 @@ public class MySortingAlgorithms {
     public static class SelectionSort implements SortingAlgorithm {
         @Override
         public void sort(int[] array, int k) {
-            // FIXME
+            for (int i = 0; i < k; i++) {
+                int min = i;
+                for (int j = i + 1; j < k; j++) {
+                    if (array[min] >  array[j]) {
+                        min = j;
+                    }
+                }
+                int temp = array[min];
+                array[min] =  array[i];
+                array[i] = temp;
+            }
         }
 
         @Override
@@ -122,7 +141,39 @@ public class MySortingAlgorithms {
     public static class QuickSort implements SortingAlgorithm {
         @Override
         public void sort(int[] array, int k) {
-            // FIXME
+            if (array.length <= 0) {
+                return;
+            }
+            int head = 0;
+            int tail = k - 1;
+            qsort(array, head, tail);
+        }
+
+        private void qsort(int[] array, int head, int tail) {
+            int i = head; int j = tail;
+            int pivot = (head + tail) / 2;
+            int value = array[pivot];
+            while (i <= j) {
+                while (array[i] < value) {
+                    i++;
+                }
+                while (array[j] > value) {
+                    j--;
+                }
+                if (i <= j) {
+                    int temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
+                    i++;
+                    j--;
+                }
+            }
+            if (head < i - 1) {
+                qsort(array, head, i - 1);
+            }
+            if (i < tail) {
+                qsort(array, i, tail);
+            }
         }
 
         @Override
@@ -143,8 +194,57 @@ public class MySortingAlgorithms {
      */
     public static class LSDSort implements SortingAlgorithm {
         @Override
-        public void sort(int[] a, int k) {
-            // FIXME
+        public void sort(int[] array, int n) {
+            int k = 10;
+            if (array.length == 0) {
+                return;
+            }
+
+            int min = array[0];
+            int max = array[0];
+
+            for (int i = 1; i < n; i++) {
+                if (array[i] < min) {
+                    min = array[i];
+                }
+                if (array[i] > max) {
+                    max = array[i];
+                }
+            }
+
+            int digit = 1;
+            while ((max - min) / digit >= 1) {
+                countsort(array, k, digit, min, n);
+                digit *= k;
+            }
+        }
+
+        private void countsort(int[] array, int k, int digit, int min, int n) {
+            int index;
+            int[] buckets = new int[k];
+            int[] output = new int[n];
+
+            for (int i = 0; i < k; i++) {
+                buckets[i] = 0;
+            }
+
+            for (int i = 0; i < n; i++) {
+                index = (((array[i] - min) / digit) % k);
+                buckets[index] += 1;
+            }
+
+            for (int i = 1; i < k; i++) {
+                buckets[i] += buckets[i - 1];
+            }
+
+            for (int i = n - 1; i >= 0; i--) {
+                index = (((array[i] - min) / digit) % k);
+                output[--buckets[index]] = array[i];
+            }
+
+            for (int i = 0; i < n; i++) {
+                array[i] = output[i];
+            }
         }
 
         @Override
