@@ -1,9 +1,7 @@
 import org.junit.Test;
 import static org.junit.Assert.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.*;
 
 /** HW #8, Problem 3.
  *  @author
@@ -14,7 +12,37 @@ public class Intervals {
      *  total length covered by the union of the intervals. */
     public static int coveredLength(List<int[]> intervals) {
         // REPLACE WITH APPROPRIATE STATEMENTS.
-        return 0;
+        intervals.sort(new helperComparator());
+        ArrayList<int[]> helper = new ArrayList<>();
+        helper.add(intervals.get(0));
+
+        for (int i = 0; i < intervals.size(); i++) {
+            int middle = intervals.get(i)[0];
+            int front = helper.get(helper.size() - 1)[1];
+            int back = intervals.get(i)[1];
+            if (middle < front && back < front) {
+                int[] rec = new int[]{ helper.get(helper.size() - 1)[0], back}
+                helper.remove(helper.size() - 1);
+                helper.add(rec);
+            } else if (middle > front) {
+                helper.add(intervals.get(i));
+            }
+        }
+        int second = 0;
+        for (int[] i : helper) {
+            second += i[1] - i[0];
+        }
+        return second;
+    }
+
+    static class helperComparator implements Comparator<int[]> {
+        public int compare(int[] a, int[] b) {
+            if (a[0] == b[0]) {
+                return a[1] - b[1];
+            } else {
+                return a[0] - b[0];
+            }
+        }
     }
 
     /** Test intervals. */
