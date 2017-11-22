@@ -11,28 +11,33 @@ public class Intervals {
      *  <x,y> with x <= y, representing intervals of ints, this returns the
      *  total length covered by the union of the intervals. */
     public static int coveredLength(List<int[]> intervals) {
-        // REPLACE WITH APPROPRIATE STATEMENTS.
+        int result = 0;
         intervals.sort(new helperComparator());
         ArrayList<int[]> helper = new ArrayList<>();
         helper.add(intervals.get(0));
 
         for (int i = 0; i < intervals.size(); i++) {
-            int middle = intervals.get(i)[0];
-            int front = helper.get(helper.size() - 1)[1];
-            int back = intervals.get(i)[1];
-            if (middle < front && back < front) {
-                int[] rec = new int[]{ helper.get(helper.size() - 1)[0], back}
+
+            int[] current = intervals.get(i);
+            int front = current[0];
+            int back = current[1];
+
+            int[] compared = helper.get(helper.size() - 1);
+            int cfront = compared[0];
+            int cback = compared[1];
+
+            if (front < cback && back > cback) {
                 helper.remove(helper.size() - 1);
-                helper.add(rec);
-            } else if (middle > front) {
+                helper.add(new int[]{ cfront, back});
+            } else if (front > cback) {
                 helper.add(intervals.get(i));
             }
         }
-        int second = 0;
+
         for (int[] i : helper) {
-            second += i[1] - i[0];
+            result += i[1] - i[0];
         }
-        return second;
+        return result;
     }
 
     static class helperComparator implements Comparator<int[]> {
