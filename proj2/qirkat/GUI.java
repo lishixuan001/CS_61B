@@ -3,6 +3,7 @@ package qirkat;
 import ucb.gui2.TopLevel;
 import ucb.gui2.LayoutSpec;
 
+import java.awt.event.MouseListener;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -13,6 +14,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+import java.awt.event.MouseEvent;
+import static com.sun.java.accessibility.util.AWTEventMonitor.addMouseListener;
 import static qirkat.PieceColor.*;
 
 /** The GUI for the Qirkat game.
@@ -50,8 +53,18 @@ class GUI extends TopLevel implements Observer, Reporter {
      *  same commands as the text format for Qirkat. */
     GUI(String title, Board model, Writer outCommands) {
         super(title, true);
+        addMenuButton("Game->Start", this::start);
+        addMenuButton("Game->Clear", this::clear);
+        addMenuButton("Game->Undo", this::undo);
+        addMenuButton("Game->Surrender", this::surrender);
         addMenuButton("Game->Quit", this::quit);
+        addMenuButton("Options->Players->White Manual", this::setWhiteManual);
+        addMenuButton("Options->Players->Black Manual", this::setBlackManual);
+        addMenuButton("Options->Players->White Auto", this::setWhiteAuto);
+        addMenuButton("Options->Players->Black Auto", this::setBlackAuto);
         addMenuButton("Options->Seed...", this::setSeed);
+        addMenuButton("Options->Clean Choices", this::cleanChoices);
+        addMenuButton("Info->Help", this::help);
         _model = model;
         _widget = new BoardWidget(model);
         _out = new PrintWriter(outCommands, true);
@@ -63,6 +76,26 @@ class GUI extends TopLevel implements Observer, Reporter {
         setMinimumSize(MIN_SIZE, MIN_SIZE);
         _widget.addObserver(this);
         _model.addObserver(this);
+    }
+
+    /** Start the game. */
+    private synchronized void start(String unused) {
+        _out.printf("start%n");
+    }
+
+    /** Clear the board. */
+    private synchronized void clear(String unused) {
+        _out.printf("clear%n");
+    }
+
+    /** Surrender. */
+    private synchronized void surrender(String unused) {
+        _out.printf("surrender%n");
+    }
+
+    /** Undo. */
+    private synchronized void undo(String unused) {
+        _out.printf("undo%n");
     }
 
     /** Execute the "Quit" button function. */
@@ -85,6 +118,34 @@ class GUI extends TopLevel implements Observer, Reporter {
         }
     }
 
+    /** Set White to Manual. */
+    private synchronized void setWhiteManual(String unused) {
+        _out.printf("manual White%n");
+    }
+
+    /** Set Black to Manual. */
+    private synchronized void setBlackManual(String unused) {
+        _out.printf("manual Black%n");
+    }
+
+    /** Set White to Auto. */
+    private synchronized void setWhiteAuto(String unused) {
+        _out.printf("auto White%n");
+    }
+
+    /** Set Black to auto. */
+    private synchronized void setBlackAuto(String unused) {
+        _out.printf("auto Black%n");
+    }
+
+    /** Call for help. */
+    private synchronized void help(String unused) {
+        _out.printf("help%n");
+        String title = "Help";
+        String msg = "Game Instructions not complete";
+        displayText(title, msg);
+    }
+
     /** Display text in file NAME in a box titled TITLE. */
     private void displayText(String name, String title) {
         InputStream input =
@@ -101,6 +162,11 @@ class GUI extends TopLevel implements Observer, Reporter {
                 /* Ignore IOException */
             }
         }
+    }
+
+    /** Clean choices in the graphical map. */
+    private void cleanChoices(String unused) {
+        _widget.clearString();
     }
 
     @Override
@@ -120,23 +186,31 @@ class GUI extends TopLevel implements Observer, Reporter {
 
     @Override
     public void update(Observable obs, Object arg) {
+//        if (arg == null) { return; }
+
         if (obs == _model) {
-            //FIXME
+//            System.out.println((String) arg);
         } else if (obs == _widget) {
-            //FIXME
+            if (_model.whoseMove().equals(WHITE)) {
+                System.out.println("White moves " + (String) arg);
+            }
+            _widget.update(_model, arg);
+            _out.printf(arg + "%n");
         }
     }
 
-    /** Respond to a click on SQ. */
-    private void movePiece(String sq) {
-        //FIXME
-    }
-
-    /** Make MOV the user-selected move (no move if null). */
-    private void selectMove(Move mov) {
-        _selectedMove = mov;
-        _widget.indicateMove(mov);
-    }
+//    /** Respond to a click on SQ. */
+//    private void movePiece(String sq) {
+//        Move mov = Move.parseMove(sq);
+//        _model.makeMove(mov);
+//        selectMove(mov);
+//    }
+//
+//    /** Make MOV the user-selected move (no move if null). */
+//    private void selectMove(Move mov) {
+//        _selectedMove = mov;
+//        _widget.indicateMove(mov);
+//    }
 
     /** Contains the drawing logic for the Qirkat model. */
     private BoardWidget _widget;

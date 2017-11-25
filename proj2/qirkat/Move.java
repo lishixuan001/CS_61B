@@ -355,6 +355,7 @@ class Move {
         _toIndex = (byte) index(col1, row1);
         _isJump = abs(col0 - col1) > 1 || abs(row0 - row1) > 1;
         _nextJump = nextJump;
+
         assert (_isJump
                 && (nextJump == null
                     || (nextJump.isJump()

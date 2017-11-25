@@ -474,6 +474,7 @@ class Board extends Observable {
 
         // false if invalid start/end
         if (!validSquare(col0, row0) || !validSquare(col1, row1)) {
+//            System.out.println("Problem 1");
             return false;
         }
 
@@ -482,7 +483,13 @@ class Board extends Observable {
         int k1 = index(col1, row1);
 
         // false if start is not White/Black
-        if (!pieces.get(k0).isPiece() || pieces.get(k1).isPiece()) {
+        if ((!pieces.get(k0).isPiece()) || pieces.get(k1).isPiece()) {
+//            System.out.println("Problem 2");
+//            System.out.println(board().charAt(12));
+//            System.out.println(board().charAt(17));
+//            System.out.print(col0);System.out.print(row0);
+//            System.out.print("-");
+//            System.out.print(col1);System.out.print(row1);
             return false;
         }
 
@@ -499,6 +506,7 @@ class Board extends Observable {
         boolean con3 = diffcol == 1 && diffrow == 1;
         boolean condition = con1 || con2 || con3;
         if (!condition) {
+//            System.out.println("Problem 3");
             return false;
         }
 
@@ -507,26 +515,31 @@ class Board extends Observable {
             introw0 = _axisIndex.get(row0);
             introw1 = _axisIndex.get(row1);
             if (introw1 < introw0) {
+//                System.out.println("Problem 4");
                 return false;
             }
 
             if (introw0 == 5) {
+//                System.out.println("Problem 5");
                 return false;
             }
         } else if (pieces.get(k0).equals(BLACK)) {
             introw0 = _axisIndex.get(row0);
             introw1 = _axisIndex.get(row1);
             if (introw1 > introw0) {
+//                System.out.println("Problem 6");
                 return false;
             }
 
             if (introw0 == 1) {
+//                System.out.println("Problem 7");
                 return false;
             }
         }
 
         // false if illegal diagonal move
         if (k0 % 2 == 1 && k1 % 2 == 1) {
+//            System.out.println("Problem 8");
             return false;
         }
 
@@ -535,6 +548,7 @@ class Board extends Observable {
         pair.add(k0);
         pair.add(k1);
         if (_movedNotJumped.contains(pair)) {
+//            System.out.println("Problem 9");
             return false;
         }
 
@@ -701,7 +715,7 @@ class Board extends Observable {
                     removePiece(jumped);
                     _movedNotJumped = new ArrayList<>();
                 } else {
-                    System.out.println("This is an illegal move.");
+                    System.out.println("This is an illegal jump.");
                     return;
                 }
             } else {

@@ -36,8 +36,8 @@ public class Main {
         game = null;
         if (useGUI) {
             try {
-                System.err.printf("Sorry, --display not implemented.%n");
-                System.exit(2);
+//                System.err.printf("Sorry, --display not implemented.%n");
+//                System.exit(2);
 
                 PipedWriter writer = new PipedWriter();
                 GUI display = new GUI("Qirkat", board, writer);
@@ -47,6 +47,7 @@ public class Main {
                                                  false),
                                 display);
                 display.display(true);
+
             } catch (IOException excp) {
                 System.err.printf("Could not connect to display.%n");
                 System.exit(1);

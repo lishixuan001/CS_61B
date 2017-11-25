@@ -112,12 +112,14 @@ class Game {
                     if (!_board.checkMoveMyPiece(move)) {
                         _moved = false;
                         System.out.println("Note! Please move your own piece!");
+//                        throw new Error("Note! Please move your own piece!");
                     }
 
                     // Check if illegal move
                     if (!(_board.isLegalMove(move) || _board.isLegalJump(move))) {
                         _moved = false;
                         System.out.println("Note! Illegal Move!");
+//                        throw new Error("Note! Illegal Move!");
                     } else {
                         _board.makeMove(move);
                         System.out.println(_board.toString());
@@ -126,7 +128,6 @@ class Game {
 
                 // If a move is made, takeTurn
                 if (_moved) {
-
                     takeTurn();
                     _moved = false;
                 }
