@@ -10,7 +10,31 @@ Move commands:
                  1 - - - - -
                    a b c d e
 
-Commands:
+Rules:
+    Winning: The first one who cannot move nor jump loses.
+    Players can either "move", or "jump".
+        Move:   1) Can only move along lines;
+                2) Can only move one step forward, left, or right;
+                3) Can only "jump" back but never "move" backwards;
+                4) Cannot move in any direction once get the other side;
+                5) Cannot move back-forth in same place,
+                    unless you jumped during the movements.
+
+        Jump:   1) Can only jump over opponent's piece;
+                2) Can jump multiple times in a roll;
+                3) Can jump in any direction.
+
+
+Commands: (For Graphical Players)
+    Settings    Explore the Headlines
+    Control     Click to choose the piece or next place, double click
+                    for the final move/jump spot. If you made mistake
+                    for choose same place twice or choosing a wrong
+                    spot, please go to "Options->Clean Choices" to
+                    choose again, or there will be a problem.
+
+
+Commands: (For Terminal Players)
    start    Begin a new game.
    clear    Clear the board and set up for a new game.
    auto C   Let player C (White or Black) be an AI.

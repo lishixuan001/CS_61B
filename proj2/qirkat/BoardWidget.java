@@ -19,7 +19,7 @@ import qirkat.Board;
 import static qirkat.PieceColor.*;
 
 /** Widget for displaying a Qirkat board.
- *  @author Shixuan (Wayne) Li [66 / 89]
+ *  @author Shixuan (Wayne) Li
  */
 class BoardWidget extends Pad implements Observer {
 

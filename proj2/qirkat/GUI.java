@@ -19,7 +19,7 @@ import static com.sun.java.accessibility.util.AWTEventMonitor.addMouseListener;
 import static qirkat.PieceColor.*;
 
 /** The GUI for the Qirkat game.
- *  @author Shixuan (Wayne) Li [108/113/123/125/131]
+ *  @author Shixuan (Wayne) Li
  */
 class GUI extends TopLevel implements Observer, Reporter {
 
@@ -199,18 +199,18 @@ class GUI extends TopLevel implements Observer, Reporter {
         }
     }
 
-//    /** Respond to a click on SQ. */
-//    private void movePiece(String sq) {
-//        Move mov = Move.parseMove(sq);
-//        _model.makeMove(mov);
-//        selectMove(mov);
-//    }
-//
-//    /** Make MOV the user-selected move (no move if null). */
-//    private void selectMove(Move mov) {
-//        _selectedMove = mov;
-//        _widget.indicateMove(mov);
-//    }
+    /** Respond to a click on SQ. */
+    private void movePiece(String sq) {
+        Move mov = Move.parseMove(sq);
+        _model.makeMove(mov);
+        selectMove(mov);
+    }
+
+    /** Make MOV the user-selected move (no move if null). */
+    private void selectMove(Move mov) {
+        _selectedMove = mov;
+        _widget.indicateMove(mov);
+    }
 
     /** Contains the drawing logic for the Qirkat model. */
     private BoardWidget _widget;
