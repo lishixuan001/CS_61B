@@ -3,16 +3,16 @@ package qirkat;
 import ucb.gui2.TopLevel;
 import ucb.gui2.LayoutSpec;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
-
-import java.io.Writer;
-import java.io.PrintWriter;
-import java.io.InputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
 
 import java.awt.event.MouseEvent;
 import static com.sun.java.accessibility.util.AWTEventMonitor.addMouseListener;
@@ -55,8 +55,11 @@ class GUI extends TopLevel implements Observer, Reporter {
         super(title, true);
         addMenuButton("Game->Start", this::start);
         addMenuButton("Game->Clear", this::clear);
-        addMenuButton("Game->Undo", this::undo);
+//        addMenuButton("Game->Undo", this::undo);
         addMenuButton("Game->Surrender", this::surrender);
+        addMenuButton("Game->Save", this::save);
+        addMenuButton("Game->Import", this::setImport);
+//        addMenuButton("Game->Set", this::set);
         addMenuButton("Game->Quit", this::quit);
         addMenuButton("Options->Players->White Manual", this::setWhiteManual);
         addMenuButton("Options->Players->Black Manual", this::setBlackManual);
@@ -101,6 +104,64 @@ class GUI extends TopLevel implements Observer, Reporter {
     /** Execute the "Quit" button function. */
     private synchronized void quit(String unused) {
         _out.printf("quit%n");
+    }
+
+    /** Save current board as a file, later we can continue playing. */
+    private synchronized void save(String unused) {
+        String resp =
+                getTextInput("Save As", "Save Game","question", "File Name");
+        if (resp == null) {
+            return;
+        }
+        try {
+            String filename = "./SavedMaps/" + resp + ".txt";
+            Path path = Paths.get(filename);
+
+            if (Files.exists(path)) {
+                String title = "Error";
+                String msg = "File name already exist, please try again.";
+                errMsg(title, msg);
+            } else {
+                Writer writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(filename), "utf-8"));
+                String map = _model.reverseBoard();
+                String nextmove = _model.whoseMove().toString();
+                writer.write(nextmove + " " + map);
+                writer.close();
+            }
+        } catch (UnsupportedEncodingException e) {
+            errMsg("Error", "UnsupportedEncodingException --GUI.save");
+        } catch (FileNotFoundException e) {
+            errMsg("Error", "FileNotFoundException --GUI.save");
+        } catch (IOException e) {
+            errMsg("Error", "IOException --GUI.save");
+        }
+    }
+
+    /** Import and continue the map. */
+    private synchronized void setImport(String unused) {
+        String resp =
+                getTextInput("Get Map", "Import Game", "question", "Map Name");
+        if (resp == null) {
+            return;
+        }
+        try {
+            String filename = "./SavedMaps/" + resp + ".txt";
+            Path path = Paths.get(filename);
+            if (Files.notExists(path)) {
+                String title = "Error";
+                String msg = "File not found, please try again.";
+                errMsg(title, msg);
+            } else {
+                BufferedReader br = new BufferedReader(new FileReader(filename));
+                String line = br.readLine();
+                _out.printf("set %s%n", line);
+            }
+        } catch (FileNotFoundException e) {
+            errMsg("Error", "FileNotFoundException --GUI.setImport");
+        } catch (IOException e) {
+            errMsg("Error", "IOException --GUI.setImport");
+        }
     }
 
     /** Execute Seed... command. */
@@ -170,46 +231,46 @@ class GUI extends TopLevel implements Observer, Reporter {
     }
 
     @Override
-    public void errMsg(String format, Object... args) {
-        //FIXME
+    public void errMsg(String title, Object... args) {
+        reportMsg(title, (String) args[0]);
     }
 
     @Override
-    public void outcomeMsg(String format, Object... args) {
-        //FIXME
+    public void outcomeMsg(String title, Object... args) {
+        reportMsg(title, (String) args[0]);
     }
 
     @Override
-    public void moveMsg(String format, Object... args) {
-        //FIXME
+    public void moveMsg(String title, Object... args) {
+        reportMsg(title, (String) args[0]);
+    }
+
+    private void reportMsg(String title, String msg) {
+        JOptionPane pane = new JOptionPane(msg, JOptionPane.INFORMATION_MESSAGE);
+        JDialog dialog = pane.createDialog(null, title);
+        dialog.setModal(false);
+        dialog.setVisible(true);
+
+        new Timer(3000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.setVisible(false);
+            }
+        }).start();
     }
 
     @Override
     public void update(Observable obs, Object arg) {
-//        if (arg == null) { return; }
 
         if (obs == _model) {
-//            System.out.println((String) arg);
+            // Update the gui only for result (ignore AI trials)
+            _widget.update(_model, arg);
         } else if (obs == _widget) {
             if (_model.whoseMove().equals(WHITE)) {
                 System.out.println("White moves " + (String) arg);
             }
-            _widget.update(_model, arg);
             _out.printf(arg + "%n");
         }
-    }
-
-    /** Respond to a click on SQ. */
-    private void movePiece(String sq) {
-        Move mov = Move.parseMove(sq);
-        _model.makeMove(mov);
-        selectMove(mov);
-    }
-
-    /** Make MOV the user-selected move (no move if null). */
-    private void selectMove(Move mov) {
-        _selectedMove = mov;
-        _widget.indicateMove(mov);
     }
 
     /** Contains the drawing logic for the Qirkat model. */

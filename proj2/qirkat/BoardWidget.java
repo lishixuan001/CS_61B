@@ -81,24 +81,23 @@ class BoardWidget extends Pad implements Observer {
     public synchronized void paintComponent(Graphics2D g) {
         _board = _model.board();
 
+        // Set background color
         g.setColor(BLANK_COLOR);
         g.fillRect(0, 0, _dim, _dim);
 
+        // Get attribute for the lines
         g.setStroke(LINE_STROKE);
         g.setColor(LINE_COLOR);
 
-        g.drawLine(1 * SQDIM,  SQDIM, 1 * SQDIM, SQDIM * SIDE);
-        g.drawLine(2 * SQDIM,  SQDIM, 2 * SQDIM, SQDIM * SIDE);
-        g.drawLine(3 * SQDIM,  SQDIM, 3 * SQDIM, SQDIM * SIDE);
-        g.drawLine(4 * SQDIM,  SQDIM, 4 * SQDIM, SQDIM * SIDE);
-        g.drawLine(5 * SQDIM,  SQDIM, 5 * SQDIM, SQDIM * SIDE);
+        for (int i = 1; i <= 5; i++) {
+            // Draw the vertical lines
+            g.drawLine(i * SQDIM, SQDIM, i * SQDIM, SQDIM * SIDE);
+            // Draw the horizontal lines
+            g.drawLine(SQDIM, i * SQDIM, SQDIM * SIDE, i * SQDIM);
 
-        g.drawLine(SQDIM, 1 * SQDIM, SQDIM * SIDE, 1 * SQDIM);
-        g.drawLine(SQDIM, 2 * SQDIM, SQDIM * SIDE, 2 * SQDIM);
-        g.drawLine(SQDIM, 3 * SQDIM, SQDIM * SIDE, 3 * SQDIM);
-        g.drawLine(SQDIM, 4 * SQDIM, SQDIM * SIDE, 4 * SQDIM);
-        g.drawLine(SQDIM, 5 * SQDIM, SQDIM * SIDE, 5 * SQDIM);
+        }
 
+        // Draw the cross lines
         g.drawLine(SQDIM, SQDIM, SQDIM * SIDE, SQDIM * SIDE);
         g.drawLine(SQDIM, SQDIM * SIDE, SQDIM * SIDE, SQDIM);
         g.drawLine(SQDIM, EDGE / 2, EDGE/ 2, SQDIM);
@@ -106,20 +105,25 @@ class BoardWidget extends Pad implements Observer {
         g.drawLine(SQDIM * SIDE, EDGE / 2, EDGE/ 2, SQDIM);
         g.drawLine(SQDIM * SIDE, EDGE / 2, EDGE/ 2, SQDIM * SIDE);
 
+        // Set attribute for the boundary lines
         g.setStroke(OUTLINE_STROKE);
         g.setColor(LINE_COLOR);
 
+        // Draw boundary lines
         g.drawLine(0,0, EDGE, 0);
         g.drawLine(0, EDGE, EDGE, EDGE);
         g.drawLine(0, 0, 0, EDGE);
         g.drawLine(EDGE, 0, EDGE, EDGE);
 
+        // Run if some point is selected
         if (_pointSelected) {
             int[] positions = getPosition(_selectedx, _selectedy);
             if (positions != null) {
                 int xpos = positions[0], ypos = positions[1];
                 int xloc = xpos * SQDIM, yloc = ypos * SQDIM;
 
+                // Check what piece is at the point, show different
+                // colors for different piece.
                 int index = (ypos - 1) * 5 + (xpos - 1) % 5;
                 if (_board.charAt(index) == '-') {
                     g.setColor(Color.GRAY);
@@ -127,12 +131,14 @@ class BoardWidget extends Pad implements Observer {
                     g.setColor(LIT_COLOR);
                 }
 
+                // Draw graph for the selected effect
                 g.fillOval(xloc - LIT_RADIUS, yloc - LIT_RADIUS
                         , 2 * LIT_RADIUS, 2 * LIT_RADIUS);
             }
             _pointSelected = !_pointSelected;
         }
 
+        // Draw the pieces according to the board
         for (int i = 0; i < _board.length(); i++) {
             int col = i % 5 + 1;
             int row = i / 5 + 1;
@@ -164,18 +170,27 @@ class BoardWidget extends Pad implements Observer {
         int xpos = where.getX(), ypos = where.getY();
         char mouseCol, mouseRow;
 
+        // If clicked left mouse
         if (where.getButton() == MouseEvent.BUTTON1) {
+
+            // See which square the mouse click
             int[] position = getPosition(xpos, ypos);
             if (position != null) {
                 int xloc = position[0], yloc = position[1];
                 mouseCol = _colIndex.get(xloc);
                 mouseRow = _rowIndex.get(6 - yloc);
 
+                // Add information to report message
                 _string.append("" + mouseCol + mouseRow);
+
                 if (where.getClickCount() == 1) {
+
+                    // If clicked once, lit the selected piece
                     _string.append("-");
                     selectPoint(xpos, ypos);
                 } else if (where.getClickCount() == 2) {
+
+                    // If double clicked, report the message
                     _string.delete(_string.length() - 3, _string.length());
                     String string = _string.toString();
                     clearString();

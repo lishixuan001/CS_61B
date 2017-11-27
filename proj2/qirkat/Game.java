@@ -76,7 +76,11 @@ class Game {
                             _moved = false;
                         } else {
                             move = _white.myMove(cmnd);
-                            _moved = true;
+                            if (move == null) {
+                                _moved = false;
+                            } else {
+                                _moved = true;
+                            }
                         }
                     } else {
 
@@ -95,7 +99,11 @@ class Game {
                             _moved = false;
                         } else {
                             move = _black.myMove(cmnd);
-                            _moved = true;
+                            if (move == null) {
+                                _moved = false;
+                            } else {
+                                _moved = true;
+                            }
                         }
                     } else {
 
@@ -111,15 +119,17 @@ class Game {
                     // Check if move piece of current player's
                     if (!_board.checkMoveMyPiece(move)) {
                         _moved = false;
-                        System.out.println("Note! Please move your own piece!");
-//                        throw new Error("Note! Please move your own piece!");
+                        String title = "Notice";
+                        String msg = "Note! Please move your own piece!";
+                        _reporter.errMsg(title, msg);
                     }
 
                     // Check if illegal move
                     if (!(_board.isLegalMove(move) || _board.isLegalJump(move))) {
                         _moved = false;
-                        System.out.println("Note! Illegal Move!");
-//                        throw new Error("Note! Illegal Move!");
+                        String title = "Notice";
+                        String msg = "Note! Illegal Move!";
+                        _reporter.errMsg(title, msg);
                     } else {
                         _board.makeMove(move);
                         System.out.println(_board.toString());
@@ -157,7 +167,7 @@ class Game {
             // Acknowledge and run command
             _commands.get(cmnd.commandType()).accept(cmnd.operands());
         } catch (GameException excp) {
-            _reporter.errMsg(excp.getMessage());
+            _reporter.errMsg("Error", excp.getMessage());
         }
     }
 
@@ -271,8 +281,28 @@ class Game {
     void doMove(String[] operands) {
         String string = operands[0];
         Move mov = Move.parseMove(string);
-        _board.makeMove(mov);
-        _moved = true;
+        if (mov == null) {
+            return;
+        }
+        if (mov.isJump()) {
+            if (_board.isLegalJump(mov)) {
+                _board.makeMove(mov);
+                _moved = true;
+            } else {
+                String title = "Alert";
+                String msg = "This is an illegal jump --doMove";
+                _reporter.errMsg(title, msg);
+            }
+        } else {
+            if (_board.isLegalMove(mov)) {
+                _board.makeMove(mov);
+                _moved = true;
+            } else {
+                String title = "Alert";
+                String msg = "This is an illegal move --doMove";
+                _reporter.errMsg(title, msg);
+            }
+        }
     }
 
     /** Set the game map. "set white ----- ---w- ---b- ---bb --w--"
@@ -385,7 +415,9 @@ class Game {
         msg.append("\n");
         msg.append(winner);
         msg.append(" wins!");
-        _reporter.outcomeMsg(msg.toString());
+
+        String title = "Congratulations";
+        _reporter.outcomeMsg(title, msg.toString());
     }
 
     /** Report "White wins." or "Black wins."
@@ -398,7 +430,8 @@ class Game {
         msg.append(winner);
         msg.append(" wins!");
 
-        _reporter.outcomeMsg(msg.toString());
+        String title = "Congratulations";
+        _reporter.outcomeMsg(title, msg.toString());
     }
 
     /** Transform PieceColor to String.

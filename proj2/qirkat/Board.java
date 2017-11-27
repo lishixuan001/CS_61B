@@ -454,6 +454,9 @@ class Board extends Observable {
 
     /** Return true iff MOV is legal on the current board. */
     boolean isLegalMove(Move mov) {
+        if (mov == null) {
+            return false;
+        }
         char col0 = mov.col0();
         char col1 = mov.col1();
         char row0 = mov.row0();
@@ -795,7 +798,9 @@ class Board extends Observable {
 
     /** Check if moves the right piece (piece of current player's) */
     boolean checkMoveMyPiece(Move mov) {
-
+        if (mov == null) {
+            return true;
+        }
         // true if start piece is current player's
         int k0 = mov.fromIndex();
         PieceColor start = _pieces.get(k0);
@@ -1018,7 +1023,7 @@ class Board extends Observable {
 
     /** Reversed board. For better fitting undo need
      * for setPiece in correct direction. */
-    private String reverseBoard() {
+    public String reverseBoard() {
         StringBuilder string = new StringBuilder();
         for (int key = 0 * SIDE; key < 1 * SIDE; key++) {
             PieceColor piece = _pieces.get(key);

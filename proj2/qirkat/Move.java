@@ -74,12 +74,15 @@ class Move {
         if (_staged == null) {
             _staged = new Move();
         }
-        _staged.set(col0, row0, col1, row1, nextJump);
+
+        try {
+            _staged.set(col0, row0, col1, row1, nextJump);
+        } catch (AssertionError e) {
+            return null;
+        }
         if (_staged.isJump() && nextJump != null && !nextJump.isJump()) {
-//            throw new IllegalArgumentException("bad jump");
             return null;
         } else if (!_staged.isJump() && nextJump != null) {
-//            throw new IllegalArgumentException("bad jump");
             return null;
         }
         Move result = _internedMoves.computeIfAbsent(_staged, IDENTITY);
