@@ -1053,6 +1053,37 @@ class Board extends Observable {
         return string.toString();
     }
 
+    /** Record last Move, used for GUI show trace. */
+    public void recordLastMove(Move mov) {
+        _lastMove = mov.toString();
+    }
+
+    /** Show the last Move. */
+    public String getLastMove() {
+        return _lastMove;
+    }
+
+    /** Reset Last Move. */
+    public void resetLastMove() {
+        _lastMove = null;
+    }
+
+    /** Record the last Move by String. */
+    private String _lastMove = null;
+
+    /** Record last Board, used for GUI show trace. */
+    public void recordLastBoard(String map) {
+        _lastBoard = map;
+    }
+
+    /** Show the last Board. */
+    public String getLastBoard() {
+        return _lastBoard;
+    }
+
+    /** Record the last Board by String. */
+    private String _lastBoard = null;
+
     /** Added by Wayne, variable showing board map. */
     private String _board;
 

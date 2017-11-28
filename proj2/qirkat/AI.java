@@ -539,11 +539,32 @@ class AI extends Player {
         return result;
     }
 
+    @Override
+    public void setLevel(String level) {
+        switch (level) {
+            case "one":
+                PIECE_POINT = 0;
+                JUMPABLE_POINT = 0;
+                POSITION_POINT = 0;
+                break;
+            case "two":
+                PIECE_POINT = 500;
+                JUMPABLE_POINT = 0;
+                POSITION_POINT = 5;
+                break;
+            case "three":
+                PIECE_POINT = 500;
+                JUMPABLE_POINT = 500;
+                POSITION_POINT = 5;
+                break;
+        }
+    }
+
     /** Point value for Piece Count Difference. */
-    private static final int PIECE_POINT = 100;
+    private int PIECE_POINT = 0;
     /** Point value for Piece Count Difference. */
-    private static final int JUMPABLE_POINT = 100;
+    private int JUMPABLE_POINT = 0;
     /** Point value for Piece Position on board. */
-    private static final int POSITION_POINT = 10;
+    private int POSITION_POINT = 0;
 
 }

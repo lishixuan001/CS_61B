@@ -1,7 +1,5 @@
 package qirkat;
 
-import graph.B;
-
 import java.io.File;
 import java.io.Reader;
 import java.io.InputStream;
@@ -122,22 +120,24 @@ class Game {
                         String title = "Notice";
                         String msg = "Note! Please move your own piece!";
                         _reporter.errMsg(title, msg);
-                    }
-
-                    // Check if illegal move
-                    if (!(_board.isLegalMove(move) || _board.isLegalJump(move))) {
-                        _moved = false;
-                        String title = "Notice";
-                        String msg = "Note! Illegal Move!";
-                        _reporter.errMsg(title, msg);
                     } else {
-                        _board.makeMove(move);
-                        System.out.println(_board.toString());
+                        // Check if illegal move
+                        if (!(_board.isLegalMove(move) || _board.isLegalJump(move))) {
+                            _moved = false;
+                            String title = "Notice";
+                            String msg = "Note! Illegal Move!";
+                            _reporter.errMsg(title, msg);
+                        } else {
+                            _board.recordLastBoard(_board.board());
+                            _board.makeMove(move);
+                            System.out.println(_board.toString());
+                        }
                     }
                 }
 
                 // If a move is made, takeTurn
                 if (_moved) {
+                    _board.recordLastMove(move);
                     takeTurn();
                     _moved = false;
                 }
@@ -363,6 +363,28 @@ class Game {
         doClear(null);
     }
 
+    /** Set AI Level. */
+    void setAI(String[] operands) {
+
+        String level = operands[0];
+        String title = "Notice";
+        StringBuilder msg = new StringBuilder();
+        if (_state == PLAYING) {
+            msg.append("Since game has started, we'll pause the game for changing AI settings.\n");
+        }
+        msg.append(String.format("Already set AIs to level %s", level));
+        _reporter.moveMsg(title, msg.toString());
+
+        _state = SETUP;
+
+        if (!_whiteIsManual) {
+            _white.setLevel(level);
+        }
+        if (!_blackIsManual) {
+            _black.setLevel(level);
+        }
+    }
+
     /** Execute 'seed OPERANDS[0]' command, where the operand is a string
      *  of decimal digits. Silently substitutes another value if
      *  too large. */
@@ -465,6 +487,7 @@ class Game {
         _commands.put(ERROR, this::doError);
         _commands.put(EOF, this::doQuit);
         _commands.put(SURRENDER, this::doSurrender);
+        _commands.put(SETAI, this::setAI);
     }
 
     /** Input source. */

@@ -292,7 +292,8 @@ class Move {
         while (end > 2) {
             mat.region(0, end);
             if (!mat.matches()) {
-                throw new IllegalArgumentException("bad move denotation");
+                System.out.println("Bad move denotation! --Move.parseMove");
+                return null;
             }
 
             result = move(mat.group(1).charAt(0), mat.group(2).charAt(0),
@@ -301,8 +302,7 @@ class Move {
             end = mat.end(2);
         }
         if (result == null) {
-//            throw new IllegalArgumentException("bad move denotation");
-            System.out.println("Illegal Move!");
+            System.out.println("Illegal Move! --Move.parseMove");
             return null;
         }
         return result;

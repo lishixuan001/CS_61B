@@ -6,7 +6,6 @@ import ucb.gui2.LayoutSpec;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,8 +13,6 @@ import java.nio.file.Paths;
 import java.util.Observable;
 import java.util.Observer;
 
-import java.awt.event.MouseEvent;
-import static com.sun.java.accessibility.util.AWTEventMonitor.addMouseListener;
 import static qirkat.PieceColor.*;
 
 /** The GUI for the Qirkat game.
@@ -59,12 +56,14 @@ class GUI extends TopLevel implements Observer, Reporter {
         addMenuButton("Game->Surrender", this::surrender);
         addMenuButton("Game->Save", this::save);
         addMenuButton("Game->Import", this::setImport);
-//        addMenuButton("Game->Set", this::set);
         addMenuButton("Game->Quit", this::quit);
-        addMenuButton("Options->Players->White Manual", this::setWhiteManual);
-        addMenuButton("Options->Players->Black Manual", this::setBlackManual);
-        addMenuButton("Options->Players->White Auto", this::setWhiteAuto);
-        addMenuButton("Options->Players->Black Auto", this::setBlackAuto);
+        addMenuButton("Options->Play Mode->Man vs. AI->Play White", this::playManAIWhite);
+        addMenuButton("Options->Play Mode->Man vs. AI->Play Black", this::playManAIBlack);
+        addMenuButton("Options->Play Mode->Man vs. Man", this::playManMan);
+        addMenuButton("Options->Play Mode->AI vs. AI", this::playAIAI);
+        addMenuButton("Options->AI Setting->Level 1", this::setAIone);
+        addMenuButton("Options->AI Setting->Level 2", this::setAItwo);
+        addMenuButton("Options->AI Setting->Level 3", this::setAIthree);
         addMenuButton("Options->Seed...", this::setSeed);
         addMenuButton("Options->Clean Choices", this::cleanChoices);
         addMenuButton("Info->Help", this::help);
@@ -114,6 +113,11 @@ class GUI extends TopLevel implements Observer, Reporter {
             return;
         }
         try {
+            File directory = new File("SavedMaps");
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+
             String filename = "./SavedMaps/" + resp + ".txt";
             Path path = Paths.get(filename);
 
@@ -175,8 +179,46 @@ class GUI extends TopLevel implements Observer, Reporter {
             long s = Long.parseLong(resp);
             _out.printf("seed %d%n", s);
         } catch (NumberFormatException excp) {
-            return;
+            // Ignore the Error
         }
+    }
+
+    /** Do setting when Man vs. AI and play White. */
+    private synchronized void playManAIWhite(String unused) {
+        setWhiteManual(unused);
+        setBlackAuto(unused);
+        String title = "Notice";
+        String msg = "Current Mode: Man vs. AI. Player hold: White.\n " +
+                "Note: White moves first.";
+        moveMsg(title, msg);
+    }
+
+    /** Do setting when Man vs. AI and play Black. */
+    private synchronized void playManAIBlack(String unused) {
+        setBlackManual(unused);
+        setWhiteAuto(unused);
+        String title = "Notice";
+        String msg = "Current Mode: Man vs. AI. Player hold: Black.\n" +
+                "Note: Black moves first.";
+        moveMsg(title, msg);
+    }
+
+    /** Do setting when Man vs. Man. */
+    private synchronized void playManMan(String unused) {
+        setWhiteManual(unused);
+        setBlackManual(unused);
+        String title = "Notice";
+        String msg = "Current Mode: Man vs. Man. White goes first.";
+        moveMsg(title, msg);
+    }
+
+    /** Do setting when AI vs. AI. */
+    private synchronized void playAIAI(String unused) {
+        setWhiteAuto(unused);
+        setBlackAuto(unused);
+        String title = "Notice";
+        String msg = "Current Mode: AI vs AI. Please Enjoy!";
+        moveMsg(title, msg);
     }
 
     /** Set White to Manual. */
@@ -198,6 +240,16 @@ class GUI extends TopLevel implements Observer, Reporter {
     private synchronized void setBlackAuto(String unused) {
         _out.printf("auto Black%n");
     }
+
+    /** Set AI to Level 1. */
+    private synchronized void setAIone(String unused) { _out.printf("AI one%n"); }
+
+    /** Set AI to Level 2. */
+    private synchronized void setAItwo(String unused) { _out.printf("AI two%n"); }
+
+    /** Set AI to Level 3. */
+    private synchronized void setAIthree(String unused) { _out.printf("AI three%n"); }
+
 
     /** Call for help. */
     private synchronized void help(String unused) {
@@ -245,6 +297,8 @@ class GUI extends TopLevel implements Observer, Reporter {
         reportMsg(title, (String) args[0]);
     }
 
+
+    // Report message to user
     private void reportMsg(String title, String msg) {
         JOptionPane pane = new JOptionPane(msg, JOptionPane.INFORMATION_MESSAGE);
         JDialog dialog = pane.createDialog(null, title);
@@ -268,6 +322,8 @@ class GUI extends TopLevel implements Observer, Reporter {
         } else if (obs == _widget) {
             if (_model.whoseMove().equals(WHITE)) {
                 System.out.println("White moves " + (String) arg);
+            } else if (_model.whoseMove().equals(BLACK)) {
+                System.out.println("Black moves " + (String) arg);
             }
             _out.printf(arg + "%n");
         }
@@ -279,6 +335,4 @@ class GUI extends TopLevel implements Observer, Reporter {
     private Board _model;
     /** Output sink for sending commands to a game. */
     private PrintWriter _out;
-    /** Move selected by clicking. */
-    private Move _selectedMove;
 }

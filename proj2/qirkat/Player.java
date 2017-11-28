@@ -39,6 +39,11 @@ abstract class Player {
         return _prompt;
     }
 
+    /** Change Player Level. */
+    public void setLevel(String level) {
+        return;
+    }
+
     /** The game I am playing in. */
     private final Game _game;
     /** The color of my pieces. */

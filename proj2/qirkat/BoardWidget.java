@@ -1,22 +1,13 @@
 package qirkat;
 
-import javafx.scene.input.KeyCode;
-import javafx.scene.shape.Circle;
 import ucb.gui2.Pad;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.*;
-import java.io.BufferedReader;
 import java.util.HashMap;
 import java.util.Observer;
 import java.util.Observable;
 
 import java.awt.event.MouseEvent;
-
-import qirkat.Board;
-import static qirkat.PieceColor.*;
 
 /** Widget for displaying a Qirkat board.
  *  @author Shixuan (Wayne) Li
@@ -35,6 +26,8 @@ class BoardWidget extends Pad implements Observer {
     static final int LIT_RADIUS = 20;
     /** Radius of acceptable error range. */
     static final int ERROR_RADIUS = 20;
+    /** Radius of the trace point. */
+    static final int TRACE_RADIUS = 2;
 
     /** Color of white pieces. */
     private static final Color WHITE_COLOR = Color.WHITE;
@@ -47,6 +40,10 @@ class BoardWidget extends Pad implements Observer {
     private static final Color LIT_COLOR = Color.ORANGE;
     /** Color of blank squares. */
     private static final Color BLANK_COLOR = new Color(100, 100, 100);
+    /** Color of the moved spots in trace. */
+    private static final Color MOVED_COLOR = Color.RED;
+    /** Color of the eat-ed spots in trace. */
+    private static final Color EATED_COLOR = new Color(240, 255, 255);
 
     /** Stroke for lines.. */
     private static final BasicStroke LINE_STROKE = new BasicStroke(1.0f);
@@ -67,14 +64,6 @@ class BoardWidget extends Pad implements Observer {
         _model.addObserver(this);
         _dim = EDGE;
         setPreferredSize(EDGE, EDGE);
-    }
-
-    /** Indicate that the squares indicated by MOV are the currently selected
-     *  squares for a pending move. */
-    void indicateMove(Move mov) {
-        _selectedMove = mov;
-        _model.makeMove(_selectedMove);
-        repaint();
     }
 
     @Override
@@ -136,6 +125,7 @@ class BoardWidget extends Pad implements Observer {
                         , 2 * LIT_RADIUS, 2 * LIT_RADIUS);
             }
             _pointSelected = !_pointSelected;
+
         }
 
         // Draw the pieces according to the board
@@ -154,6 +144,50 @@ class BoardWidget extends Pad implements Observer {
             }
         }
 
+        // Draw the trace based on the last move of the board
+        String lastmove = _model.getLastMove();
+        if (lastmove != null) {
+
+            // Draw the eat-ed points
+            String _recordBoard = _model.getLastBoard();
+            if (_recordBoard != null) {
+                for (int i = 0; i < _board.length(); i++) {
+                    int col = i % 5 + 1;
+                    int row = i / 5 + 1;
+
+                    if (_recordBoard.charAt(i) != '-' && _board.charAt(i) == '-') {
+                        g.setColor(EATED_COLOR);
+                        g.fillOval(col * SQDIM - TRACE_RADIUS, row * SQDIM - TRACE_RADIUS
+                                , 2 * TRACE_RADIUS, 2 * TRACE_RADIUS);
+                    }
+                }
+            }
+
+            // Draw the moved-to spots
+            g.setColor(MOVED_COLOR);
+            lastmove.trim();
+            String[] movs = lastmove.split("-");
+            for (int i = 0; i < movs.length; i++) {
+                String mov = movs[i];
+
+                if (i == movs.length - 1) {
+                    int[] position = getPosition(mov);
+                    int xpos = position[0], ypos = position[1];
+                    int xloc = xpos * SQDIM, yloc = ypos * SQDIM;
+                    g.fillOval(xloc - TRACE_RADIUS, yloc - TRACE_RADIUS
+                            , 2 * TRACE_RADIUS, 2 * TRACE_RADIUS);
+                } else {
+                    int[] position = getPosition(mov);
+                    int xpos = position[0], ypos = position[1];
+                    int xloc = xpos * SQDIM, yloc = ypos * SQDIM;
+                    g.fillOval(xloc - TRACE_RADIUS, yloc - TRACE_RADIUS
+                            , 2 * TRACE_RADIUS, 2 * TRACE_RADIUS);
+                }
+
+            }
+
+            _model.resetLastMove();
+        }
     }
 
     /** Lit a selected piece. */
@@ -182,20 +216,28 @@ class BoardWidget extends Pad implements Observer {
 
                 // Add information to report message
                 _string.append("" + mouseCol + mouseRow);
+                _string.append("-");
 
                 if (where.getClickCount() == 1) {
 
                     // If clicked once, lit the selected piece
-                    _string.append("-");
                     selectPoint(xpos, ypos);
                 } else if (where.getClickCount() == 2) {
 
                     // If double clicked, report the message
-                    _string.delete(_string.length() - 3, _string.length());
+                    if (_string.length() > 4) {
+                        _string.delete(_string.length() - 4, _string.length());
+                    }
                     String string = _string.toString();
                     clearString();
-                    setChanged();
-                    notifyObservers(string);
+
+                    // if get things like "c2" or "c2-", ignore
+                    if (string.length() > 3) {
+                        setChanged();
+                        notifyObservers(string);
+                    } else {
+                        return;
+                    }
                 }
             }
         }
@@ -219,6 +261,17 @@ class BoardWidget extends Pad implements Observer {
                 }
             }
         }
+        return result;
+    }
+
+    /** Get position by [a-e][1-5] format. */
+    private int[] getPosition(String location) {
+        int[] result = null;
+        char xchar = location.charAt(0);
+        char ychar = location.charAt(1);
+        int x = _axisIndex.get(xchar);
+        int y = _axisIndex.get(ychar);
+        result = new int[] {x, 6 - y};
         return result;
     }
 
@@ -256,11 +309,26 @@ class BoardWidget extends Pad implements Observer {
         }
     };
 
+    /** Added by Wayne, convert axis expression into int. */
+    @SuppressWarnings("unchecked")
+    private HashMap<Character, Integer> _axisIndex = new HashMap() {
+        {
+            put('a', 1);
+            put('b', 2);
+            put('c', 3);
+            put('d', 4);
+            put('e', 5);
+            put('1', 1);
+            put('2', 2);
+            put('3', 3);
+            put('4', 4);
+            put('5', 5);
+        }
+    };
+
     /** Dimension of current drawing surface in pixels. */
     private int _dim;
 
-    /** A partial Move indicating selected squares. */
-    private Move _selectedMove;
     /** Selected x, and y. */
     private int _selectedx;
     private int _selectedy;
@@ -268,4 +336,5 @@ class BoardWidget extends Pad implements Observer {
     private boolean _pointSelected = false;
     /** Record Mouse Movement. */
     private StringBuilder _string = new StringBuilder();
+    /** Record the board for comparing. */
 }
