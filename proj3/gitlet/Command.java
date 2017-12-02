@@ -1,32 +1,39 @@
-package qirkat;
+package gitlet;
 
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.Pattern.*;
 
-import static qirkat.PieceColor.*;
 
 /** All things to do with parsing commands.
  *  @author Shixuan (Wayne) Li
  */
 class Command {
 
-    /** Command types.  PIECEMOVE indicates a move of the form
-     *  c0r0-c1r1.  ERROR indicates a parse error in the command.
+    /** Command types.
+     *  ERROR indicates a parse error in the command.
      *  All other commands are upper-case versions of what the
      *  programmer writes. */
     enum Type {
         /* Start-up state only. */
-        AUTO("(?i)auto\\s+(white|black)"),
-        MANUAL("(?i)manual\\s+(white|black)"),
-        SEED("seed\\s+(\\d+)"),
-        START,
-        SETBOARD("(?i)set\\s+(white|black)\\s+((?:[bw-]\\s*){25})"),
-        /* Regular moves (set-up or play) */
-        PIECEMOVE("([a-e][1-5](?:-[a-e][1-5])+)"),
-        /* Valid at any time. */
-        LOAD("load\\s+(\\S+)"),
-        SETAI("(?i)AI\\s+(one|two|three)"),
-        QUIT, CLEAR, DUMP, HELP, SURRENDER,
+        INIT, LOG, STATUS, CLEAN,
+        GLOBALLOG("global-log"),
+        ADD("add\\s+(\\S+)"),
+
+//        COMMIT,     // Alert!! Message Format is not correct
+
+        RM("rm\\s+(\\S+)"),
+
+//        FIND,    // Alert!! Message Format is not correct
+
+        BRANCH("branch\\s+(\\S+)"),
+        RMBRANCH("rm-branch\\s+(\\S+)"),
+        RESET("reset\\s+(\\S+)"),
+        MERGE("merge\\s+(\\S+)"),
+        CHECKOUTF("checkout\\s--\\s+(\\S+)"),
+        CHECKOUTCF("checkout\\s+(\\S+)\\s--\\s+(\\S+)"),
+        CHECKOUTB("checkout\\s+(\\S+)"),
+        HELP("--help"),
         /* Special "commands" internally generated. */
         /** Syntax error in command. */
         ERROR(".*"),
@@ -77,6 +84,7 @@ class Command {
         for (Type type : Type.values()) {
             Matcher mat = type._pattern.matcher(command);
             if (mat.matches()) {
+
                 String[] operands = new String [mat.groupCount()];
                 for (int i = 1; i <= operands.length; i += 1) {
                     operands[i - 1] = mat.group(i);
@@ -84,7 +92,7 @@ class Command {
                 return new Command(type, operands);
             }
         }
-        throw new Error("Internal failure: error command did not match.");
+        throw new Error("This error should not occur --Command.parseCommand");
     }
 
     /** The command name. */
