@@ -17,7 +17,50 @@ public class MST {
      *  are a subset of those in E (they do not include copies of the
      *  original edges, just the original edges themselves.) */
     public static int[][] mst(int V, int[][] E) {
-        return null;  // FIXME
+
+        int[][] H = Arrays.copyOf(E, E.length);
+        // Filter out the loops
+        for (int[] item : E) {
+            if (item[0] == item[1]) {
+                H = remove(H, item);
+            }
+        }
+
+        int[][] K = Arrays.copyOf(H, H.length);
+        // Filter out the ones with parallel routes
+        for (int i = 0; i < H.length; i++) {
+            for (int j = i + 1; j < H.length; j++) {
+                int[] itemi = E[i];
+                int[] itemj = E[j];
+                if (itemi[0] == itemj[0] && itemi[1] == itemj[1]) {
+                    if (itemi[2] < itemj[2]) {
+                        K = remove(K, itemj);
+                    } else {
+                        K = remove(K, itemi);
+                    }
+                }
+            }
+        }
+
+        // use Comparator
+        Arrays.sort(K, EDGE_WEIGHT_COMPARATOR);
+
+        return K;
+    }
+
+    public static int[][] remove(int[][] symbols, int[] c)
+    {
+        for (int i = 0; i < symbols.length; i++)
+        {
+            if (symbols[i] == c)
+            {
+                int[][] copy = new int[symbols.length-1][];
+                System.arraycopy(symbols, 0, copy, 0, i);
+                System.arraycopy(symbols, i+1, copy, i, symbols.length-i-1);
+                return copy;
+            }
+        }
+        return symbols;
     }
 
     /** An ordering of edges by weight. */

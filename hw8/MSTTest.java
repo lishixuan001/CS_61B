@@ -82,12 +82,12 @@ public class MSTTest {
         check(20, 10, 100, 19234, 1076);
     }
 
-    @Test(timeout = 500)
+    @Test(timeout = 2000)
     public void biggishTest1() {
         check(5000, 30000, 1000, 192345, 536912);
     }
 
-    @Test(timeout = 500)
+    @Test(timeout = 2000)
     public void biggishTest2() {
         check(20000, 100000, 1000, 1923456, 2595553);
     }

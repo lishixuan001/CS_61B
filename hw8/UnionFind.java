@@ -12,13 +12,13 @@ public class UnionFind {
     /** A union-find structure consisting of the sets { 1 }, { 2 }, ... { N }.
      */
     public UnionFind(int N) {
-        _id = new int[N];
+        _id = new int[N + 1];
         initialId(_id);
-        _length = N;
+        _length = N + 1;
     }
 
     private void initialId(int[] id) {
-        for (int i = 0; i < _length; i++) {
+        for (int i = 1; i < _length; i++) {
             id[i] = i;
         }
     }
@@ -37,7 +37,7 @@ public class UnionFind {
     /** Union U and V into a single partition, returning its representative. */
     public int union(int u, int v) {
         if (u != v) {
-            for (int i = 0; i < _length; i++) {
+            for (int i = 1; i < _length; i++) {
                 if (_id[i] == find(u)) {
                     _id[i] = find(v);
                 }
