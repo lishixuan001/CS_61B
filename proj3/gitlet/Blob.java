@@ -1,32 +1,30 @@
 package gitlet;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.List;
 
-import static gitlet.GitletOperator.*;
 import static gitlet.Doc.*;
 import static gitlet.Staged.*;
+import static gitlet.GitletOperator.*;
 
 public class Blob{
 
     Blob() {
-        _myAreaPath = PATH_BLOBS;
         _files = getAllDocs();
     }
 
     /** Get all files in Blobs. */
-    private ArrayList<Doc> getAllDocs() {
-        ArrayList<Doc> docs = new ArrayList<>();
-        File[] files = getFilesInFile(_myAreaPath);
+    private ArrayList<String> getAllDocs() {
+        ArrayList<String> result = new ArrayList<>();
+        File[] files = getFilesInFile(PATH_BLOBS);
         if (files != null) {
             ArrayList<String> hashs = getAllDirectorysFrom(files);
-            for (String hash : hashs) {
-                String name = readFrom(_myAreaPath + hash + "/" + _nameFolder)[0];
-                docs.add(new Doc(name, hash, _myAreaPath + hash + _contentFolder));
-            }
+            result.addAll(hashs);
         }
-        return docs;
+        return result;
     }
 
     /** Init in init mode. */
@@ -34,10 +32,17 @@ public class Blob{
         new File(PATH_BLOBS).mkdir();
     }
 
+    /** Get my files' hashs. */
+    static ArrayList<String> myFiles() {
+        ArrayList<String> result = new ArrayList<>();
+        result.addAll(_files);
+        return result;
+    }
+
     /** Check if has file by hash. */
     boolean hasFileHash(String fileHash) {
-        for (Doc file : _files) {
-            if (file.myHash().equals(fileHash)) {
+        for (String hash: _files) {
+            if (hash.equals(fileHash)) {
                 return true;
             }
         }
@@ -46,17 +51,35 @@ public class Blob{
 
     /** Check and add from Staged Area. */
     void add(Doc doc) {
-        // FIXME
+        try {
+            Files.move(new File(PATH_STAGED + doc.myHash()).toPath(),
+                    new File(PATH_BLOBS + doc.myHash()).toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-        // Add from Staged to Blobs
+    /** Get name of a hash. */
+    String getNameOf(String hash) {
+        if (hasFileHash(hash)) {
+            return readFrom(PATH_BLOBS + hash + "/" + _nameFolder)[0];
+        } else {
+            return null;
+        }
+    }
 
-        // Add the new doc to _files
-
+    /** Checkout file based on filename to WorkingArea. Assume exist. */
+    void checkOutByHash(String hash) {
+        File source = new File(PATH_BLOBS + hash + _contentFolder + getNameOf(hash));
+        File target = new File(PATH_WORKING + getNameOf(hash));
+        if (target.exists()) {
+            target.delete();
+        }
+        copyFiles(source, target);
     }
 
     /** All files inside Staged Area. */
-    private static ArrayList<Doc> _files = new ArrayList<>();
-    /** My Area's general path. */
-    private static String _myAreaPath;
+    private static ArrayList<String> _files = new ArrayList<>();
 
 }

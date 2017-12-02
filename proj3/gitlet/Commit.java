@@ -1,15 +1,10 @@
 package gitlet;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import static gitlet.Utils.*;
+import static gitlet.Staged.*;
 import static gitlet.GitletOperator.*;
 
 public class Commit {
@@ -66,6 +61,18 @@ public class Commit {
         }
     }
 
+    /** Restore a Commit with 7-digit id. Assume exist. */
+    static String fullLengthIdOf(String id) {
+        String fullId = "";
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            String partHash = hash.substring(0, 7);
+            if (partHash.equals(id)) {
+                fullId = hash;
+            }
+        }
+        return fullId;
+    }
+
     /** Initialized commit (the first commit). */
     void init() {
         new File(PATH_COMMITS).mkdir();
@@ -97,17 +104,22 @@ public class Commit {
         writeInto(_myPath + _filesFolder, false, _files);
         writeInto(_myPath + _branchesFolder, false, SetToStrings(_branches));
 
-        try {
-            for (Doc doc : _staged.files()) {
-                Files.move(new File(PATH_STAGED + doc.myHash()).toPath(),
-                        new File(PATH_BLOBS + doc.myHash()).toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (Doc doc : _staged.files()) {
+            _blobs.add(doc);
         }
 
+        clearRemovedFiles();
         _branch.addCommit(_myHash);
+    }
+
+    /** Get my files. */
+    String[] myFiles() {
+        return _files;
+    }
+
+    /** Get my branches. */
+    Set<String> myBranches() {
+        return _branches;
     }
 
     /** Check if this commit has parents. */
@@ -118,6 +130,33 @@ public class Commit {
     /** Get my parents. */
     String[] myParents() {
         return _parents;
+    }
+
+    /** Add branch to the commit. */
+    static void addBranchTo(String hash, String branch) {
+        writeInto(PATH_COMMITS + hash + "/" + _branchesFolder, true, branch);
+    }
+
+    /** Delete branch from the commit. */
+    static void deleteBranchFrom(String hash, String branch) {
+        File commit = new File(PATH_COMMITS + hash + "/" + _branchesFolder);
+        String[] currentBranchs = readFrom(commit);
+        clearFile(commit);
+        for (String currentbranch : currentBranchs) {
+            if (!currentbranch.equals(branch)) {
+                writeInto(commit, true, currentbranch);
+            }
+        }
+    }
+
+    /** Check the existence of a commit with id. */
+    static boolean existCommit(String id) {
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            if (hash.equals(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Get String format date. */
@@ -156,6 +195,37 @@ public class Commit {
             }
         }
         return result;
+    }
+
+    /** Contains file with filename. */
+    boolean contains(String filename) {
+        String[] hashs = readFrom(_myPath + _filesFolder);
+        if (hashs == null) {
+            return false;
+        }
+        for (String hash : hashs) {
+            if (_blobs.hasFileHash(hash)) {
+                String name = _blobs.getNameOf(hash);
+                if (name.equals(filename)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Get the hash of the file in this commit by its name. Assume exist. */
+    String getHashByName(String filename) {
+        String[] hashs = readFrom(_myPath + _filesFolder);
+        for (String hash : hashs) {
+            if (_blobs.hasFileHash(hash)) {
+                String name = _blobs.getNameOf(hash);
+                if (name.equals(filename)) {
+                    return hash;
+                }
+            }
+        }
+        return null;
     }
 
     /** My hash id name. */
@@ -202,13 +272,13 @@ public class Commit {
     /** The path of this commit. */
     private static String _myPath;
     /** Convenience for folders. */
-    private static String _parentFolder = "parents.txt",
+    static String _parentFolder = "parents.txt",
                    _timeStampFolder = "timeStamp.txt",
                    _messageFolder = "message.txt",
                    _filesFolder = "files.txt",
                    _branchesFolder = "branches.txt";
     /** If this committed is created by merging. */
-    private static boolean _isMerged = false;
+    private boolean _isMerged = false;
 
 
 

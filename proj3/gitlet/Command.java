@@ -19,13 +19,7 @@ class Command {
         INIT, LOG, STATUS, CLEAN,
         GLOBALLOG("global-log"),
         ADD("add\\s+(\\S+)"),
-
-//        COMMIT,     // Alert!! Message Format is not correct
-
         RM("rm\\s+(\\S+)"),
-
-//        FIND,    // Alert!! Message Format is not correct
-
         BRANCH("branch\\s+(\\S+)"),
         RMBRANCH("rm-branch\\s+(\\S+)"),
         RESET("reset\\s+(\\S+)"),

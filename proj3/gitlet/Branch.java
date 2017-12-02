@@ -3,29 +3,21 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
+import static gitlet.Commit.*;
 import static gitlet.GitletOperator.*;
 
 public class Branch {
 
     /** This should occur only in init mode. */
     Branch() {
-        new Branch(getCurrentBranch());
+        _name = getCurrentBranch();
     }
 
-    /** Auto check current head Commit for current branch. */
+    /** Create a new branch. */
     Branch(String name) {
-        new Branch(name, currentLatestCommit());
-    }
-
-    /** Create a branch. */
-    Branch(String name, String headCommit) {
         _name = name;
-        if (headCommit != null) {
-            _commits.add(headCommit);
-        }
+        _commits = _branch.myCommits();
         _myPath = PATH_BRANCHES + _name + "/";
     }
 
@@ -61,20 +53,30 @@ public class Branch {
             rewriteCurrentBranch(DEFAULT_BRANCH);
 
             _name = DEFAULT_BRANCH;
-            _commits.add(INIT_COMMIT);
             _myPath = PATH_BRANCHES + _name + "/";
             createBranch();
+            _commits.add(INIT_COMMIT);
             _branch = Branch.restore(DEFAULT_BRANCH);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /** My Commits. */
+   ArrayList<String> myCommits() {
+        return _commits;
+    }
 
     /** Create branch. */
     void createBranch() {
         new File(_myPath).mkdir();
         writeInto(_myPath + _commitsFolder, false, ListToStrings(_commits));
+    }
+
+    /** Delete branch. */
+    static void deleteBranch(String branchName) {
+        File branch = new File(PATH_BRANCHES + branchName);
+        deleteDirectory(branch);
     }
 
     /** My hash id name. */
@@ -96,13 +98,39 @@ public class Branch {
         writeInto(_myPath + _commitsFolder, true, id);
     }
 
+    /** See if there already exist a branch with the name. */
+    static boolean hasBranchName(String branchName) {
+        for (String branch : getAllDirectorysFrom(PATH_BRANCHES)) {
+            if (branch.equals(branchName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Check if a file with filename in WorkingArea is tracked by the branch. */
+    static boolean isTrackedBy(String filename, String branch) {
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            for (String file : readFrom(PATH_COMMITS + hash + "/" + _filesFolder)) {
+                if (_blobs.getNameOf(file).equals(filename)) {
+                    for (String bran : readFrom(PATH_COMMITS + hash + "/" + _branchesFolder)) {
+                        if (bran.equals(branch)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     /** Name of this branch. */
     private static String _name;
     /** Path of this branch. */
     private static String _myPath;
     /** Commits through this branch. */
-    private static ArrayList<String> _commits = new ArrayList<>();
+    private ArrayList<String> _commits = new ArrayList<>();
     /** Convenience showing commits.txt. */
-    private static String _commitsFolder = "commits.txt";
+    static String _commitsFolder = "commits.txt";
 }

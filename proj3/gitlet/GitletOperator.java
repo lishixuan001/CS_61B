@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import static gitlet.Utils.*;
 import static gitlet.Commit.*;
+import static gitlet.Branch.*;
 import static gitlet.Command.Type.*;
 import static gitlet.Staged.*;
 import static gitlet.GitletException.error;
@@ -32,7 +33,7 @@ class GitletOperator {
         _blobs = new Blob();
         _staged = new Staged();
         _workArea = new WorkArea();
-        _branch = new Branch();
+        _branch = Branch.restore();
     }
 
     /** Process the user commands. */
@@ -43,10 +44,10 @@ class GitletOperator {
     void process(String cmnd, String[] operands) {
 
         // FIXME --Test what command is translated
-        System.out.println("=====================");
-        System.out.println("Command Type: " + cmnd.toUpperCase());
-        System.out.println("Command Operands: " + Arrays.toString(operands));
-        System.out.println("=====================");
+//        System.out.println("=====================");
+//        System.out.println("Command Type: " + cmnd.toUpperCase());
+//        System.out.println("Command Operands: " + Arrays.toString(operands));
+//        System.out.println("=====================");
 
         if (cmnd.equals("commit")) {
             doCommit(operands);
@@ -63,10 +64,10 @@ class GitletOperator {
                     Command.parseCommand(input);
 
             // FIXME --Test what command is translated
-            System.out.println("=====================");
-            System.out.println("Command Type: " + cmnd.commandType());
-            System.out.println("Command Operands: " + Arrays.toString(cmnd.operands()));
-            System.out.println("=====================");
+//            System.out.println("=====================");
+//            System.out.println("Command Type: " + cmnd.commandType());
+//            System.out.println("Command Operands: " + Arrays.toString(cmnd.operands()));
+//            System.out.println("=====================");
 
             // Acknowledge and run command
             _commands.get(cmnd.commandType()).accept(cmnd.operands());
@@ -112,16 +113,22 @@ class GitletOperator {
     /** Function for "rm [file name]". */
     private void doRm(String[] operands) {
         doTest(operands);
-       // FIXME  --here assume by name
-//
-//        String filename = operands[0];
-//        // Check if has the name in Staged
-//        if (_staged.hasFileName(filename)) {
-//            _staged.deleteByName(filename);
-//        }
-//
-//        // Check if has name in Staged/nextCommit.txt
-//        String[] nextCommitList = readFrom(_nextCommitFile);
+
+        String filename = operands[0];
+        Doc doc = new Doc(filename, PATH_WORKING);
+
+        if (_staged.hasFileHash(doc.myHash())) {
+            _staged.deleteByHash(filename);
+        }
+
+        if (nextCommitListContains(doc.myHash())) {
+            deleteFromNextCommitList(doc.myHash());
+        }
+
+        deleteFromWorking(filename);
+
+        addToRemovedHashs(doc.myHash());
+        addToRemovedNames(doc.myName());
     }
 
     /** Function for "log". */
@@ -183,32 +190,147 @@ class GitletOperator {
     /** Function for "status". */
     private void doStatus(String[] unused) {
         doTest(unused);
-        // FIXME
+
+        // Branches
+        System.out.println("=== Branches ===");
+        ArrayList<String> branches = new ArrayList<>();
+        branches.addAll(getAllDirectorysFrom(PATH_BRANCHES));
+        Collections.sort(branches);
+        String currentBranch = getCurrentBranch();
+        for (String branch : branches) {
+            if (branch.equals(currentBranch)) {
+                System.out.println("*" + branch);
+            } else {
+                System.out.println(branch);
+            }
+        }
+        System.out.println();
+
+        // Staged files
+        System.out.println("=== Staged Files ===");
+        ArrayList<String> stageds = new ArrayList<>();
+        stageds.addAll(getAllDirectorysFrom(PATH_STAGED));
+        Collections.sort(stageds);
+        for (String file : stageds) {
+            System.out.println(file);
+        }
+        System.out.println();
+
+        // Removed files
+        System.out.println("=== Removed Files ===");
+        ArrayList<String> removed = new ArrayList<>();
+        removed.addAll(StringsToList(readFrom(_removedNames)));
+        Collections.sort(removed);
+        for (String file : removed) {
+            System.out.println(file);
+        }
+        System.out.println();
+
+        // FIXME -- Do these for Extra Credits
+        // Gather all files in Staged and in nextCommit.txt
+
+        // for the gathered commits:
+        // if not in Staged: if in nextCommit.txt: modified/deleted
+        //               else: should not happen
+        // else: if in Staged: modified
+
+        // Untracked files
     }
 
     /** Function for "branch [branch name]". */
     private void doBranch(String[] operands) {
         doTest(operands);
+        String branchName = operands[0];
+        if (hasBranchName(branchName)) {
+            SystemExit("A branch with that name already exists.");
+        }
+        Branch newBranch = new Branch(branchName);
+        newBranch.createBranch();
+
+        addBranchTo(currentLatestCommit(), branchName);
     }
 
     /** Function for "rm-branch [branch name]". */
     private void doRmBranch(String[] operands) {
         doTest(operands);
+        String branchName = operands[0];
+        if (getCurrentBranch().equals(branchName)) {
+            SystemExit("Cannot remove the current branch.");
+        }
+        if (!hasBranchName(branchName)) {
+            SystemExit("A branch with that name does not exist.");
+        }
+        File commits = new File(PATH_BRANCHES + branchName + "/" + _commitsFolder);
+        for (String commit : readFrom(commits)) {
+            deleteBranchFrom(commit, branchName);
+        }
+
+        deleteBranch(branchName);
     }
 
     /** Function for "checkout -- [file name]". */
     private void doCheckoutF(String[] operands) {
         doTest(operands);
+        String filename = operands[0];
+        String latestCommit = currentLatestCommit();
+        Commit commit = Commit.restore(latestCommit);
+        if (!commit.contains(filename)) {
+            SystemExit("File does not exist in that commit.");
+        }
+        _blobs.checkOutByHash(commit.getHashByName(filename));
     }
 
     /** Function for "checkout [commit id] -- [file name]". */
     private void doCheckoutCF(String[] operands) {
         doTest(operands);
+        String commitId = operands[0];
+        String filename = operands[1];
+
+        if (commitId.length() <= 7) {
+            commitId = fullLengthIdOf(commitId);
+        }
+
+        if (!existCommit(commitId)) {
+            SystemExit("No commit with that id exists.");
+        }
+
+        Commit commit = Commit.restore(commitId);
+
+        if (!commit.contains(filename)) {
+            SystemExit("File does not exist in that commit.");
+        }
+        _blobs.checkOutByHash(commit.getHashByName(filename));
     }
 
     /** Function for "checkout [branch name]". */
     private void doCheckoutB(String[] operands) {
         doTest(operands);
+        String branchName = operands[0];
+
+        if (!hasBranchName(branchName)) {
+            SystemExit("No such branch exists.");
+        }
+        String currentBranch = getCurrentBranch();
+        if (currentBranch.equals(branchName)) {
+            SystemExit("No need to checkout the current branch.");
+        }
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            if (!isTrackedBy(file.getName(), currentBranch)) {
+                SystemExit("There is an untracked file in the way; delete it or add it first.");
+            }
+        }
+
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            if (!isTrackedBy(file.getName(), branchName)) {
+                delete(file);
+            }
+        }
+
+        rewriteCurrentBranch(branchName);
+        Commit commit = Commit.restore(currentLatestCommit());
+        for (String hash : commit.myFiles()) {
+            _blobs.checkOutByHash(hash);
+        }
     }
 
     /** Function for "reset [commit id]". */
@@ -284,6 +406,21 @@ class GitletOperator {
         }
     }
 
+    /** Clear a file. */
+    static void clearFile(String file) {
+        try {
+            PrintWriter pw = new PrintWriter(file);
+            pw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Clear a file with input "File". */
+    static void clearFile(File file) {
+        clearFile(file.getPath());
+    }
+
     /** Convenience for writing objects into file. */
     static void writeInto(String file, boolean ifAppend, String... strs) {
         try {
@@ -336,16 +473,7 @@ class GitletOperator {
 
     /** Convenience for re-writing currentBranch.txt. */
     static void rewriteCurrentBranch(String branchName) {
-        try {
-            FileWriter fw = new FileWriter(PATH_CURRENTBRANCH);
-            BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(branchName);
-            bw.newLine();
-            bw.flush();
-            bw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeInto(PATH_CURRENTBRANCH, false, branchName);
     }
 
     /** Get Files in File. */
@@ -356,6 +484,9 @@ class GitletOperator {
     /** Get all directories from File[]. */
     static ArrayList<String> getAllDirectorysFrom(File[] files) {
         ArrayList<String> result = new ArrayList<>();
+        if (files == null) {
+            return result;
+        }
         for (File file : files) {
             if (file.isDirectory()) {
                 result.add(file.getName());
@@ -441,6 +572,23 @@ class GitletOperator {
         }
     }
 
+    /** Delete from Working directory. */
+    static void deleteFromWorking(String filename) {
+        new File(PATH_WORKING + filename).delete();
+    }
+
+    /** Delete directory. */
+    static void deleteDirectory(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDirectory(f);
+            }
+        }
+        file.delete();
+    }
+
+    /** Make system exit with a message. */
     static void SystemExit(String msg) {
         System.out.println(msg);
         System.exit(0);

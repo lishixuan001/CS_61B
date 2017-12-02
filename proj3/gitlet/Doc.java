@@ -6,7 +6,7 @@ import java.io.Serializable;
 import static gitlet.Utils.*;
 import static gitlet.GitletOperator.*;
 
-public class Doc {
+class Doc {
 
     /** Create Doc Class by filename and filepath. */
     Doc(String filename, String filepath) {
@@ -45,7 +45,7 @@ public class Doc {
     }
 
     /** Set the local parameters. */
-    private static String _myName, _myPath, _myHash;
+    private String _myName, _myPath, _myHash;
     /** Convenience for name.txt folder. */
     static final String _nameFolder = "name.txt";
 
