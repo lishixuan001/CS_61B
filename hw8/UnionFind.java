@@ -12,9 +12,9 @@ public class UnionFind {
     /** A union-find structure consisting of the sets { 1 }, { 2 }, ... { N }.
      */
     public UnionFind(int N) {
-        _id = new int[N + 1];
+        _id = new int[N];
         initialId(_id);
-        _length = N + 1;
+        _length = N;
     }
 
     private void initialId(int[] id) {
