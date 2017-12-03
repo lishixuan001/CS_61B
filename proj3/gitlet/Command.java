@@ -2,8 +2,6 @@ package gitlet;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.Pattern.*;
-
 
 /** All things to do with parsing commands.
  *  @author Shixuan (Wayne) Li

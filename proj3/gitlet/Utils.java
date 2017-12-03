@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 
-
 /** Assorted utilities.
  *  @author P. N. Hilfinger
  */

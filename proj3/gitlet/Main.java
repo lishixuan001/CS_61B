@@ -12,22 +12,15 @@ public class Main {
      *  <COMMAND> <OPERAND> .... */
     public static void main(String... args) {
 
-        // Test if has command, if not report corresponding message and exit
         if (args.length <= 0) {
             SystemExit("Please enter a command.");
         }
 
-        // Test if has correct command, if not report corresponding message and exit
         String _command = args[0];
         if (!isValidCommand(_command)) {
             SystemExit("No command with that name exists.");
         }
 
-        // Test has correct operands, if not report corresponding message and exit
-        // This would be tested in Command.java
-
-
-        // Exception for "commit" and "find"
         if (_command.equals("commit")) {
             if (args.length == 1) {
                 SystemExit("Please enter a commit message.");
@@ -45,7 +38,6 @@ public class Main {
             }
             operator.process(_command, operands);
         } else {
-            // Get the input as one String command
             StringBuilder input = new StringBuilder();
             for (String arg : args) {
                 input.append(arg).append(" ");
@@ -53,8 +45,6 @@ public class Main {
             GitletOperator operator = new GitletOperator(input.toString());
             operator.process();
         }
-
-
     }
 
     static boolean isValidCommand(String command) {
@@ -67,21 +57,21 @@ public class Main {
     }
 
     static final String[] _commands = new String[] {
-            "init",
-            "add",
-            "commit",
-            "rm",
-            "log",
-            "global-log",
-            "find",
-            "status",
-            "branch",
-            "rm-branch",
-            "checkout",
-            "reset",
-            "merge",
-            "--help",
-            "clean",
+        "init",
+        "add",
+        "commit",
+        "rm",
+        "log",
+        "global-log",
+        "find",
+        "status",
+        "branch",
+        "rm-branch",
+        "checkout",
+        "reset",
+        "merge",
+        "--help",
+        "clean",
     };
 
 }

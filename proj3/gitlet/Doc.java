@@ -1,11 +1,14 @@
 package gitlet;
 
 import java.io.File;
-import java.io.Serializable;
+import java.util.Arrays;
 
 import static gitlet.Utils.*;
 import static gitlet.GitletOperator.*;
 
+/** Representing a full doc file.
+ *  @author Shixuan (Wayne) Li
+ */
 class Doc {
 
     /** Create Doc Class by filename and filepath. */
@@ -40,8 +43,7 @@ class Doc {
     /** Get the hash id base on 'this' file content. */
     private String getHash() {
         File file = new File(_myPath);
-        byte[] content = readContents(file);
-        return sha1(_myName + content);
+        return sha1(_myName, Arrays.toString(readFrom(file)[0].getBytes()));
     }
 
     /** Set the local parameters. */

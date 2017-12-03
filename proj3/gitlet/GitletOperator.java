@@ -1,9 +1,6 @@
 package gitlet;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -14,11 +11,8 @@ import static gitlet.Commit.*;
 import static gitlet.Branch.*;
 import static gitlet.Command.Type.*;
 import static gitlet.Staged.*;
-import static gitlet.GitletException.error;
-import static java.io.File.*;
 
-
-/** Real functional operating class for Gitlet system.
+/** Operator form Gitlet System.
  *  @author Shixuan (Wayne) Li
  */
 class GitletOperator {
@@ -32,7 +26,6 @@ class GitletOperator {
         _input = input;
         _blobs = new Blob();
         _staged = new Staged();
-        _workArea = new WorkArea();
         _branch = Branch.restore();
     }
 
@@ -42,13 +35,6 @@ class GitletOperator {
     }
     /** Process if it's "commit" or "find". */
     void process(String cmnd, String[] operands) {
-
-        // FIXME --Test what command is translated
-//        System.out.println("=====================");
-//        System.out.println("Command Type: " + cmnd.toUpperCase());
-//        System.out.println("Command Operands: " + Arrays.toString(operands));
-//        System.out.println("=====================");
-
         if (cmnd.equals("commit")) {
             doCommit(operands);
         } else if (cmnd.equals("find")) {
@@ -59,17 +45,7 @@ class GitletOperator {
     /** Perform the next command from our input source. */
     private void doCommand(String input) {
         try {
-            // Get command from Player
-            Command cmnd =
-                    Command.parseCommand(input);
-
-            // FIXME --Test what command is translated
-//            System.out.println("=====================");
-//            System.out.println("Command Type: " + cmnd.commandType());
-//            System.out.println("Command Operands: " + Arrays.toString(cmnd.operands()));
-//            System.out.println("=====================");
-
-            // Acknowledge and run command
+            Command cmnd = Command.parseCommand(input);
             _commands.get(cmnd.commandType()).accept(cmnd.operands());
         } catch (GitletException excp) {
             throw new Error("Error --Main.doCommand");
@@ -134,14 +110,15 @@ class GitletOperator {
     /** Function for "log". */
     private void doLog(String[] unused) {
         doTest(unused);
-        Commit headCommit = Commit.restore(currentLatestCommit());
+        Commit headCommit = Commit.restore(currentHeadCommit());
         while(true) {
             System.out.println("===");
             System.out.println("commit " + headCommit.myHash());
             if (headCommit.isMerged()) {
-                String originCommit = headCommit.myParents()[0].substring(0, 7);
-                String mergedInCommit = headCommit.myParents()[1].substring(0, 7);
-                System.out.println("Merge: " + originCommit + " " + mergedInCommit);
+                System.out.print("Merge:");
+                for (String commit : headCommit.myParents()) {
+                    System.out.print(" " + commit.substring(0, 7));
+                }
             }
             System.out.println("Date: " + headCommit.myDate());
             System.out.println(headCommit.myMessage());
@@ -206,7 +183,6 @@ class GitletOperator {
         }
         System.out.println();
 
-        // Staged files
         System.out.println("=== Staged Files ===");
         ArrayList<String> stageds = new ArrayList<>();
         stageds.addAll(getAllDirectorysFrom(PATH_STAGED));
@@ -216,7 +192,6 @@ class GitletOperator {
         }
         System.out.println();
 
-        // Removed files
         System.out.println("=== Removed Files ===");
         ArrayList<String> removed = new ArrayList<>();
         removed.addAll(StringsToList(readFrom(_removedNames)));
@@ -246,8 +221,7 @@ class GitletOperator {
         }
         Branch newBranch = new Branch(branchName);
         newBranch.createBranch();
-
-        addBranchTo(currentLatestCommit(), branchName);
+        addBranchTo(currentHeadCommit(), branchName);
     }
 
     /** Function for "rm-branch [branch name]". */
@@ -264,7 +238,6 @@ class GitletOperator {
         for (String commit : readFrom(commits)) {
             deleteBranchFrom(commit, branchName);
         }
-
         deleteBranch(branchName);
     }
 
@@ -272,9 +245,9 @@ class GitletOperator {
     private void doCheckoutF(String[] operands) {
         doTest(operands);
         String filename = operands[0];
-        String latestCommit = currentLatestCommit();
-        Commit commit = Commit.restore(latestCommit);
-        if (!commit.contains(filename)) {
+        String currentCommit = currentHeadCommit();
+        Commit commit = Commit.restore(currentCommit);
+        if (!commit.containsFileName(filename)) {
             SystemExit("File does not exist in that commit.");
         }
         _blobs.checkOutByHash(commit.getHashByName(filename));
@@ -290,13 +263,13 @@ class GitletOperator {
             commitId = fullLengthIdOf(commitId);
         }
 
-        if (!existCommit(commitId)) {
+        if (commitId == null || !existCommit(commitId)) {
             SystemExit("No commit with that id exists.");
         }
 
         Commit commit = Commit.restore(commitId);
 
-        if (!commit.contains(filename)) {
+        if (!commit.containsFileName(filename)) {
             SystemExit("File does not exist in that commit.");
         }
         _blobs.checkOutByHash(commit.getHashByName(filename));
@@ -319,15 +292,13 @@ class GitletOperator {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
         }
-
         for (File file : getFilesInFile(PATH_WORKING)) {
             if (!isTrackedBy(file.getName(), branchName)) {
                 delete(file);
             }
         }
-
         rewriteCurrentBranch(branchName);
-        Commit commit = Commit.restore(currentLatestCommit());
+        Commit commit = Commit.restore(currentHeadCommit());
         for (String hash : commit.myFiles()) {
             _blobs.checkOutByHash(hash);
         }
@@ -335,15 +306,170 @@ class GitletOperator {
 
     /** Function for "reset [commit id]". */
     private void doReset(String[] operands) {
-        // Use "restore" in Commit.java
-        // if return null, means not found
-        // there are totally two possibilities of error
         doTest(operands);
+        String commitId = operands[0];
+
+        if (commitId.length() <= 7) {
+            commitId = fullLengthIdOf(commitId);
+        }
+        if (commitId == null || !existCommit(commitId)) {
+            SystemExit("No commit with that id exists.");
+        }
+        String currentBranch = getCurrentBranch();
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            if (file.getName() == _gitletPath) {
+                continue;
+            }
+            if (!isTrackedBy(file.getName(), currentBranch)) {
+                SystemExit("There is an untracked file in the way; delete it or add it first.");
+            }
+        }
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            if (file.getName() != _gitletPath) {
+                delete(file);
+            }
+        }
+        Commit commit = Commit.restore(commitId);
+        for (String hash : commit.myFiles()) {
+            String filename = _blobs.getNameOf(hash);
+            File source = new File(PATH_BLOBS + hash + _contentFolder + filename);
+            File target = new File(PATH_WORKING + filename);
+            copyFiles(source, target);
+        }
     }
 
     /** Function for "merge [branch name]". */
     private void doMerge(String[] operands) {
         doTest(operands);
+        String givenBranchName = operands[0];
+        String currentBranch = getCurrentBranch();
+        String[] removed = readFrom(_removedNames);
+        boolean conflictOccur = false;
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            if (file.getName() == _gitletPath) {
+                continue;
+            }
+            if (!isTrackedBy(file.getName(), currentBranch)) {
+                SystemExit("There is an untracked file in the way; delete it or add it first.");
+            }
+        }
+        if (!_staged.isEmpty() || removed != null) {
+            SystemExit("You have uncommitted changes.");
+        }
+        if (hasBranchName(givenBranchName)) {
+            SystemExit("A branch with that name does not exist.");
+        }
+        if (currentBranch.equals(givenBranchName)) {
+            SystemExit("Cannot merge a branch with itself.");
+        }
+
+        String splitCommitHash = getSplitCommit(currentBranch, givenBranchName);
+        Branch givenBranch = Branch.restore(givenBranchName);
+        Commit splitCommit = Commit.restore(splitCommitHash);
+        Commit lastCommitOfCurrent = Commit.restore(_branch.myLatestCommit());
+        Commit lastCommitOfGiven = Commit.restore(givenBranch.myLatestCommit());
+
+        if (splitCommitHash.equals(lastCommitOfGiven)) {
+            SystemExit("Given branch is an ancestor of the current branch.");
+        }
+        if (splitCommitHash.equals(lastCommitOfCurrent)) {
+            File source = new File(PATH_BRANCHES + givenBranch.myName() + "/" + _commitsFolder);
+            File target = new File(PATH_BRANCHES + _branch.myName() + "/" + _commitsFolder);
+            if (target.exists()) {
+                delete(target);
+            }
+            copyFiles(source, target);
+            _branch = Branch.restore();
+            _branch.changeMyHeadCommitTo(_branch.myLatestCommit());
+            SystemExit("Current branch fast-forwarded.");
+        }
+
+        for (String fileHash : lastCommitOfGiven.myFiles()) {
+            String fileName = _blobs.getNameOf(fileHash);
+            boolean existedButModifiedAndCurrNotChanged = splitCommit.containsFileName(fileName)
+                    && !splitCommit.containsFileHash(fileHash)
+                    && lastCommitOfCurrent.containsFileHash(splitCommit.getHashByName(fileName));
+            boolean newFileAndCurrNotHave = !splitCommit.containsFileName(fileName)
+                    && !splitCommit.containsFileHash(fileHash)
+                    && !lastCommitOfCurrent.containsFileHash(fileHash)
+                    && !lastCommitOfCurrent.containsFileName(fileName);
+            if (existedButModifiedAndCurrNotChanged || newFileAndCurrNotHave) {
+                _blobs.checkOutByHash(fileHash);
+                doAdd(new String[] {fileName});
+            }
+
+            boolean existedButModifiedInDiffWays = !splitCommit.containsFileHash(fileHash)
+                    && splitCommit.containsFileName(fileName)
+                    && !lastCommitOfCurrent.containsFileHash(fileHash)
+                    && lastCommitOfCurrent.containsFileName(fileName);
+            boolean newFileButModifiedInDiffWays = !splitCommit.containsFileHash(fileHash)
+                    && !splitCommit.containsFileName(fileName)
+                    && !lastCommitOfCurrent.containsFileHash(fileHash)
+                    && lastCommitOfCurrent.containsFileName(fileName);
+            if (existedButModifiedInDiffWays || newFileButModifiedInDiffWays) {
+                conflictOccur = true;
+                _blobs.checkOutByHash(fileHash);
+                writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
+                String currentFileHash = lastCommitOfCurrent.getHashByName(fileName);
+                writeInto(PATH_WORKING + fileName, true, PATH_BLOBS + currentFileHash + _contentFolder + fileName);
+                writeInto(PATH_WORKING + fileName, true, "=======");
+                writeInto(PATH_WORKING + fileName, true, readFrom(PATH_BLOBS + fileHash + _contentFolder + fileName));
+                writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
+                doAdd(new String[] {fileName});
+            }
+        }
+
+        for (String fileHash : splitCommit.myFiles()) {
+            String fileName = _blobs.getNameOf(fileHash);
+            boolean existedNotModifiedCurrButDeletedInGiven = !lastCommitOfGiven.containsFileHash(fileHash)
+                    && !lastCommitOfGiven.containsFileName(fileName)
+                    && lastCommitOfCurrent.containsFileHash(fileHash)
+                    && lastCommitOfCurrent.containsFileName(fileName);
+            if (existedNotModifiedCurrButDeletedInGiven) {
+                File fileShouldBeDeleted = new File(PATH_WORKING + fileName);
+                if (fileShouldBeDeleted.exists()) {
+                    fileShouldBeDeleted.delete();
+                }
+                deleteFromNextCommitList(fileHash);
+                addToRemovedHashs(fileHash);
+                addToRemovedHashs(fileName);
+            }
+
+            boolean existedButGiveModifedAndCurrDeleted = !lastCommitOfGiven.containsFileHash(fileHash)
+                    && lastCommitOfGiven.containsFileName(fileName)
+                    && !lastCommitOfCurrent.containsFileHash(fileHash)
+                    && !lastCommitOfCurrent.containsFileName(fileName);
+            boolean existedButCurrModifedAndGivenDeleted = !lastCommitOfCurrent.containsFileHash(fileHash)
+                    && lastCommitOfCurrent.containsFileName(fileName)
+                    && !lastCommitOfGiven.containsFileHash(fileHash)
+                    && !lastCommitOfGiven.containsFileName(fileName);
+            if (existedButCurrModifedAndGivenDeleted || existedButGiveModifedAndCurrDeleted) {
+                conflictOccur = true;
+                writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
+                if (lastCommitOfCurrent.containsFileName(fileName)) {
+                    writeInto(PATH_WORKING + fileName, true, readFrom(PATH_BLOBS + lastCommitOfCurrent.getHashByName(fileName) + _contentFolder + fileName));
+                } else {
+                    writeInto(PATH_WORKING + fileName, true, "");
+                }
+                writeInto(PATH_WORKING + fileName, true, "=======");
+                if (lastCommitOfGiven.containsFileName(fileName)) {
+                    writeInto(PATH_WORKING + fileName, true, readFrom(PATH_BLOBS + lastCommitOfGiven.getHashByName(fileName) + _contentFolder + fileName));
+                } else {
+                    writeInto(PATH_WORKING + fileName, true, "");
+                }
+                writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
+                doAdd(new String[] {fileName});
+            }
+        }
+
+        doCommit(new String[] {String.format("Merged %s into %s.", givenBranchName, currentBranch)});
+        Commit mergedCommit = Commit.restore(_branch.myLatestCommit());
+        mergedCommit.tagAsMerged();
+        mergedCommit.addParent(givenBranchName);
+
+        if (conflictOccur) {
+            SystemExit("Encountered a merge conflict.");
+        }
     }
 
     /** Function for "help". */
@@ -474,6 +600,7 @@ class GitletOperator {
     /** Convenience for re-writing currentBranch.txt. */
     static void rewriteCurrentBranch(String branchName) {
         writeInto(PATH_CURRENTBRANCH, false, branchName);
+        _branch = Branch.restore(branchName);
     }
 
     /** Get Files in File. */
@@ -526,12 +653,9 @@ class GitletOperator {
         return new ArrayList<>(Arrays.asList(str));
     }
 
-    /** Get the hash of th commit of the current branch. */
-    static String currentLatestCommit() {
-        String currentBranchName = getCurrentBranch();
-        Branch currentBranch = Branch.restore(currentBranchName);
-        if (currentBranch == null) { return null; }
-        return currentBranch.myLatestCommit();
+    /** Get the current(head) commit for current branch. */
+    static String currentHeadCommit() {
+        return _branch.myHeadCommit();
     }
 
     /** Copy File from one place to another. Do not use in same directory. */
@@ -600,11 +724,9 @@ class GitletOperator {
     {
         _commands.put(INIT, this::doInit);
         _commands.put(ADD, this::doAdd);
-//        _commands.put(COMMIT, this::doCommit);
         _commands.put(RM, this::doRm);
         _commands.put(LOG, this::doLog);
         _commands.put(GLOBALLOG, this::doGlobalLog);
-//        _commands.put(FIND, this::doFind);
         _commands.put(STATUS, this::doStatus);
         _commands.put(BRANCH, this::doBranch);
         _commands.put(RMBRANCH, this::doRmBranch);
@@ -625,13 +747,11 @@ class GitletOperator {
     static Blob _blobs;
     /** The current Staged Area. */
     static Staged _staged;
-    /** The current Work Area. */
-    static WorkArea _workArea;
     /** The current branch. */
     static Branch _branch;
 
     /** The File name of the directory that saves Gitlet System files. */
-    static final String _gitletPath = ".gitlet/";
+    private static final String _gitletPath = ".gitlet";
     /** Default Date Format. */
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
     /** Initialized branch -> *master */
@@ -642,13 +762,13 @@ class GitletOperator {
     /** Convenience for directory on Working Area. */
     static final String PATH_WORKING = "./";
     /** Convenience for directory on .gitlet/Commits. */
-    static final String PATH_COMMITS = _gitletPath + "Commits/";
+    static final String PATH_COMMITS = _gitletPath + "/" + "Commits/";
     /** Convenience for directory on .gitlet/Blobs/. */
-    static final String PATH_BLOBS = _gitletPath + "Blobs/";
+    static final String PATH_BLOBS = _gitletPath + "/" + "Blobs/";
     /** Convenience for directory on .gitlet/Staged/. */
-    static final String PATH_STAGED = _gitletPath + "Staged/";
+    static final String PATH_STAGED = _gitletPath + "/" + "Staged/";
     /** Convenience for directory on .gitlet/Branches/. */
-    static final String PATH_BRANCHES = _gitletPath + "Branches/";
+    static final String PATH_BRANCHES = _gitletPath + "/" + "Branches/";
     /** Convenience for directory on .gitlet/Branches/currentBranch.txt. */
     static final String PATH_CURRENTBRANCH = PATH_BRANCHES + "currentBranch.txt";
 

@@ -7,8 +7,12 @@ import java.util.ArrayList;
 import static gitlet.Doc._nameFolder;
 import static gitlet.GitletOperator.*;
 
+/** Staged Area in .gitlet/Staged.
+ *  @author Shixuan (Wayne) Li
+ */
 class Staged {
 
+    /** Get the staged area ready. */
     Staged() {
         _files = getAllDocs();
         _nextCommit = getNextCommitList();
@@ -26,12 +30,14 @@ class Staged {
         }
     }
 
-    /** Get files in Staged. */
+    /** Get files in Staged.
+     * @return -- return files in Staged. */
     ArrayList<Doc> files() {
         return _files;
     }
 
-    /** Get all files in Staged. (Get names(hash) of all directories). */
+    /** Get all files in Staged. (Get names(hash) of all directories).
+     * @return -- gather all files in Staged. */
     private ArrayList<Doc> getAllDocs() {
         ArrayList<Doc> docs = new ArrayList<>();
         ArrayList<String> hashs = getAllDirectorysFrom(PATH_STAGED);
@@ -44,7 +50,8 @@ class Staged {
         return docs;
     }
 
-    /** Read file of .gitlet/Staged/nextCommit.txt. */
+    /** Read file of .gitlet/Staged/nextCommit.txt.
+     * @return -- gather the nextCommit's list. */
     private ArrayList<String> getNextCommitList() {
         ArrayList<String> result = new ArrayList<>();
         File file = new File(_nextCommitFile);
@@ -55,12 +62,15 @@ class Staged {
         return result;
     }
 
-    /** Get the next commit's file list. */
+    /** Get the next commit's file list.
+     * @return -- return the nextCommit's list. */
     ArrayList<String> getNextCommitFiles() {
         return _nextCommit;
     }
 
-    /** Check if has file by hash. */
+    /** Check if has file by hash.
+     * @param fileHash -- file hash.
+     * @return -- check result. */
     boolean hasFileHash(String fileHash) {
         for (Doc file : _files) {
             if (file.myHash().equals(fileHash)) {
@@ -70,13 +80,15 @@ class Staged {
         return false;
     }
 
-    /** Show if Staged has new files. */
+    /** Show if Staged has new files.
+     * @return -- if is empty. */
     boolean isEmpty() {
         ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
         return files.isEmpty();
     }
 
-    /** Add file folder with name.txt and content in Staged place. */
+    /** Add file folder with name.txt and content in Staged place.
+     * @param doc -- doc to be added. */
     void add(Doc doc) {
         if (_blobs.hasFileHash(doc.myHash())) {
             if (_staged.hasFileHash(doc.myHash())) {
@@ -91,18 +103,20 @@ class Staged {
         }
     }
 
-    /** Add to the _nextCommit list, and rewrite the file to record. */
+    /** Add to the _nextCommit list, and rewrite the file to record.
+     * @param hash -- hash to be added to nextCommit's list. */
     private void addToNextCommit(String hash) {
         _nextCommit.add(hash);
         rewriteNextCommitList();
     }
 
-    /** This follows when _nextCommit changes. */
+    /** This follows when _nextCommit changes.*/
     private void rewriteNextCommitList() {
         writeInto(_nextCommitFile, false, ListToStrings(_nextCommit));
     }
 
-    /** Copy over file from Working place. */
+    /** Copy over file from Working place.
+     * @param doc -- doc to be copied over. */
     private void copyOverFromWorking(Doc doc) {
         try {
             new File(PATH_STAGED + doc.myHash()).mkdir();
@@ -123,7 +137,8 @@ class Staged {
         }
     }
 
-    /** Delete file in Staged by hash. */
+    /** Delete file in Staged by hash.
+     * @param hash -- hash of file to be deleted. */
     void deleteByHash(String hash) {
         File folder = new File(PATH_STAGED + hash);
         if (folder.exists()) {
@@ -137,18 +152,21 @@ class Staged {
         clearFile(_removedNames);
     }
 
-    /** Write into _removedNames. */
+    /** Write into _removedNames.
+     * @param filename -- filename of the removed.*/
     static void addToRemovedNames(String filename) {
         writeInto(_removedNames, true, filename);
     }
 
-    /** Write into _removedHashs. */
+    /** Write into _removedHashs.
+     * @param filehash -- filehash of the removed.*/
     static void addToRemovedHashs(String filehash) {
         writeInto(_removedHashs, true, filehash);
     }
 
 
-    /** See if the nextCommit.txt has the hash. */
+    /** See if the nextCommit.txt has the hash.
+     * @param hash -- input. */
     static boolean nextCommitListContains(String hash) {
         ArrayList<String> files = getAllDirectorysFrom(_nextCommitFile);
         for (String myhash : files) {
@@ -159,7 +177,8 @@ class Staged {
         return false;
     }
 
-    /** Delete the hash from the nextCommit.txt. */
+    /** Delete the hash from the nextCommit.txt.
+     * @param hash -- hash of file to be deleted. */
     static void deleteFromNextCommitList(String hash) {
         ArrayList<String> currentList = getAllDirectorysFrom(_nextCommitFile);
         clearFile(_nextCommitFile);
