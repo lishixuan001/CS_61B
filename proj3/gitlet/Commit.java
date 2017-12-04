@@ -126,7 +126,7 @@ public class Commit {
      * @param isInit -- if is init.*/
     private void createCommit(boolean isInit) {
 
-        if (_staged.isEmpty() && !isInit) {
+        if (_staged.isEmptyForCommit() && !isInit) {
             SystemExit("No changes added to the commit.");
         }
 
@@ -358,7 +358,42 @@ public class Commit {
     /** Auto-collect file hashes in staged area.
      * @return -- applied to get files that need to be commited. */
     private String[] getFilesFromStaged() {
-        return ListToStrings(_staged.getNextCommitFiles());
+        //        return ListToStrings(_staged.getNextCommitFiles());
+        ArrayList<String> files = new ArrayList<>();
+        String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
+        if (parentfiles == null) {
+            return null;
+        }
+        for (String parentFile : parentfiles) {
+            String parentFileName = _blobs.getNameOf(parentFile);
+            if (!existFileNameInRemoved(parentFileName)) {
+                files.add(parentFile);
+            }
+        }
+        for (String stagedFile : getAllDirectorysFrom(PATH_STAGED)) {
+            String stagedFileName = _staged.getNameByHash(stagedFile);
+            if (!existFileNameInRemoved(stagedFileName)) {
+                files.add(stagedFile);
+            }
+        }
+        return ListToStrings(files);
+    }
+
+    /** Check if a file name is tracked by the commit. Assume exist commit.
+     * @param filename -- input
+     * @return check result. */
+    static boolean isTrackedByCommit(String filename, String commitHash) {
+        String[] filesInCommit = readFrom(PATH_COMMITS + commitHash + "/" + _filesFolder);
+        if (filesInCommit == null) {
+            return false;
+        }
+        for (String commitFile : filesInCommit) {
+            String commitFileName = _blobs.getNameOf(commitFile);
+            if (commitFileName.equals(filename)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Initial Date. */

@@ -156,7 +156,7 @@ public class Branch {
      * @param filename -- file name as input.
      * @param branch -- branch name as input.
      * @return -- check result. */
-    static boolean isTrackedBy(String filename, String branch) {
+    static boolean isTrackedByBranch(String filename, String branch) {
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
             for (String file : readFrom(PATH_COMMITS
                     + hash + "/" + _filesFolder)) {
@@ -183,7 +183,7 @@ public class Branch {
         Commit commit1 = Commit.restore(commitHash1);
 
         while (true) {
-            if (commit1.containsBranch(branchName2)) {
+            if (commit1.containsBranch(branchName2) || !commit1.isMerged()) {
                 return commit1.myHash();
             }
             if (commit1.hasParents()) {

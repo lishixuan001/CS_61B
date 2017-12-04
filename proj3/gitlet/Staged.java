@@ -15,15 +15,12 @@ class Staged {
     /** Get the staged area ready. */
     Staged() {
         _files = getAllDocs();
-        _nextCommit = getNextCommitList();
     }
 
     /** Init the Staged Area in init mode. */
     void init() {
         try {
             new File(PATH_STAGED).mkdir();
-            new File(_nextCommitFile).createNewFile();
-            new File(_removedHashs).createNewFile();
             new File(_removedNames).createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
@@ -50,30 +47,12 @@ class Staged {
         return docs;
     }
 
-    /** Read file of .gitlet/Staged/nextCommit.txt.
-     * @return -- gather the nextCommit's list. */
-    private ArrayList<String> getNextCommitList() {
-        ArrayList<String> result = new ArrayList<>();
-        File file = new File(_nextCommitFile);
-        if (file.exists()) {
-            String[] fileList = readFrom(file);
-            result = StringsToList(fileList);
-        }
-        return result;
-    }
-
-    /** Get the next commit's file list.
-     * @return -- return the nextCommit's list. */
-    ArrayList<String> getNextCommitFiles() {
-        return _nextCommit;
-    }
-
     /** Check if has file by hash.
      * @param fileHash -- file hash.
      * @return -- check result. */
     boolean hasFileHash(String fileHash) {
-        for (Doc file : _files) {
-            if (file.myHash().equals(fileHash)) {
+        for (String hash : getAllDirectorysFrom(PATH_STAGED)) {
+            if (hash.equals(fileHash)) {
                 return true;
             }
         }
@@ -87,32 +66,50 @@ class Staged {
         return files.isEmpty();
     }
 
-    /** Add file folder with name.txt and content in Staged place.
+    /** Show if Staged is empty without those in removed(marked) files. */
+    boolean isEmptyForCommit() {
+        if (_staged.isEmpty()) {
+            return true;
+        }
+        for (Doc doc : _staged.files()) {
+            if (!existFileNameInRemoved(doc.myName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Add file folder with name.txt and content in Staged place. Assume exist.
      * @param doc -- doc to be added. */
     void add(Doc doc) {
-        if (_blobs.hasFileHash(doc.myHash())) {
-            if (_staged.hasFileHash(doc.myHash())) {
-                _staged.deleteByHash(doc.myHash());
-            }
-            if (!_nextCommit.contains(doc.myHash())) {
-                addToNextCommit(doc.myHash());
+        String hash = doc.myHash();
+        String name = doc.myName();
+        if (_blobs.hasFileHash(hash)) {
+            if (_staged.hasFileName(name)) {
+                _staged.deleteByName(name);
             }
         } else {
-            addToNextCommit(doc.myHash());
+            if (_staged.hasFileName(name)) {
+                _staged.deleteByName(name);
+            }
             copyOverFromWorking(doc);
+            _files.add(new Doc(name, hash, PATH_STAGED + hash + _contentFolder));
+        }
+
+        if (existFileNameInRemoved(name)) {
+            deleteFromRemovedNames(name);
         }
     }
 
-    /** Add to the _nextCommit list, and rewrite the file to record.
-     * @param hash -- hash to be added to nextCommit's list. */
-    private void addToNextCommit(String hash) {
-        _nextCommit.add(hash);
-        rewriteNextCommitList();
-    }
-
-    /** This follows when _nextCommit changes.*/
-    private void rewriteNextCommitList() {
-        writeInto(_nextCommitFile, false, ListToStrings(_nextCommit));
+    /** Get file name by hash. Assume exist.
+     * @param hash -- input
+     * @return -- name of file. */
+    String getNameByHash(String hash) {
+        String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+        if (name == null) {
+            return null;
+        }
+        return name[0];
     }
 
     /** Copy over file from Working place.
@@ -142,13 +139,30 @@ class Staged {
     void deleteByHash(String hash) {
         File folder = new File(PATH_STAGED + hash);
         if (folder.exists()) {
-            folder.delete();
+            deleteDirectory(folder);
+            _files.remove(hash);
+        }
+    }
+
+    /** Delete file in Staged by name. Assume exist.
+     * @param filename -- name of file to be deleted. */
+    void deleteByName(String filename) {
+        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
+        for (String hash : files) {
+            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+            if (name == null) {
+                return;
+            }
+            if (name[0].equals(filename)) {
+                _staged.deleteByHash(hash);
+                _files.remove(hash);
+                return;
+            }
         }
     }
 
     /** Clear the _removedFiles. */
     static void clearRemovedFiles() {
-        clearFile(_removedHashs);
         clearFile(_removedNames);
     }
 
@@ -158,35 +172,57 @@ class Staged {
         writeInto(_removedNames, true, filename);
     }
 
-    /** Write into _removedHashs.
-     * @param filehash -- filehash of the removed.*/
-    static void addToRemovedHashs(String filehash) {
-        writeInto(_removedHashs, true, filehash);
+    /** Delete name from removed names. Assume exist.
+     * @param filename -- filename to be deleted from the removed. */
+    static void deleteFromRemovedNames(String filename) {
+        String[] existedNames = readFrom(_removedNames);
+        if (existedNames == null) {
+            return;
+        }
+        clearRemovedFiles();
+        for (String name : existedNames) {
+            if (!name.equals(filename)) {
+                writeInto(_removedNames, true, name);
+            }
+        }
     }
 
-
-    /** See if the nextCommit.txt has the hash.
-     * @param hash -- input. */
-    static boolean nextCommitListContains(String hash) {
-        ArrayList<String> files = getAllDirectorysFrom(_nextCommitFile);
-        for (String myhash : files) {
-            if (myhash.equals(hash)) {
+    /** Check if a file name exist in RemovedNames.
+     * @param filename -- input.
+     * @return -- check result. */
+    static boolean existFileNameInRemoved(String filename) {
+        String[] existedNames = readFrom(_removedNames);
+        if (existedNames == null) {
+            return false;
+        }
+        for (String name : existedNames) {
+            if (name.equals(filename)) {
                 return true;
             }
         }
         return false;
     }
 
-    /** Delete the hash from the nextCommit.txt.
-     * @param hash -- hash of file to be deleted. */
-    static void deleteFromNextCommitList(String hash) {
-        ArrayList<String> currentList = getAllDirectorysFrom(_nextCommitFile);
-        clearFile(_nextCommitFile);
-        for (String currenthash : currentList) {
-            if (!currenthash.equals(hash)) {
-                writeInto(_nextCommitFile, true, currenthash);
+    /** */
+
+    /** Check if has a filename in staged.
+     * @param filename -- input
+     * @return -- check result. */
+    boolean hasFileName(String filename) {
+        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
+        if (files.size() <= 0) {
+            return false;
+        }
+        for (String hash : files) {
+            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+            if (name == null) {
+                return false;
+            }
+            if (name[0].equals(filename)) {
+                return true;
             }
         }
+        return false;
     }
 
     /** All files inside Staged Area. */
@@ -195,10 +231,7 @@ class Staged {
     private static ArrayList<String> _nextCommit = new ArrayList<>();
     /** Convenience showing content folder. */
     static final String _contentFolder = "/content/";
-    /** Convenience for .gitlet/Staged/nextCommit.txt. */
-    static final String _nextCommitFile = PATH_STAGED + "nextCommit.txt";
-    /** Removed family : removed hashs and names. */
-    static final String _removedHashs = PATH_STAGED + "removedHashs.txt";
+    /** Removed names. */
     static final String _removedNames = PATH_STAGED + "removedNames.txt";
 
 }

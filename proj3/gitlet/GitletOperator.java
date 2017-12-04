@@ -91,20 +91,20 @@ class GitletOperator {
         doTest(operands);
 
         String filename = operands[0];
-        Doc doc = new Doc(filename, PATH_WORKING);
 
-        if (_staged.hasFileHash(doc.myHash())) {
-            _staged.deleteByHash(filename);
+        if (!_staged.hasFileName(filename) &&
+                !isTrackedByCommit(filename, currentHeadCommit())) {
+            SystemExit("No reason to remove the file.");
         }
 
-        if (nextCommitListContains(doc.myHash())) {
-            deleteFromNextCommitList(doc.myHash());
+        if (_staged.hasFileName(filename)) {
+            _staged.deleteByName(filename);
         }
 
-        deleteFromWorking(filename);
-
-        addToRemovedHashs(doc.myHash());
-        addToRemovedNames(doc.myName());
+        if (isTrackedByCommit(filename, currentHeadCommit())) {
+            deleteFromWorking(filename);
+            addToRemovedNames(filename);
+        }
     }
 
     /** Function for "log". */
@@ -184,11 +184,16 @@ class GitletOperator {
         System.out.println();
 
         System.out.println("=== Staged Files ===");
-        ArrayList<String> stageds = new ArrayList<>();
-        stageds.addAll(getAllDirectorysFrom(PATH_STAGED));
-        Collections.sort(stageds);
-        for (String file : stageds) {
-            System.out.println(file);
+        ArrayList<String> stagedNames = new ArrayList<>();
+        ArrayList<String> stagedHashs = getAllDirectorysFrom(PATH_STAGED);
+        for (String stagedHash : stagedHashs) {
+            String stagedName = _staged.getNameByHash(stagedHash);
+            stagedNames.add(stagedName);
+        }
+        Collections.sort(stagedNames);
+
+        for (String name : stagedNames) {
+            System.out.println(name);
         }
         System.out.println();
 
@@ -202,6 +207,9 @@ class GitletOperator {
         System.out.println();
 
         // FIXME -- Do these for Extra Credits
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        ArrayList<String> modified = new ArrayList<>();
+
         // Gather all files in Staged and in nextCommit.txt
 
         // for the gathered commits:
@@ -288,12 +296,12 @@ class GitletOperator {
             SystemExit("No need to checkout the current branch.");
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (!isTrackedBy(file.getName(), currentBranch)) {
+            if (!isTrackedByBranch(file.getName(), currentBranch)) {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (!isTrackedBy(file.getName(), branchName)) {
+            if (!isTrackedByBranch(file.getName(), branchName)) {
                 delete(file);
             }
         }
@@ -320,7 +328,7 @@ class GitletOperator {
             if (file.getName() == _gitletPath) {
                 continue;
             }
-            if (!isTrackedBy(file.getName(), currentBranch)) {
+            if (!isTrackedByBranch(file.getName(), currentBranch)) {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
         }
@@ -349,7 +357,7 @@ class GitletOperator {
             if (file.getName() == _gitletPath) {
                 continue;
             }
-            if (!isTrackedBy(file.getName(), currentBranch)) {
+            if (!isTrackedByBranch(file.getName(), currentBranch)) {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
         }
@@ -430,9 +438,7 @@ class GitletOperator {
                 if (fileShouldBeDeleted.exists()) {
                     fileShouldBeDeleted.delete();
                 }
-                deleteFromNextCommitList(fileHash);
-                addToRemovedHashs(fileHash);
-                addToRemovedHashs(fileName);
+                addToRemovedNames(fileName);
             }
 
             boolean existedButGiveModifedAndCurrDeleted = !lastCommitOfGiven.containsFileHash(fileHash)

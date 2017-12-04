@@ -43,7 +43,11 @@ class Doc {
     /** Get the hash id base on 'this' file content. */
     private String getHash() {
         File file = new File(_myPath);
-        return sha1(_myName, Arrays.toString(readFrom(file)[0].getBytes()));
+        String[] content = readFrom(file);
+        if (content == null || content.length <= 0) {
+            return sha1(_myName);
+        }
+        return sha1(_myName, Arrays.toString(content[0].getBytes()));
     }
 
     /** Set the local parameters. */
