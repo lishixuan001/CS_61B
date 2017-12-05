@@ -347,13 +347,6 @@ public class GitletOperator {
         if (currentBranch.equals(branchName)) {
             SystemExit("No need to checkout the current branch.");
         }
-//        for (File file : getFilesInFile(PATH_WORKING)) {
-//            if (!file.getName().equals( _gitletPath)) {
-//                if (!isTrackedByBranch(file.getName(), currentBranch)) {
-//                    SystemExit("There is an untracked file in the way; delete it or add it first.");
-//                }
-//            }
-//        }
         rewriteCurrentBranch(branchName);
         Commit commit = new Commit().restoreCommit(currentHeadCommit());
         for (File file : getFilesInFile(PATH_WORKING)) {
@@ -368,11 +361,9 @@ public class GitletOperator {
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
             if (!file.getName().equals( _gitletPath)) {
-                delete(file);
+                deleteFile(file);
             }
         }
-//        rewriteCurrentBranch(branchName);
-//        Commit commit = new Commit().restoreCommit(currentHeadCommit());
         for (String hash : commit.myFiles()) {
             _blobs.checkOutByHash(hash);
         }
@@ -402,7 +393,7 @@ public class GitletOperator {
         for (File file : getFilesInFile(PATH_WORKING)) {
             if (!file.getName().equals( _gitletPath)) {
                 if (isTrackedByCommit(file.getName(), commitId)) {
-                    delete(file);
+                    deleteFile(file);
                 }
             }
         }
@@ -413,7 +404,7 @@ public class GitletOperator {
             copyFiles(source, target);
         }
         for (String stagedFile : getAllDirectorysFrom(PATH_STAGED)) {
-            deleteDirectory(new File(PATH_STAGED + stagedFile));
+            deleteFile(new File(PATH_STAGED + stagedFile));
         }
         _branch.changeMyHeadCommitTo(commitId);
     }
@@ -458,7 +449,7 @@ public class GitletOperator {
             File source = new File(PATH_BRANCHES + givenBranch.myName() + "/" + _commitsFolder);
             File target = new File(PATH_BRANCHES + _branch.myName() + "/" + _commitsFolder);
             if (target.exists()) {
-                delete(target);
+                deleteFile(target);
             }
             copyFiles(source, target);
             _branch = new Branch().restoreBranch();
@@ -474,10 +465,6 @@ public class GitletOperator {
                     && !splitCommit.containsFileHash(fileHash)
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedAndBothModifiedSameWay) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE2-1 - " + fileName);
-
                 continue;
             }
 
@@ -485,10 +472,6 @@ public class GitletOperator {
             boolean newFileExistOnlyInGiven = !splitCommit.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (newFileExistOnlyInGiven) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE5 - " + fileName);
-
                 File fileShouldBeCreated = new File(PATH_WORKING + fileName);
                 if (fileShouldBeCreated.exists()) {
                     fileShouldBeCreated.delete();
@@ -506,10 +489,6 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedInDiffWays || newFileButModifiedInDiffWays) {
-
-////                 FIXME -- DELETE
-//                System.out.println("Conflict-Type1 - " + fileName);
-
                 conflictOccur = true;
                 writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
                 String currentFileHash = lastCommitOfCurrent.getHashByName(fileName);
@@ -530,10 +509,6 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedGivenAndUnchangedCurr) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE1 - " + fileName);
-
                 File fileShouldBeUpdated = new File(PATH_WORKING + fileName);
                 if (fileShouldBeUpdated.exists()) {
                     fileShouldBeUpdated.delete();
@@ -546,10 +521,6 @@ public class GitletOperator {
             boolean existedButBothDeleted = !lastCommitOfGiven.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (existedButBothDeleted) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE2-2 - " + fileName);
-
                 continue;
             }
 
@@ -558,10 +529,6 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedUnchangedGivenButModifiedCurr) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE3 - " + fileName);
-
                 continue;
             }
 
@@ -569,10 +536,6 @@ public class GitletOperator {
             boolean existedButDeletedGivenAndUnchangedCurr = !lastCommitOfGiven.containsFileName(fileName)
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButDeletedGivenAndUnchangedCurr) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE6 - " + fileName);
-
                 doRm(new String[] {fileName});
             }
 
@@ -580,10 +543,6 @@ public class GitletOperator {
             boolean existedUnchangedGivenButDeletedCurr = lastCommitOfGiven.containsFileHash(fileHash)
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (existedUnchangedGivenButDeletedCurr) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE7 - " + fileName);
-
                 continue;
             }
 
@@ -594,10 +553,6 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButCurrModifedAndGivenDeleted || existedButGivenModifedAndCurrDeleted) {
-
-//                // FIXME -- DELETE
-//                System.out.println("Conflict-Type2 - " + fileName);
-
                 conflictOccur = true;
                 File conflictFile = new File(PATH_WORKING + fileName);
                 if (!conflictFile.exists()) {
@@ -633,10 +588,6 @@ public class GitletOperator {
             boolean newFileExistOnlyInCurr = !splitCommit.containsFileName(fileName)
                     && !lastCommitOfGiven.containsFileName(fileName);
             if (newFileExistOnlyInCurr) {
-
-//                // FIXME -- DELETE
-//                System.out.println("HERE4 - " + fileName);
-
                 continue;
             }
         }
@@ -690,19 +641,10 @@ public class GitletOperator {
     /** Clean up the .gitlet (remove). */
     private void doClean(String[] unused) {
         if (isInitialized()) {
-            delete(new File(_gitletPath));
+            deleteFile(new File(_gitletPath));
         } else {
             SystemExit("This directory hasn't been initialized --Wayne's doClean");
         }
-    }
-
-    /** Delete files and directories for doClean. */
-    private void delete(File f){
-        if (f.isDirectory()) {
-            for (File c : f.listFiles())
-                delete(c);
-        }
-        f.delete();
     }
 
     /** Check if current environment is initialized.
@@ -727,6 +669,10 @@ public class GitletOperator {
         }
     }
 
+    /* **********************************
+     *        File R/W/Cr/Cp/De         *
+     ********************************** */
+
     /** Clear a file. */
     static void clearFile(String file) {
         try {
@@ -737,84 +683,14 @@ public class GitletOperator {
         }
     }
 
-    /** See if there already exist a branch with the name.
-     * @param branchName -- input.
-     * @return -- check result. */
-    public boolean hasBranchName(String branchName) {
-        for (String branch : getAllDirectorysFrom(PATH_BRANCHES)) {
-            if (branch.equals(branchName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Search if there is a commit in .gitlet/Commits with the message.
-     * @param message -- message to be searched.
-     * @return -- check result. */
-    public boolean hasCommitWithMsg(String message) {
-        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
-            Commit commit = new Commit().restoreCommit(commitHash);
-            if (commit.myMessage().equals(message)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Add branch to the commit.
-     * @param hash -- hash of the commit
-     * @param branch -- name of the branch. */
-    public void addBranchTo(String hash, String branch) {
-        writeInto(PATH_COMMITS + hash + "/" + _branchesFolder, true, branch);
-    }
-
-    /** Get hashs of the commit with the message.
-     * @param message -- message to be searched.
-     * @return -- commits' hashes as a searched result. */
-    public ArrayList<String> getCommitsWithMsg(String message) {
-        ArrayList<String> result = new ArrayList<>();
-        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
-            Commit commit = new Commit().restoreCommit(commitHash);
-            if (commit.myMessage().equals(message)) {
-                result.add(commitHash);
-            }
-        }
-        return result;
-    }
-
-    /** Delete branch from the commit.
-     * @param hash -- hash of the commit
-     * @param branch -- name of the branch. */
-    public void deleteBranchFrom(String hash, String branch) {
-        File commit = new File(PATH_COMMITS + hash + "/" + _branchesFolder);
-        String[] currentBranchs = readFrom(commit);
-        clearFile(commit);
-        for (String currentbranch : currentBranchs) {
-            if (!currentbranch.equals(branch)) {
-                writeInto(commit, true, currentbranch);
-            }
-        }
-    }
-
-    /** Restore a Commit with 7-digit id. Assume exist.
-     * @param id -- 7-digit version commit id.
-     * @return -- full length version of the id. */
-    public String fullLengthIdOf(String id) {
-        String fullId = null;
-        int length = id.length();
-        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
-            String partHash = hash.substring(0, length);
-            if (partHash.equals(id)) {
-                fullId = hash;
-            }
-        }
-        return fullId;
-    }
-
     /** Clear a file with input "File". */
     static void clearFile(File file) {
         clearFile(file.getPath());
+    }
+
+    /** WriteInto with input as "File". */
+    static void writeInto(File file, boolean ifAppend, String... strs) {
+        writeInto(file.getPath(), ifAppend, strs);
     }
 
     /** Convenience for writing objects into file. */
@@ -837,12 +713,225 @@ public class GitletOperator {
         }
     }
 
+    /** readFrom with input as "File". */
+    static String[] readFrom(File file) {
+        return readFrom(file.getPath());
+    }
+
+    /** Convenience for reading Objects from file. */
+    static String[] readFrom(String file) {
+        ArrayList<String> lst = new ArrayList<>();
+        String strLine;
+        try {
+            FileInputStream fstream = new FileInputStream(file);
+            InputStreamReader istream = new InputStreamReader(fstream);
+            BufferedReader br = new BufferedReader(istream);
+            while ((strLine = br.readLine()) != null)   {
+                lst.add(strLine);
+            }
+            br.close();
+        } catch (FileNotFoundException e) {
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ListToStrings(lst);
+    }
+
+    /** Copy File from one place to another. Do not use in same directory. */
+    static void copyFiles(File sourceLocation, File targetLocation) {
+        if (sourceLocation.isDirectory()) {
+            copyDirectory(sourceLocation, targetLocation);
+        } else {
+            copyPlains(sourceLocation, targetLocation);
+        }
+    }
+
+    /** Copy Directories form source to target. */
+    private static void copyDirectory(File source, File target){
+        if (!target.exists()) {
+            target.mkdir();
+        }
+
+        for (String f : source.list()) {
+            copyFiles(new File(source, f), new File(target, f));
+        }
+    }
+
+    /** Copy Plain files form source to target. */
+    private static void copyPlains(File source, File target){
+        try {
+            InputStream instream = new FileInputStream(source);
+            OutputStream outstream = new FileOutputStream(target);
+
+            byte[] buf = new byte[1024];
+            int length;
+            while ((length = instream.read(buf)) > 0) {
+                outstream.write(buf, 0, length);
+            }
+            instream.close();
+            outstream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Delete files and directories for doClean. */
+    static void deleteFile(File f){
+        if (f.isDirectory()) {
+            for (File c : f.listFiles())
+                deleteFile(c);
+        }
+        f.delete();
+    }
+
+    /* **********************************
+     *          Commit-Related          *
+     ********************************** */
+
     /** Check the existence of a commit with id.
      * @param id -- hash of the commit.
      * @return -- check result. */
     public boolean existCommit(String id) {
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
             if (hash.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /** Search if there is a commit in .gitlet/Commits with the message.
+     * @param message -- message to be searched.
+     * @return -- check result. */
+    public boolean hasCommitWithMsg(String message) {
+        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.myMessage().equals(message)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Add branch to the commit.
+     * @param hash -- hash of the commit
+     * @param branch -- name of the branch. */
+    public void addBranchTo(String hash, String branch) {
+        writeInto(PATH_COMMITS + hash + "/" + _branchesFolder, true, branch);
+    }
+
+    /** Delete branch from the commit.
+     * @param hash -- hash of the commit
+     * @param branch -- name of the branch. */
+    public void deleteBranchFrom(String hash, String branch) {
+        File commit = new File(PATH_COMMITS + hash + "/" + _branchesFolder);
+        String[] currentBranchs = readFrom(commit);
+        clearFile(commit);
+        for (String currentbranch : currentBranchs) {
+            if (!currentbranch.equals(branch)) {
+                writeInto(commit, true, currentbranch);
+            }
+        }
+    }
+
+    /** Get hashs of the commit with the message.
+     * @param message -- message to be searched.
+     * @return -- commits' hashes as a searched result. */
+    public ArrayList<String> getCommitsWithMsg(String message) {
+        ArrayList<String> result = new ArrayList<>();
+        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.myMessage().equals(message)) {
+                result.add(commitHash);
+            }
+        }
+        return result;
+    }
+
+    /** Restore a Commit with 7-digit id. Assume exist.
+     * @param id -- 7-digit version commit id.
+     * @return -- full length version of the id. */
+    public String fullLengthIdOf(String id) {
+        String fullId = null;
+        int length = id.length();
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            String partHash = hash.substring(0, length);
+            if (partHash.equals(id)) {
+                fullId = hash;
+            }
+        }
+        return fullId;
+    }
+
+    /** Check if a file name is tracked by the commit. Assume exist commit.
+     * @param filename -- input
+     * @return check result. */
+    public boolean isTrackedByCommit(String filename, String commitHash) {
+        String[] filesInCommit = readFrom(PATH_COMMITS + commitHash + "/" + _filesFolder);
+        if (filesInCommit == null) {
+            return false;
+        }
+        for (String commitFile : filesInCommit) {
+            String commitFileName = _blobs.getNameOf(commitFile);
+            if (commitFileName.equals(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /* **********************************
+     *          Branch-Related          *
+     ********************************** */
+
+    /** See if there already exist a branch with the name.
+     * @param branchName -- input.
+     * @return -- check result. */
+    public boolean hasBranchName(String branchName) {
+        for (String branch : getAllDirectorysFrom(PATH_BRANCHES)) {
+            if (branch.equals(branchName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Delete branch.
+     * @param branchName -- branch name to be deleted. */
+    public void deleteBranch(String branchName) {
+        File branch = new File(PATH_BRANCHES + branchName);
+        deleteFile(branch);
+    }
+
+    /** Check if a file name is ever tracked.
+     * @param fileName -- input
+     * @return -- check result. */
+    public boolean isEverTracked(String fileName) {
+        for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
+            if (_blobs.getNameOf(fileHash).equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Check if a file with filename in WorkingArea is tracked by the branch.
+     * @param filename -- file name as input.
+     * @param branchName -- branch name as input.
+     * @return -- check result. */
+    public boolean isTrackedByBranch(String filename, String branchName) {
+        Branch branch = new Branch().restoreBranch(branchName);
+        if (branch == null) {
+            return false;
+        }
+        ArrayList<String> commits = branch.myCommits();
+        if (commits == null) {
+            return false;
+        }
+        for (String commitHash : commits) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.containsFileName(filename)) {
                 return true;
             }
         }
@@ -871,35 +960,9 @@ public class GitletOperator {
         return null;
     }
 
-    /** WriteInto with input as "File". */
-    static void writeInto(File file, boolean ifAppend, String... strs) {
-        writeInto(file.getPath(), ifAppend, strs);
-    }
-
-    /** Convenience for reading Objects from file. */
-    static String[] readFrom(String file) {
-        ArrayList<String> lst = new ArrayList<>();
-        String strLine;
-        try {
-            FileInputStream fstream = new FileInputStream(file);
-            InputStreamReader istream = new InputStreamReader(fstream);
-            BufferedReader br = new BufferedReader(istream);
-            while ((strLine = br.readLine()) != null)   {
-                lst.add(strLine);
-            }
-            br.close();
-        } catch (FileNotFoundException e) {
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return ListToStrings(lst);
-    }
-
-    /** readFrom with input as "File". */
-    static String[] readFrom(File file) {
-        return readFrom(file.getPath());
-    }
+    /* **********************************
+     *         Global-Attributes        *
+     ********************************** */
 
     /** Convenience for re-writing currentBranch.txt. */
     static void rewriteCurrentBranch(String branchName) {
@@ -907,34 +970,19 @@ public class GitletOperator {
         _branch = new Branch().restoreBranch(branchName);
     }
 
-    /** Check if a file with filename in WorkingArea is tracked by the branch.
-     * @param filename -- file name as input.
-     * @param branchName -- branch name as input.
-     * @return -- check result. */
-    public boolean isTrackedByBranch(String filename, String branchName) {
-        Branch branch = new Branch().restoreBranch(branchName);
-        if (branch == null) {
-            return false;
-        }
-        ArrayList<String> commits = branch.myCommits();
-        if (commits == null) {
-            return false;
-        }
-        for (String commitHash : commits) {
-            Commit commit = new Commit().restoreCommit(commitHash);
-            if (commit.containsFileName(filename)) {
-                return true;
-            }
-        }
-        return false;
+    /** Get the current(head) commit for current branch. */
+    static String currentHeadCommit() {
+        return _branch.myHeadCommit();
     }
 
-    /** Delete branch.
-     * @param branchName -- branch name to be deleted. */
-    public void deleteBranch(String branchName) {
-        File branch = new File(PATH_BRANCHES + branchName);
-        deleteDirectory(branch);
+    /** Delete from Working directory. */
+    static void deleteFromWorking(String filename) {
+        new File(PATH_WORKING + filename).delete();
     }
+
+    /* **********************************
+     *         Static-Utilities         *
+     ********************************** */
 
     /** Get Files in File. */
     static File[] getFilesInFile(String path) {
@@ -986,93 +1034,6 @@ public class GitletOperator {
         return new ArrayList<>(Arrays.asList(str));
     }
 
-    /** Get the current(head) commit for current branch. */
-    static String currentHeadCommit() {
-        return _branch.myHeadCommit();
-    }
-
-    /** Copy File from one place to another. Do not use in same directory. */
-    static void copyFiles(File sourceLocation, File targetLocation) {
-        if (sourceLocation.isDirectory()) {
-            copyDirectory(sourceLocation, targetLocation);
-        } else {
-            copyPlains(sourceLocation, targetLocation);
-        }
-    }
-
-    /** Copy Directories form source to target. */
-    private static void copyDirectory(File source, File target){
-        if (!target.exists()) {
-            target.mkdir();
-        }
-
-        for (String f : source.list()) {
-            copyFiles(new File(source, f), new File(target, f));
-        }
-    }
-
-    /** Check if a file name is ever tracked.
-     * @param fileName -- input
-     * @return -- check result. */
-    public boolean isEverTracked(String fileName) {
-        for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
-            if (_blobs.getNameOf(fileHash).equals(fileName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Copy Plain files form source to target. */
-    private static void copyPlains(File source, File target){
-        try {
-            InputStream instream = new FileInputStream(source);
-            OutputStream outstream = new FileOutputStream(target);
-
-            byte[] buf = new byte[1024];
-            int length;
-            while ((length = instream.read(buf)) > 0) {
-                outstream.write(buf, 0, length);
-            }
-            instream.close();
-            outstream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /** Delete from Working directory. */
-    static void deleteFromWorking(String filename) {
-        new File(PATH_WORKING + filename).delete();
-    }
-
-    /** Check if a file name is tracked by the commit. Assume exist commit.
-     * @param filename -- input
-     * @return check result. */
-    public boolean isTrackedByCommit(String filename, String commitHash) {
-        String[] filesInCommit = readFrom(PATH_COMMITS + commitHash + "/" + _filesFolder);
-        if (filesInCommit == null) {
-            return false;
-        }
-        for (String commitFile : filesInCommit) {
-            String commitFileName = _blobs.getNameOf(commitFile);
-            if (commitFileName.equals(filename)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Delete directory. */
-    static void deleteDirectory(File file) {
-        File[] contents = file.listFiles();
-        if (contents != null) {
-            for (File f : contents) {
-                deleteDirectory(f);
-            }
-        }
-        file.delete();
-    }
 
     /** Make system exit with a message. */
     static void SystemExit(String msg) {

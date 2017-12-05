@@ -149,7 +149,7 @@ class Staged {
     void deleteByHash(String hash) {
         File folder = new File(PATH_STAGED + hash);
         if (folder.exists()) {
-            deleteDirectory(folder);
+            deleteFile(folder);
             _files.remove(hash);
         }
     }
