@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static gitlet.Doc._nameFolder;
+import static gitlet.Doc.*;
 import static gitlet.GitletOperator.*;
 
 /** Staged Area in .gitlet/Staged.
@@ -21,7 +21,7 @@ class Staged {
     void init() {
         try {
             new File(PATH_STAGED).mkdir();
-            new File(_removedNames).createNewFile();
+            new File(REMOVED_NAMES).createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,11 +42,11 @@ class Staged {
                 _staged.deleteByName(name);
             }
             copyOverFromWorking(doc);
-            _files.add(new Doc(name, hash, PATH_STAGED + hash + _contentFolder));
+            _files.add(new Doc(name, hash, PATH_STAGED + hash + CONTENT_FOLDER));
         }
 
         if (existFileNameInRemoved(name)) {
-            deleteFromRemovedNames(name);
+            deleteFromREMOVED_NAMES(name);
         }
     }
 
@@ -55,14 +55,14 @@ class Staged {
     private void copyOverFromWorking(Doc doc) {
         try {
             new File(PATH_STAGED + doc.myHash()).mkdir();
-            File name = new File(PATH_STAGED + doc.myHash() + "/" + _nameFolder);
+            File name = new File(PATH_STAGED + doc.myHash() + "/" + NAME_FOLDER);
             name.createNewFile();
             writeInto(name, false, doc.myName());
 
-            new File(PATH_STAGED + doc.myHash() + "/" + _contentFolder).mkdir();
+            new File(PATH_STAGED + doc.myHash() + "/" + CONTENT_FOLDER).mkdir();
 
             File source = new File(doc.myPath());
-            File target = new File(PATH_STAGED + doc.myHash() + _contentFolder + doc.myName());
+            File target = new File(PATH_STAGED + doc.myHash() + CONTENT_FOLDER + doc.myName());
             copyFiles(source, target);
 
             Doc newFile = new Doc(doc.myName(), doc.myHash(), target.getPath());
@@ -106,8 +106,8 @@ class Staged {
         ArrayList<String> hashs = getAllDirectorysFrom(PATH_STAGED);
         if (!hashs.isEmpty()) {
             for (String hash : hashs) {
-                String name = readFrom(PATH_STAGED + hash + "/" + _nameFolder)[0];
-                docs.add(new Doc(name, hash, PATH_STAGED + hash + _contentFolder));
+                String name = readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER)[0];
+                docs.add(new Doc(name, hash, PATH_STAGED + hash + CONTENT_FOLDER));
             }
         }
         return docs;
@@ -128,7 +128,7 @@ class Staged {
      * @param hash -- input
      * @return -- name of file. */
     String getNameByHash(String hash) {
-        String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+        String[] name = readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER);
         if (name == null) {
             return null;
         }
@@ -144,7 +144,7 @@ class Staged {
             return false;
         }
         for (String hash : files) {
-            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+            String[] name = readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER);
             if (name == null) {
                 return false;
             }
@@ -182,7 +182,7 @@ class Staged {
     void deleteByName(String filename) {
         ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
         for (String hash : files) {
-            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+            String[] name = readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER);
             if (name == null) {
                 return;
             }
@@ -201,7 +201,7 @@ class Staged {
     /** Check if removed is empty.
      * @return -- check result. */
     public boolean isEmptyRemovedFile() {
-        String[] existedNames = readFrom(_removedNames);
+        String[] existedNames = readFrom(REMOVED_NAMES);
         if (existedNames == null) {
             return true;
         }
@@ -210,35 +210,35 @@ class Staged {
 
     /** Clear the _removedFiles. */
     void clearRemovedFiles() {
-        clearFile(_removedNames);
+        clearFile(REMOVED_NAMES);
     }
 
-    /** Write into _removedNames.
+    /** Write into REMOVED_NAMES.
      * @param filename -- filename of the removed.*/
     void addToRemovedNames(String filename) {
-        writeInto(_removedNames, true, filename);
+        writeInto(REMOVED_NAMES, true, filename);
     }
 
     /** Delete name from removed names. Assume exist.
      * @param filename -- filename to be deleted from the removed. */
-    void deleteFromRemovedNames(String filename) {
-        String[] existedNames = readFrom(_removedNames);
+    void deleteFromREMOVED_NAMES(String filename) {
+        String[] existedNames = readFrom(REMOVED_NAMES);
         if (existedNames == null) {
             return;
         }
         clearRemovedFiles();
         for (String name : existedNames) {
             if (!name.equals(filename)) {
-                writeInto(_removedNames, true, name);
+                writeInto(REMOVED_NAMES, true, name);
             }
         }
     }
 
-    /** Check if a file name exist in RemovedNames.
+    /** Check if a file name exist in REMOVED_NAMES.
      * @param filename -- input.
      * @return -- check result. */
     boolean existFileNameInRemoved(String filename) {
-        String[] existedNames = readFrom(_removedNames);
+        String[] existedNames = readFrom(REMOVED_NAMES);
         if (existedNames == null) {
             return false;
         }
@@ -255,8 +255,8 @@ class Staged {
     /** Recording the commit-files for next commit. */
     private ArrayList<String> _nextCommit = new ArrayList<>();
     /** Convenience showing content folder. */
-    static final String _contentFolder = "/content/";
+    static final String CONTENT_FOLDER = "/content/";
     /** Removed names. */
-    static final String _removedNames = PATH_STAGED + "removedNames.txt";
+    static final String REMOVED_NAMES = PATH_STAGED + "REMOVED_NAMES.txt";
 
 }

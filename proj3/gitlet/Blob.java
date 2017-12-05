@@ -70,7 +70,7 @@ public class Blob {
      * @return -- name of the hash. */
     String getNameOf(String hash) {
         if (hasFileHash(hash)) {
-            String[] name = readFrom(PATH_BLOBS + hash + "/" + _nameFolder);
+            String[] name = readFrom(PATH_BLOBS + hash + "/" + NAME_FOLDER);
             if (name != null) {
                 return name[0];
             } else {
@@ -97,7 +97,7 @@ public class Blob {
      * @param hash -- file hash. */
     void checkOutByHash(String hash) {
         File source = new File(PATH_BLOBS + hash
-                + _contentFolder + getNameOf(hash));
+                + CONTENT_FOLDER + getNameOf(hash));
         File target = new File(PATH_WORKING + getNameOf(hash));
         if (target.exists()) {
             target.delete();

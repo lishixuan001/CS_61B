@@ -30,7 +30,7 @@ public class Branch {
      * @param commits -- commits in the branch. */
     private Branch(String name, String[] commits) {
         _name = name;
-        _commits = StringsToList(commits);
+        _commits = transStringsToList(commits);
         _myPath = PATH_BRANCHES + _name + "/";
         _headCommit = getMyHeadCommit();
     }
@@ -48,7 +48,7 @@ public class Branch {
         String path = PATH_BRANCHES + branchName + "/";
         File file = new File(path);
         if (file.exists()) {
-            String[] commits = readFrom(path + _commitsFolder);
+            String[] commits = readFrom(path + COMMITS_FOLDER);
             return new Branch(branchName, commits);
         } else {
             return null;
@@ -66,7 +66,6 @@ public class Branch {
             _myPath = PATH_BRANCHES + _name + "/";
             createBranch();
             _commits.add(INIT_COMMIT);
-            _branch = restoreBranch(DEFAULT_BRANCH);
             _headCommit = null;
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,8 +75,8 @@ public class Branch {
     /** Create branch. */
     void createBranch() {
         new File(_myPath).mkdir();
-        writeInto(_myPath + _commitsFolder, false, ListToStrings(_commits));
-        writeInto(_myPath + _headCommitFolder, false, _headCommit);
+        writeInto(_myPath + COMMITS_FOLDER, false, transListToStrings(_commits));
+        writeInto(_myPath + HEADCOMMIT_FOLDER, false, _headCommit);
     }
 
     /* **********************************
@@ -115,7 +114,7 @@ public class Branch {
     /** Get the head commit for this branch by reading file.
      * @return -- hash of the head commit. */
     private String getMyHeadCommit() {
-        String[] head = readFrom(_myPath + _headCommitFolder);
+        String[] head = readFrom(_myPath + HEADCOMMIT_FOLDER);
         if (head != null && head.length > 0) {
             return head[0];
         } else {
@@ -131,14 +130,14 @@ public class Branch {
      * @param commit -- hash of commit to be set as head. */
     void changeMyHeadCommitTo(String commit) {
         _headCommit = commit;
-        writeInto(_myPath + _headCommitFolder, false, commit);
+        writeInto(_myPath + HEADCOMMIT_FOLDER, false, commit);
     }
 
     /** Add commit to this branch.
      * @param id -- commit id to be added to this branch. */
     void addCommit(String id) {
         _commits.add(id);
-        writeInto(_myPath + _commitsFolder, true, id);
+        writeInto(_myPath + COMMITS_FOLDER, true, id);
     }
 
 
@@ -152,8 +151,8 @@ public class Branch {
     private String _headCommit;
 
     /** Convenience showing commits.txt. */
-    static final String _commitsFolder = "commits.txt";
+    static final String COMMITS_FOLDER = "commits.txt";
     /** Convenience showing headCommit.txt. */
-    static final String _headCommitFolder = "headCommit.txt";
+    static final String HEADCOMMIT_FOLDER = "headCommit.txt";
 
 }

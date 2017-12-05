@@ -61,12 +61,12 @@ public class Commit {
         String path = PATH_COMMITS + id + "/";
         File file = new File(path);
         if (file.exists()) {
-            String[] parents = readFrom(path + _parentFolder),
-                    timeStamp = readFrom(path + _timeStampFolder),
-                    message = readFrom(path + _messageFolder),
-                    files = readFrom(path + _filesFolder),
-                    branches = readFrom(path + _branchesFolder);
-            String[] isMergedString = readFrom(path + _isMergedFolder);
+            String[] parents = readFrom(path + PARENT_FOLDER),
+                    timeStamp = readFrom(path + TIMESTAMP_FOLDER),
+                    message = readFrom(path + MESSAGE_FOLDER),
+                    files = readFrom(path + FILES_FOLDER),
+                    branches = readFrom(path + BRANCHES_FOLDER);
+            String[] isMergedString = readFrom(path + ISMERGED_FOLDER);
             if (isMergedString == null) {
                 return null;
             }
@@ -105,7 +105,7 @@ public class Commit {
                 SystemExit("No changes added to the commit.");
             }
 
-            String[] lastFiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
+            String[] lastFiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + FILES_FOLDER);
 
             if (lastFiles == null || lastFiles.length <= 0) {
                 if (_files == null) {
@@ -120,12 +120,12 @@ public class Commit {
         }
 
         new File(_myPath).mkdir();
-        writeInto(_myPath + _parentFolder, false, _parents);
-        writeInto(_myPath + _timeStampFolder, false, _timeStamp);
-        writeInto(_myPath + _messageFolder, false, _message);
-        writeInto(_myPath + _filesFolder, false, _files);
-        writeInto(_myPath + _branchesFolder, false, SetToStrings(_branches));
-        writeInto(_myPath + _isMergedFolder, false, String.valueOf(_isMerged));
+        writeInto(_myPath + PARENT_FOLDER, false, _parents);
+        writeInto(_myPath + TIMESTAMP_FOLDER, false, _timeStamp);
+        writeInto(_myPath + MESSAGE_FOLDER, false, _message);
+        writeInto(_myPath + FILES_FOLDER, false, _files);
+        writeInto(_myPath + BRANCHES_FOLDER, false, SetToStrings(_branches));
+        writeInto(_myPath + ISMERGED_FOLDER, false, String.valueOf(_isMerged));
 
         for (String file : getAllDirectorysFrom(PATH_STAGED)) {
             _blobs.add(file);
@@ -219,7 +219,7 @@ public class Commit {
     /** Read file and get if isMerged.
      * @return -- Check result. */
     private boolean getIfMerged() {
-        String[] isMerged = readFrom(_myPath + _isMergedFolder);
+        String[] isMerged = readFrom(_myPath + ISMERGED_FOLDER);
         return isMerged != null && Boolean.parseBoolean(isMerged[0]);
     }
 
@@ -227,7 +227,7 @@ public class Commit {
      * @return -- applied to get files that need to be commited. */
     private String[] getFilesFromStaged() {
         ArrayList<String> files = new ArrayList<>();
-        String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
+        String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + FILES_FOLDER);
         if (parentfiles != null) {
             for (String parentFile : parentfiles) {
                 String parentFileName = _blobs.getNameOf(parentFile);
@@ -252,7 +252,7 @@ public class Commit {
      * @param filename -- file name
      * @return -- hash of the file. */
     String getHashByName(String filename) {
-        String[] hashs = readFrom(_myPath + _filesFolder);
+        String[] hashs = readFrom(_myPath + FILES_FOLDER);
         for (String hash : hashs) {
             if (_blobs.hasFileHash(hash)) {
                 String name = _blobs.getNameOf(hash);
@@ -267,7 +267,7 @@ public class Commit {
     /** Change the commit's attribute to an merged commit. */
     void tagAsMerged() {
         _isMerged = true;
-        writeInto(_myPath + _isMergedFolder, false, String.valueOf(true));
+        writeInto(_myPath + ISMERGED_FOLDER, false, String.valueOf(true));
     }
 
     /** Add parent branch to this commit.
@@ -276,7 +276,7 @@ public class Commit {
         ArrayList<String> currentParents = StringsToList(_parents);
         currentParents.add(branch);
         _parents = ListToStrings(currentParents);
-        writeInto(_myPath + _parentFolder, true, branch);
+        writeInto(_myPath + PARENT_FOLDER, true, branch);
     }
 
     /* **********************************
@@ -287,7 +287,7 @@ public class Commit {
      * @param filename -- file name.
      * @return -- check result. */
     boolean containsFileName(String filename) {
-        String[] hashs = readFrom(_myPath + _filesFolder);
+        String[] hashs = readFrom(_myPath + FILES_FOLDER);
         if (hashs == null) {
             return false;
         }
@@ -306,7 +306,7 @@ public class Commit {
      * @param filehash -- file hash.
      * @return -- check result. */
     boolean containsFileHash(String filehash) {
-        String[] hashs = readFrom(_myPath + _filesFolder);
+        String[] hashs = readFrom(_myPath + FILES_FOLDER);
         if (hashs == null) {
             return false;
         }
@@ -322,7 +322,7 @@ public class Commit {
      * @param branchname -- branch name
      * @return -- check result. */
     boolean containsBranch(String branchname) {
-        String[] branchs = readFrom(_myPath + _branchesFolder);
+        String[] branchs = readFrom(_myPath + BRANCHES_FOLDER);
         if (branchs == null) {
             return false;
         }
@@ -356,11 +356,11 @@ public class Commit {
     /** Message for initial commit. */
     static final String INIT_MESSAGE = "initial commit";
     /** Convenience for folders. */
-    static final String _parentFolder = "parents.txt",
-            _messageFolder = "message.txt",
-            _timeStampFolder = "timeStamp.txt",
-            _filesFolder = "files.txt",
-            _branchesFolder = "branches.txt",
-            _isMergedFolder = "isMerged.txt";
+    static final String PARENT_FOLDER = "parents.txt",
+            MESSAGE_FOLDER = "message.txt",
+            TIMESTAMP_FOLDER = "timeStamp.txt",
+            FILES_FOLDER = "files.txt",
+            BRANCHES_FOLDER = "branches.txt",
+            ISMERGED_FOLDER = "isMerged.txt";
 
 }

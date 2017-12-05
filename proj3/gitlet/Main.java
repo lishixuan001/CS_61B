@@ -13,17 +13,17 @@ public class Main {
     public static void main(String... args) {
 
         if (args.length <= 0) {
-            SystemExit("Please enter a command.");
+            doSystemExit("Please enter a command.");
         }
 
         String _command = args[0];
         if (!isValidCommand(_command)) {
-            SystemExit("No command with that name exists.");
+            doSystemExit("No command with that name exists.");
         }
 
         if (_command.equals("commit")) {
             if (args.length == 1 || args[1].length() <= 0) {
-                SystemExit("Please enter a commit message.");
+                doSystemExit("Please enter a commit message.");
             }
             GitletOperator operator = new GitletOperator();
             operator.process(_command, new String[] {args[1]});
