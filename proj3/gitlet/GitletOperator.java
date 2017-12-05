@@ -260,6 +260,9 @@ class GitletOperator {
         System.out.println("=== Untracked Files ===");
         for (File file : getFilesInFile(PATH_WORKING)) {
             String fileName = file.getName();
+            if (fileName.equals(_gitletPath)) {
+                continue;
+            }
             if (!isEverTracked(fileName) && !_staged.hasFileName(fileName)) {
                 System.out.println(fileName);
             }
