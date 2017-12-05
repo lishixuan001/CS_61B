@@ -126,8 +126,23 @@ public class Commit {
      * @param isInit -- if is init.*/
     private void createCommit(boolean isInit) {
 
-        if (_staged.isEmptyForCommit() && isEmptyRemovedFile() && !isInit) {
-            SystemExit("No changes added to the commit.");
+        if (!isInit) {
+            if (_staged.isEmptyForCommit() && isEmptyRemovedFile()) {
+                SystemExit("No changes added to the commit.");
+            }
+
+            String[] lastFiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
+
+            if (lastFiles == null || lastFiles.length <= 0) {
+                if (_files == null) {
+                    SystemExit("No changes added to the commit.");
+                }
+            }
+            else {
+                if (Arrays.equals(_files, lastFiles)) {
+                    SystemExit("No changes added to the commit.");
+                }
+            }
         }
 
         new File(_myPath).mkdir();
@@ -338,8 +353,12 @@ public class Commit {
     /** Get hash name for this commit.
      * @return -- created hash name for this commit. */
     private String getHashName() {
-        return sha1(_parents.toString(), _timeStamp, _message,
-                _files.toString());
+        if (_files == null) {
+            return sha1(_parents.toString(), _timeStamp, _message);
+        } else {
+            return sha1(_parents.toString(), _timeStamp, _message,
+                    _files.toString());
+        }
     }
 
     /** Create String formatted Date.
@@ -360,13 +379,12 @@ public class Commit {
     private String[] getFilesFromStaged() {
         ArrayList<String> files = new ArrayList<>();
         String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
-        if (parentfiles == null) {
-            return null;
-        }
-        for (String parentFile : parentfiles) {
-            String parentFileName = _blobs.getNameOf(parentFile);
-            if (!existFileNameInRemoved(parentFileName) && !_staged.hasFileName(parentFileName)) {
-                files.add(parentFile);
+        if (parentfiles != null) {
+            for (String parentFile : parentfiles) {
+                String parentFileName = _blobs.getNameOf(parentFile);
+                if (!existFileNameInRemoved(parentFileName) && !_staged.hasFileName(parentFileName)) {
+                    files.add(parentFile);
+                }
             }
         }
         for (String stagedFile : getAllDirectorysFrom(PATH_STAGED)) {
@@ -374,6 +392,9 @@ public class Commit {
             if (!existFileNameInRemoved(stagedFileName)) {
                 files.add(stagedFile);
             }
+        }
+        if (files.size() <= 0) {
+            return null;
         }
         return ListToStrings(files);
     }

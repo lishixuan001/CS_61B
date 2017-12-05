@@ -376,20 +376,29 @@ class GitletOperator {
             SystemExit("No commit with that id exists.");
         }
         String currentBranch = getCurrentBranch();
+        Commit commit = Commit.restore(commitId);
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (file.getName() == _gitletPath) {
+            String fileName = file.getName();
+            if (fileName.equals(_gitletPath)) {
                 continue;
             }
-            if (!isTrackedByBranch(file.getName(), currentBranch)) {
-                SystemExit("There is an untracked file in the way; delete it or add it first.");
+            Doc doc = new Doc(fileName, PATH_WORKING);
+            if (!isTrackedByBranch(fileName, currentBranch)) {
+                // FIXME -- IF WILL BE MODIFIED OR DELETED
+
+                boolean willBeDeleted = !commit.containsFileName(fileName);
+                boolean willBeModified = commit.containsFileName(fileName) &&
+                        commit.containsFileHash(doc.myHash());
+                if (willBeDeleted || willBeModified) {
+                    SystemExit("There is an untracked file in the way; delete it or add it first.");
+                }
             }
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (file.getName() != _gitletPath) {
+            if (!file.getName().equals( _gitletPath)) {
                 delete(file);
             }
         }
-        Commit commit = Commit.restore(commitId);
         for (String hash : commit.myFiles()) {
             String filename = _blobs.getNameOf(hash);
             File source = new File(PATH_BLOBS + hash + _contentFolder + filename);
@@ -406,10 +415,11 @@ class GitletOperator {
         String[] removed = readFrom(_removedNames);
         boolean conflictOccur = false;
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (file.getName() == _gitletPath) {
+            String fileName = file.getName();
+            if (fileName.equals(_gitletPath)) {
                 continue;
             }
-            if (!isTrackedByBranch(file.getName(), currentBranch)) {
+            if (!isTrackedByBranch(fileName, currentBranch)) {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
         }
