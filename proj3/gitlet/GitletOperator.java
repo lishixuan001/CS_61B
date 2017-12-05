@@ -6,12 +6,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static gitlet.Blob.*;
 import static gitlet.Branch._commitsFolder;
-import static gitlet.BranchUtilis.*;
 import static gitlet.Commit.*;
-import static gitlet.CommitUtilis.*;
-import static gitlet.Doc._nameFolder;
 import static gitlet.Utils.*;
 import static gitlet.Command.Type.*;
 import static gitlet.Staged.*;
@@ -800,7 +796,7 @@ public class GitletOperator {
         }
         return false;
     }
-    
+
     /** Search if there is a commit in .gitlet/Commits with the message.
      * @param message -- message to be searched.
      * @return -- check result. */

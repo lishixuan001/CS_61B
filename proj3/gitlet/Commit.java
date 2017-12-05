@@ -7,10 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.ArrayList;
 
-import static gitlet.CommitUtilis.*;
-import static gitlet.Doc._nameFolder;
 import static gitlet.Utils.*;
-import static gitlet.Staged.*;
 import static gitlet.GitletOperator.*;
 
 /** Commit Area in .gitlet/Commit. Representing each commit.
