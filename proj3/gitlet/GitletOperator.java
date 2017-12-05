@@ -603,17 +603,17 @@ public class GitletOperator {
                 if (lastCommitOfCurrent.containsFileName(fileName)) {
                     String currentHash = lastCommitOfCurrent.getHashByName(fileName);
                     writeInto(PATH_WORKING + fileName, true, readFrom(PATH_BLOBS + currentHash + _contentFolder + fileName));
+                    writeInto(PATH_WORKING + fileName, true, "=======");
                 } else {
-                    writeInto(PATH_WORKING + fileName, true, "");
+                    writeInto(PATH_WORKING + fileName, true, "=======");
                 }
-                writeInto(PATH_WORKING + fileName, true, "=======");
                 if (lastCommitOfGiven.containsFileName(fileName)) {
                     String givenHash = lastCommitOfGiven.getHashByName(fileName);
                     writeInto(PATH_WORKING + fileName, true, readFrom(PATH_BLOBS + givenHash + _contentFolder + fileName));
+                    writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
                 } else {
-                    writeInto(PATH_WORKING + fileName, true, "");
+                    writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
                 }
-                writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
                 doAdd(new String[] {fileName});
             }
         }
