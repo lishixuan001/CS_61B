@@ -173,6 +173,16 @@ class Staged {
         writeInto(_removedNames, true, filename);
     }
 
+    /** Check if removed is empty.
+     * @return -- check result. */
+    static boolean isEmptyRemovedFile() {
+        String[] existedNames = readFrom(_removedNames);
+        if (existedNames == null) {
+            return true;
+        }
+        return false;
+    }
+
     /** Delete name from removed names. Assume exist.
      * @param filename -- filename to be deleted from the removed. */
     static void deleteFromRemovedNames(String filename) {

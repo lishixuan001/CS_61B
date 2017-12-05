@@ -238,12 +238,14 @@ class GitletOperator {
                 String fileName = _blobs.getNameOf(fileHash);
                 if (!_staged.hasFileName(fileName)) {
                     File fileInWorking = new File(PATH_WORKING +fileName);
-                    if (!fileInWorking.exists() && existFileNameInRemoved(fileName)) {
+                    if (!fileInWorking.exists() && !existFileNameInRemoved(fileName)) {
                         modified.add(fileName + " (deleted)");
                     } else {
-                        Doc docInWorking = new Doc(fileName, PATH_WORKING);
-                        if (!docInWorking.myHash().equals(fileHash)) {
-                            modified.add(fileName + " (modified)");
+                        if (fileInWorking.exists()) {
+                            Doc docInWorking = new Doc(fileName, PATH_WORKING);
+                            if (!docInWorking.myHash().equals(fileHash)) {
+                                modified.add(fileName + " (modified)");
+                            }
                         }
                     }
                 }

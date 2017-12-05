@@ -22,7 +22,7 @@ public class Main {
         }
 
         if (_command.equals("commit")) {
-            if (args.length == 1) {
+            if (args.length == 1 || args[1].length() <= 0) {
                 SystemExit("Please enter a commit message.");
             }
             GitletOperator operator = new GitletOperator();

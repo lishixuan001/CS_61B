@@ -126,7 +126,7 @@ public class Commit {
      * @param isInit -- if is init.*/
     private void createCommit(boolean isInit) {
 
-        if (_staged.isEmptyForCommit() && !isInit) {
+        if (_staged.isEmptyForCommit() && isEmptyRemovedFile() && !isInit) {
             SystemExit("No changes added to the commit.");
         }
 
