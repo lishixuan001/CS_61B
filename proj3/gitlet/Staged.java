@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static gitlet.Doc.*;
+import static gitlet.Doc.NAME_FOLDER;
 import static gitlet.GitletOperator.*;
 
 /** Staged Area in .gitlet/Staged.
@@ -42,11 +42,12 @@ class Staged {
                 _staged.deleteByName(name);
             }
             copyOverFromWorking(doc);
-            _files.add(new Doc(name, hash, PATH_STAGED + hash + CONTENT_FOLDER));
+            _files.add(new Doc(name, hash,
+                    PATH_STAGED + hash + CONTENT_FOLDER));
         }
 
         if (existFileNameInRemoved(name)) {
-            deleteFromREMOVED_NAMES(name);
+            deleteFromRemovedNames(name);
         }
     }
 
@@ -55,14 +56,17 @@ class Staged {
     private void copyOverFromWorking(Doc doc) {
         try {
             new File(PATH_STAGED + doc.myHash()).mkdir();
-            File name = new File(PATH_STAGED + doc.myHash() + "/" + NAME_FOLDER);
+            File name = new File(PATH_STAGED
+                    + doc.myHash() + "/" + NAME_FOLDER);
             name.createNewFile();
             writeInto(name, false, doc.myName());
 
-            new File(PATH_STAGED + doc.myHash() + "/" + CONTENT_FOLDER).mkdir();
+            new File(PATH_STAGED + doc.myHash()
+                    + "/" + CONTENT_FOLDER).mkdir();
 
             File source = new File(doc.myPath());
-            File target = new File(PATH_STAGED + doc.myHash() + CONTENT_FOLDER + doc.myName());
+            File target = new File(PATH_STAGED
+                    + doc.myHash() + CONTENT_FOLDER + doc.myName());
             copyFiles(source, target);
 
             Doc newFile = new Doc(doc.myName(), doc.myHash(), target.getPath());
@@ -72,7 +76,8 @@ class Staged {
         }
     }
 
-    /** Show if Staged is empty without those in removed(marked) files. */
+    /** Show if Staged is empty without those in removed(marked) files.
+     * @return -- check result */
     boolean isEmptyForCommit() {
         if (_staged.isEmpty()) {
             return true;
@@ -106,8 +111,10 @@ class Staged {
         ArrayList<String> hashs = getAllDirectorysFrom(PATH_STAGED);
         if (!hashs.isEmpty()) {
             for (String hash : hashs) {
-                String name = readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER)[0];
-                docs.add(new Doc(name, hash, PATH_STAGED + hash + CONTENT_FOLDER));
+                String name =
+                        readFrom(PATH_STAGED + hash + "/" + NAME_FOLDER)[0];
+                docs.add(new Doc(name, hash,
+                        PATH_STAGED + hash + CONTENT_FOLDER));
             }
         }
         return docs;
@@ -200,7 +207,7 @@ class Staged {
 
     /** Check if removed is empty.
      * @return -- check result. */
-    public boolean isEmptyRemovedFile() {
+    boolean isEmptyRemovedFile() {
         String[] existedNames = readFrom(REMOVED_NAMES);
         if (existedNames == null) {
             return true;
@@ -221,7 +228,7 @@ class Staged {
 
     /** Delete name from removed names. Assume exist.
      * @param filename -- filename to be deleted from the removed. */
-    void deleteFromREMOVED_NAMES(String filename) {
+    void deleteFromRemovedNames(String filename) {
         String[] existedNames = readFrom(REMOVED_NAMES);
         if (existedNames == null) {
             return;
@@ -234,7 +241,7 @@ class Staged {
         }
     }
 
-    /** Check if a file name exist in REMOVED_NAMES.
+    /** Check if a file name exist in RemovedNames.
      * @param filename -- input.
      * @return -- check result. */
     boolean existFileNameInRemoved(String filename) {
@@ -252,11 +259,9 @@ class Staged {
 
     /** All files inside Staged Area. */
     private ArrayList<Doc> _files = new ArrayList<>();
-    /** Recording the commit-files for next commit. */
-    private ArrayList<String> _nextCommit = new ArrayList<>();
     /** Convenience showing content folder. */
     static final String CONTENT_FOLDER = "/content/";
     /** Removed names. */
-    static final String REMOVED_NAMES = PATH_STAGED + "REMOVED_NAMES.txt";
+    static final String REMOVED_NAMES = PATH_STAGED + "removedNames.txt";
 
 }

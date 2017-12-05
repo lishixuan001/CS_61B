@@ -16,19 +16,19 @@ public class Main {
             doSystemExit("Please enter a command.");
         }
 
-        String _command = args[0];
-        if (!isValidCommand(_command)) {
+        String command = args[0];
+        if (!isValidCommand(command)) {
             doSystemExit("No command with that name exists.");
         }
 
-        if (_command.equals("commit")) {
+        if (command.equals("commit")) {
             if (args.length == 1 || args[1].length() <= 0) {
                 doSystemExit("Please enter a commit message.");
             }
             GitletOperator operator = new GitletOperator();
-            operator.process(_command, new String[] {args[1]});
+            operator.process(command, new String[] {args[1]});
 
-        } else if (_command.equals("find")) {
+        } else if (command.equals("find")) {
             GitletOperator operator = new GitletOperator();
             String[] operands;
             if (args.length == 1) {
@@ -36,7 +36,7 @@ public class Main {
             } else {
                 operands = new String[] {args[1]};
             }
-            operator.process(_command, operands);
+            operator.process(command, operands);
         } else {
             StringBuilder input = new StringBuilder();
             for (String arg : args) {
@@ -47,8 +47,11 @@ public class Main {
         }
     }
 
+    /** Check if is valid command.
+     * @param command -- command
+     * @return -- check result. */
     static boolean isValidCommand(String command) {
-        for (String cmnd : _commands) {
+        for (String cmnd : VALID_COMMANDS) {
             if (cmnd.equals(command)) {
                 return true;
             }
@@ -56,7 +59,8 @@ public class Main {
         return false;
     }
 
-    static final String[] _commands = new String[] {
+    /** Collection of all correct commands. */
+    private static final String[] VALID_COMMANDS = new String[] {
         "init",
         "add",
         "commit",

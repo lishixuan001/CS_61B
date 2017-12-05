@@ -41,9 +41,11 @@ public class Commit {
      * @param message -- log message
      * @param files -- contained files
      * @param branches -- branches it got pointed to
-     * @param timeStamp -- time the commit is created. */
-    private Commit(String id, String[] parents, String[] timeStamp, String[] message,
-           String[] files, String[] branches, boolean isMerged) {
+     * @param timeStamp -- time the commit is created.
+     * @param isMerged -- if is a merged commit */
+    private Commit(String id, String[] parents, String[] timeStamp,
+                   String[] message, String[] files,
+                   String[] branches, boolean isMerged) {
         _parents = parents;
         _timeStamp = timeStamp[0];
         _message = message[0];
@@ -71,7 +73,8 @@ public class Commit {
                 return null;
             }
             boolean isMerged = Boolean.parseBoolean(isMergedString[0]);
-            return new Commit(id, parents, timeStamp, message, files, branches, isMerged);
+            return new Commit(id, parents, timeStamp,
+                    message, files, branches, isMerged);
         } else {
             return null;
         }
@@ -97,22 +100,22 @@ public class Commit {
     }
 
     /** Create commit (Record the commit information).
-     * @param InitOrMerge -- if is init.*/
-    void createCommit(boolean InitOrMerge) {
+     * @param initOrMerge -- if is init.*/
+    void createCommit(boolean initOrMerge) {
 
-        if (!InitOrMerge) {
+        if (!initOrMerge) {
             if (_staged.isEmptyForCommit() && _staged.isEmptyRemovedFile()) {
                 doSystemExit("No changes added to the commit.");
             }
 
-            String[] lastFiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + FILES_FOLDER);
+            String[] lastFiles = readFrom(PATH_COMMITS
+                    + currentHeadCommit() + "/" + FILES_FOLDER);
 
             if (lastFiles == null || lastFiles.length <= 0) {
                 if (_files == null) {
                     doSystemExit("No changes added to the commit.");
                 }
-            }
-            else {
+            } else {
                 if (Arrays.equals(_files, lastFiles)) {
                     doSystemExit("No changes added to the commit.");
                 }
@@ -124,7 +127,7 @@ public class Commit {
         writeInto(_myPath + TIMESTAMP_FOLDER, false, _timeStamp);
         writeInto(_myPath + MESSAGE_FOLDER, false, _message);
         writeInto(_myPath + FILES_FOLDER, false, _files);
-        writeInto(_myPath + BRANCHES_FOLDER, false, transSetToStrings(_branches));
+        writeInto(_myPath + BRANCHES_FOLDER, false, doSetToStrings(_branches));
         writeInto(_myPath + ISMERGED_FOLDER, false, String.valueOf(_isMerged));
 
         for (String file : getAllDirectorysFrom(PATH_STAGED)) {
@@ -227,11 +230,13 @@ public class Commit {
      * @return -- applied to get files that need to be commited. */
     private String[] getFilesFromStaged() {
         ArrayList<String> files = new ArrayList<>();
-        String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + FILES_FOLDER);
+        String[] parentfiles = readFrom(PATH_COMMITS
+                + currentHeadCommit() + "/" + FILES_FOLDER);
         if (parentfiles != null) {
             for (String parentFile : parentfiles) {
                 String parentFileName = _blobs.getNameOf(parentFile);
-                if (!_staged.existFileNameInRemoved(parentFileName) && !_staged.hasFileName(parentFileName)) {
+                if (!_staged.existFileNameInRemoved(parentFileName)
+                        && !_staged.hasFileName(parentFileName)) {
                     files.add(parentFile);
                 }
             }
@@ -245,7 +250,7 @@ public class Commit {
         if (files.size() <= 0) {
             return null;
         }
-        return transListToStrings(files);
+        return doListToStrings(files);
     }
 
     /** Get the hash of the file in this commit by its name. Assume exist.
@@ -273,9 +278,9 @@ public class Commit {
     /** Add parent branch to this commit.
      * @param branch -- name of the branch. */
     void addParent(String branch) {
-        ArrayList<String> currentParents = transStringsToList(_parents);
+        ArrayList<String> currentParents = doStringsToList(_parents);
         currentParents.add(branch);
-        _parents = transListToStrings(currentParents);
+        _parents = doListToStrings(currentParents);
         writeInto(_myPath + PARENT_FOLDER, true, branch);
     }
 

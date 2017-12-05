@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -77,8 +77,8 @@ class GitletOperator {
      * @param unused  -- none. */
     private void doInit(String[] unused) {
         if (isInitialized()) {
-            doSystemExit("A Gitlet version-control system already"
-                    + " exists in the current directory.");
+            doSystemExit("A Gitlet version-control "
+                    + "system already exists in the current directory.");
         }
         new File(GITLET_PATH).mkdir();
         _blobs.init();
@@ -170,9 +170,10 @@ class GitletOperator {
             System.out.println("===");
             System.out.println("commit " + headCommit.myHash());
             if (headCommit.isMerged()) {
-                String originCommit = headCommit.myParents()[0].substring(0, 7);
-                String mergedInCommit = headCommit.myParents()[1]
-                        .substring(0, 7);
+                String originCommit =
+                        headCommit.myParents()[0].substring(0, 7);
+                String mergedInCommit =
+                        headCommit.myParents()[1].substring(0, 7);
                 System.out.println("Merge: " + originCommit
                         + " " + mergedInCommit);
             }
@@ -183,7 +184,7 @@ class GitletOperator {
     }
 
     /** Function for "find [commit message]".
-     * @param operands -- commit message. */
+     * @param operands -- input. */
     private void doFind(String[] operands) {
         doTest(operands);
         String message = operands[0];
@@ -234,7 +235,7 @@ class GitletOperator {
 
         System.out.println("=== Removed Files ===");
         ArrayList<String> removed = new ArrayList<>();
-        removed.addAll(transStringsToList(readFrom(REMOVED_NAMES)));
+        removed.addAll(doStringsToList(readFrom(REMOVED_NAMES)));
         Collections.sort(removed);
 
         for (String file : removed) {
@@ -261,7 +262,8 @@ class GitletOperator {
             for (String fileHash : filesInCurrentCommit) {
                 String fileName = _blobs.getNameOf(fileHash);
                 if (!_staged.hasFileName(fileName)) {
-                    File fileInWorking = new File(PATH_WORKING + fileName);
+                    File fileInWorking = new File(PATH_WORKING
+                            + fileName);
                     if (!fileInWorking.exists()
                             && !_staged.existFileNameInRemoved(fileName)) {
                         modified.add(fileName + " (deleted)");
@@ -298,7 +300,7 @@ class GitletOperator {
     }
 
     /** Function for "branch [branch name]".
-     * @param operands -- branch name. */
+     * @param operands -- input */
     private void doBranch(String[] operands) {
         doTest(operands);
         String branchName = operands[0];
@@ -311,7 +313,7 @@ class GitletOperator {
     }
 
     /** Function for "rm-branch [branch name]".
-     * @param operands -- branch name. */
+     * @param operands -- input */
     private void doRmBranch(String[] operands) {
         doTest(operands);
         String branchName = operands[0];
@@ -321,8 +323,8 @@ class GitletOperator {
         if (!hasBranchName(branchName)) {
             doSystemExit("A branch with that name does not exist.");
         }
-        File commits = new File(PATH_BRANCHES + branchName + "/"
-                + COMMITS_FOLDER);
+        File commits =
+                new File(PATH_BRANCHES + branchName + "/" + COMMITS_FOLDER);
         for (String commit : readFrom(commits)) {
             deleteBranchFrom(commit, branchName);
         }
@@ -330,7 +332,7 @@ class GitletOperator {
     }
 
     /** Function for "checkout -- [file name]".
-     * @param operands -- file name. */
+     * @param operands -- input */
     private void doCheckoutF(String[] operands) {
         doTest(operands);
         String filename = operands[0];
@@ -343,7 +345,7 @@ class GitletOperator {
     }
 
     /** Function for "checkout [commit id] -- [file name]".
-     * @param operands -- [commit id], [file name]. */
+     * @param operands -- input */
     private void doCheckoutCF(String[] operands) {
         doTest(operands);
         String commitId = operands[0];
@@ -363,7 +365,7 @@ class GitletOperator {
     }
 
     /** Function for "checkout [branch name]".
-     * @param operands -- branch name. */
+     * @param operands -- input */
     private void doCheckoutB(String[] operands) {
         doTest(operands);
         String branchName = operands[0];
@@ -382,8 +384,8 @@ class GitletOperator {
             if (!fileName.equals(GITLET_PATH)) {
                 if (!isTrackedByBranch(fileName, currentBranch)) {
                     if (isTrackedByCommit(fileName, commit.myHash())) {
-                        doSystemExit("There is an untracked file in the way;"
-                                + " delete it or add it first.");
+                        doSystemExit("There is an untracked file "
+                                + "in the way; delete it or add it first.");
                     }
                 }
             }
@@ -399,7 +401,7 @@ class GitletOperator {
     }
 
     /** Function for "reset [commit id]".
-     * @param operands -- commit id. */
+     * @param operands -- input */
     private void doReset(String[] operands) {
         doTest(operands);
         String commitId = operands[0];
@@ -415,8 +417,8 @@ class GitletOperator {
             if (!fileName.equals(GITLET_PATH)) {
                 if (!isTrackedByBranch(fileName, currentBranch)) {
                     if (isTrackedByCommit(fileName, commitId)) {
-                        doSystemExit("There is an untracked file in the way;"
-                                + " delete it or add it first.");
+                        doSystemExit("There is an untracked file "
+                                + "in the way; delete it or add it first.");
                     }
                 }
             }
@@ -442,7 +444,7 @@ class GitletOperator {
     }
 
     /** Function for "merge [branch name]".
-     * @param operands -- branch name. */
+     * @param operands -- input */
     private void doMerge(String[] operands) {
         doTest(operands);
 
@@ -459,8 +461,8 @@ class GitletOperator {
                 continue;
             }
             if (!isTrackedByBranch(fileName, currentBranch)) {
-                doSystemExit("There is an untracked file in the way;"
-                        + " delete it or add it first.");
+                doSystemExit("There is an untracked "
+                        + "file in the way; delete it or add it first.");
             }
         }
         if (!hasBranchName(givenBranchName)) {
@@ -472,20 +474,22 @@ class GitletOperator {
 
         String splitCommitHash = getSplitCommit(currentBranch, givenBranchName);
         Commit splitCommit = new Commit().restoreCommit(splitCommitHash);
-        Commit lastCommitOfCurrent = new Commit().restoreCommit(
-                _branch.myLatestCommit());
+        Commit lastCommitOfCurrent =
+                new Commit().restoreCommit(_branch.myLatestCommit());
         Branch givenBranch = new Branch().restoreBranch(givenBranchName);
-        Commit lastCommitOfGiven = new Commit().restoreCommit(
-                givenBranch.myLatestCommit());
+        Commit lastCommitOfGiven =
+                new Commit().restoreCommit(givenBranch.myLatestCommit());
 
         if (splitCommitHash.equals(lastCommitOfGiven.myHash())) {
             doSystemExit("Given branch is an ancestor of the current branch.");
         }
         if (splitCommitHash.equals(lastCommitOfCurrent.myHash())) {
-            File source = new File(PATH_BRANCHES
-                    + givenBranch.myName() + "/" + COMMITS_FOLDER);
-            File target = new File(PATH_BRANCHES
-                    + _branch.myName() + "/" + COMMITS_FOLDER);
+            File source =
+                    new File(PATH_BRANCHES
+                            + givenBranch.myName() + "/" + COMMITS_FOLDER);
+            File target =
+                    new File(PATH_BRANCHES
+                            + _branch.myName() + "/" + COMMITS_FOLDER);
             if (target.exists()) {
                 deleteFile(target);
             }
@@ -510,7 +514,8 @@ class GitletOperator {
                     !splitCommit.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (newFileExistOnlyInGiven) {
-                File fileShouldBeCreated = new File(PATH_WORKING + fileName);
+                File fileShouldBeCreated =
+                        new File(PATH_WORKING + fileName);
                 if (fileShouldBeCreated.exists()) {
                     fileShouldBeCreated.delete();
                 }
@@ -529,11 +534,12 @@ class GitletOperator {
                     !splitCommit.containsFileName(fileName)
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
-            if (existedButModifiedInDiffWays || newFileButModifiedInDiffWays) {
+            if (existedButModifiedInDiffWays
+                    || newFileButModifiedInDiffWays) {
                 conflictOccur = true;
                 writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
-                String currentFileHash = lastCommitOfCurrent.getHashByName(
-                        fileName);
+                String currentFileHash =
+                        lastCommitOfCurrent.getHashByName(fileName);
                 writeInto(PATH_WORKING + fileName, true,
                         readFrom(PATH_BLOBS + currentFileHash
                                 + CONTENT_FOLDER + fileName));
@@ -555,7 +561,8 @@ class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedGivenAndUnchangedCurr) {
-                File fileShouldBeUpdated = new File(PATH_WORKING + fileName);
+                File fileShouldBeUpdated =
+                        new File(PATH_WORKING + fileName);
                 if (fileShouldBeUpdated.exists()) {
                     fileShouldBeUpdated.delete();
                 }
@@ -586,6 +593,7 @@ class GitletOperator {
                 doRm(new String[] {fileName});
             }
 
+
             boolean existedUnchangedGivenButDeletedCurr =
                     lastCommitOfGiven.containsFileHash(fileHash)
                     && !lastCommitOfCurrent.containsFileName(fileName);
@@ -614,8 +622,8 @@ class GitletOperator {
                 }
                 writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
                 if (lastCommitOfCurrent.containsFileName(fileName)) {
-                    String currentHash = lastCommitOfCurrent.getHashByName(
-                            fileName);
+                    String currentHash =
+                            lastCommitOfCurrent.getHashByName(fileName);
                     writeInto(PATH_WORKING + fileName, true,
                             readFrom(PATH_BLOBS + currentHash
                                     + CONTENT_FOLDER + fileName));
@@ -624,8 +632,8 @@ class GitletOperator {
                     writeInto(PATH_WORKING + fileName, true, "=======");
                 }
                 if (lastCommitOfGiven.containsFileName(fileName)) {
-                    String givenHash = lastCommitOfGiven.getHashByName(
-                            fileName);
+                    String givenHash =
+                            lastCommitOfGiven.getHashByName(fileName);
                     writeInto(PATH_WORKING + fileName, true,
                             readFrom(PATH_BLOBS + givenHash
                                     + CONTENT_FOLDER + fileName));
@@ -662,7 +670,7 @@ class GitletOperator {
     /** Function for add-remote [remote name] [name of remote]/.gitlet.
      * @param operands -- input */
     private void doAddRemote(String[] operands) {
-        // FIXME -- EXTRA CREDIT
+
         String remoteName = operands[0];
         String remoteDirectory = operands[1];
         System.out.println("[" + remoteName + "]");
@@ -670,15 +678,15 @@ class GitletOperator {
     }
 
     /** Function for rm-remote [remote name].
-     * @param operands -- remote name. */
+     * @param operands -- input */
     private void doRmRemote(String[] operands) {
-        // FIXME -- EXTRA CREDIT
+
         String remoteName = operands[0];
         System.out.println("[" + remoteName + "]");
     }
 
     /** Function for "help".
-     * @param unused -- unused. */
+     * @param unused -- unused */
     private void doHelp(String[] unused) {
         doTest(unused);
     }
@@ -686,36 +694,29 @@ class GitletOperator {
     /** Function as the third input command check,
      * this work if has wrong type operands with previously
      * checked correct command.
-     * @param unused -- unused. */
+     * @param unused -- unused */
     private void doError(String[] unused) {
         doSystemExit("Incorrect operands.");
     }
 
 
     /** Test if current directory is initialized.
-     * @param unused -- unused. */
-    private void doTest(String[] unused) {
+     * @param operands -- input */
+    private void doTest(String[] operands) {
         if (!isInitialized()) {
             doSystemExit("Not in an initialized Gitlet directory.");
         }
     }
 
     /** Clean up the .gitlet (remove).
-     * @param unused -- unused. */
+     * @param unused -- unused */
     private void doClean(String[] unused) {
         if (isInitialized()) {
             deleteFile(new File(GITLET_PATH));
         } else {
-            doSystemExit("This directory hasn't been "
-                    + "initialized --Wayne's doClean");
+            doSystemExit("This directory hasn't been"
+                    + " initialized --Wayne's doClean");
         }
-    }
-
-    /** This should never occur, if this happen, need to check.
-     * @param unused -- unused. */
-    private void doEOF(String[] unused) {
-        doSystemExit("EOF error occurred which "
-                + "should not happen at all times, fix it!");
     }
 
     /** Check if current environment is initialized.
@@ -726,12 +727,19 @@ class GitletOperator {
         return initedPath.exists() && initedPath.isDirectory();
     }
 
+    /** This should never occur, if this happen, need to check.
+     * @param unused -- unused */
+    private void doEOF(String[] unused) {
+        doSystemExit("EOF error occurred which should"
+                + " not happen at all times, fix it!");
+    }
+
     /* **********************************
      *        File R/W/Cr/Cp/De         *
      ********************************** */
 
     /** Clear a file.
-     * @param file -- file path. */
+     * @param file -- file path */
     static void clearFile(String file) {
         try {
             PrintWriter pw = new PrintWriter(file);
@@ -742,14 +750,14 @@ class GitletOperator {
     }
 
     /** Clear a file with input "File".
-     * @param file -- File file. */
+     * @param file -- File */
     private static void clearFile(File file) {
         clearFile(file.getPath());
     }
 
     /** WriteInto with input as "File".
-     * @param file -- File file
-     * @param ifAppend -- if do not overwrite but append
+     * @param file -- File
+     * @param ifAppend -- if append or overwrite
      * @param strs -- content */
     static void writeInto(File file, boolean ifAppend, String... strs) {
         writeInto(file.getPath(), ifAppend, strs);
@@ -757,7 +765,7 @@ class GitletOperator {
 
     /** Convenience for writing objects into file.
      * @param file -- file path
-     * @param ifAppend -- if do not overwrite but append
+     * @param ifAppend -- if append or overwrite
      * @param strs -- content */
     static void writeInto(String file, boolean ifAppend, String... strs) {
         try {
@@ -779,15 +787,15 @@ class GitletOperator {
     }
 
     /** readFrom with input as "File".
-     * @param file -- File file.
-     * @return -- read content. */
+     * @param file -- File
+     * @return -- content */
     private static String[] readFrom(File file) {
         return readFrom(file.getPath());
     }
 
     /** Convenience for reading Objects from file.
-     * @param file -- file path.
-     * @return -- read content. */
+     * @param file -- file path
+     * @return -- content*/
     static String[] readFrom(String file) {
         ArrayList<String> lst = new ArrayList<>();
         String strLine;
@@ -804,7 +812,7 @@ class GitletOperator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return transListToStrings(lst);
+        return doListToStrings(lst);
     }
 
     /** Copy File from one place to another. Do not use in same directory.
@@ -855,7 +863,7 @@ class GitletOperator {
     }
 
     /** Delete files and directories for doClean.
-     * @param file -- File file. */
+     * @param file -- File */
     static void deleteFile(File file) {
         if (file.isDirectory()) {
             File[] subFiles = file.listFiles();
@@ -901,14 +909,16 @@ class GitletOperator {
      * @param hash -- hash of the commit
      * @param branch -- name of the branch. */
     private void addBranchTo(String hash, String branch) {
-        writeInto(PATH_COMMITS + hash + "/" + BRANCHES_FOLDER, true, branch);
+        writeInto(PATH_COMMITS + hash + "/" + BRANCHES_FOLDER,
+                true, branch);
     }
 
     /** Delete branch from the commit.
      * @param hash -- hash of the commit
      * @param branch -- name of the branch. */
     private void deleteBranchFrom(String hash, String branch) {
-        File commit = new File(PATH_COMMITS + hash + "/" + BRANCHES_FOLDER);
+        File commit = new File(PATH_COMMITS + hash + "/"
+                + BRANCHES_FOLDER);
         String[] currentBranchs = readFrom(commit);
         clearFile(commit);
         for (String currentbranch : currentBranchs) {
@@ -1050,7 +1060,7 @@ class GitletOperator {
      ********************************** */
 
     /** Get name of the current branch.
-     * @return -- name of current branch. */
+     * @return -- current branch */
     static String getCurrentBranch() {
         String[] readResult = readFrom(PATH_CURRENTBRANCH);
         if (readResult != null) {
@@ -1061,20 +1071,20 @@ class GitletOperator {
     }
 
     /** Convenience for re-writing currentBranch.txt.
-     * @param branchName -- new current branch.*/
+     * @param branchName -- new branch name */
     static void rewriteCurrentBranch(String branchName) {
         writeInto(PATH_CURRENTBRANCH, false, branchName);
         _branch = new Branch().restoreBranch(branchName);
     }
 
     /** Get the current(head) commit for current branch.
-     * @return -- current head commit. */
+     * @return -- current head commit */
     static String currentHeadCommit() {
         return _branch.myHeadCommit();
     }
 
     /** Delete from Working directory.
-     * @param filename -- file name. */
+     * @param filename -- file name */
     private static void deleteFromWorking(String filename) {
         new File(PATH_WORKING + filename).delete();
     }
@@ -1085,14 +1095,14 @@ class GitletOperator {
 
     /** Get Files in File.
      * @param path -- file path
-     * @return -- Files under path */
+     * @return -- sub-Files*/
     static File[] getFilesInFile(String path) {
         return new File(path).listFiles();
     }
 
     /** Get all directories from File[].
-     * @param files -- input files
-     * @return -- list of directories */
+     * @param files -- given Files
+     * @return -- list of sub directories */
     static ArrayList<String> getAllDirectorysFrom(File[] files) {
         ArrayList<String> result = new ArrayList<>();
         if (files == null) {
@@ -1107,35 +1117,35 @@ class GitletOperator {
     }
 
     /** Convenience way of get all directories from a certain path.
-     * @param path -- file path
-     * @return -- list of directories*/
+     * @param path -- given file path
+     * @return -- list of sub directories*/
     static ArrayList<String> getAllDirectorysFrom(String path) {
         return getAllDirectorysFrom(getFilesInFile(path));
     }
 
     /** Method converting ArrayList<String> to String[].
      * @param lst -- input
-     * @return -- output */
-    static String[] transListToStrings(ArrayList<String> lst) {
+     * @return -- ouput */
+    static String[] doListToStrings(ArrayList<String> lst) {
         return lst.toArray(new String[lst.size()]);
     }
 
     /** Method converting Set<String> to String[].
      * @param lst -- input
-     * @return -- output */
-    static String[] transSetToStrings(Set<String> lst) {
+     * @return -- ouput */
+    static String[] doSetToStrings(Set<String> lst) {
         return lst.toArray(new String[lst.size()]);
     }
 
     /** Method converting String[] to ArrayList<String>.
      * @param strs -- input
-     * @return -- output */
-    static ArrayList<String> transStringsToList(String[] strs) {
+     * @return -- ouput */
+    static ArrayList<String> doStringsToList(String[] strs) {
         return new ArrayList<>(Arrays.asList(strs));
     }
 
     /** Make system exit with a message.
-     * @param msg -- message. */
+     * @param msg -- message */
     static void doSystemExit(String msg) {
         System.out.println(msg);
         System.exit(0);
@@ -1175,16 +1185,18 @@ class GitletOperator {
     /** The current branch. */
     static Branch _branch;
 
+    /** Pace for the method copyFile. */
+    private static final int PACE = 1024;
     /** The File name of the directory that saves Gitlet System files. */
     private static final String GITLET_PATH = ".gitlet";
-    /** Pace of byte for copying files. */
-    private static final int PACE = 1024;
     /** Default Date Format. */
-    static final DateFormat DATE_FORMAT = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
-    /** Initialized branch -> *master */
+    static final DateFormat DATE_FORMAT =
+            new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z");
+    /** Initialized branch -> *master. */
     static final String DEFAULT_BRANCH = "master";
-    /** Default hash for "initial commit"*/
-    static final String INIT_COMMIT = sha1(INIT_MESSAGE, DATE_FORMAT.format(INIT_DATE));
+    /** Default hash for "initial commit". */
+    static final String INIT_COMMIT =
+            sha1(INIT_MESSAGE, DATE_FORMAT.format(INIT_DATE));
 
     /** Convenience for directory on Working Area. */
     static final String PATH_WORKING = "./";
@@ -1197,6 +1209,7 @@ class GitletOperator {
     /** Convenience for directory on .gitlet/Branches/. */
     static final String PATH_BRANCHES = GITLET_PATH + "/" + "Branches/";
     /** Convenience for directory on .gitlet/Branches/currentBranch.txt. */
-    static final String PATH_CURRENTBRANCH = PATH_BRANCHES + "currentBranch.txt";
+    static final String PATH_CURRENTBRANCH =
+            PATH_BRANCHES + "currentBranch.txt";
 
 }

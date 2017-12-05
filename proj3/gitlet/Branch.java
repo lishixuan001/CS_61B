@@ -30,7 +30,7 @@ public class Branch {
      * @param commits -- commits in the branch. */
     private Branch(String name, String[] commits) {
         _name = name;
-        _commits = transStringsToList(commits);
+        _commits = doStringsToList(commits);
         _myPath = PATH_BRANCHES + _name + "/";
         _headCommit = getMyHeadCommit();
     }
@@ -66,6 +66,7 @@ public class Branch {
             _myPath = PATH_BRANCHES + _name + "/";
             createBranch();
             _commits.add(INIT_COMMIT);
+            _branch = restoreBranch(DEFAULT_BRANCH);
             _headCommit = null;
         } catch (IOException e) {
             e.printStackTrace();
@@ -75,7 +76,7 @@ public class Branch {
     /** Create branch. */
     void createBranch() {
         new File(_myPath).mkdir();
-        writeInto(_myPath + COMMITS_FOLDER, false, transListToStrings(_commits));
+        writeInto(_myPath + COMMITS_FOLDER, false, doListToStrings(_commits));
         writeInto(_myPath + HEADCOMMIT_FOLDER, false, _headCommit);
     }
 

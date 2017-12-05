@@ -13,7 +13,7 @@ import static gitlet.GitletOperator.*;
 /** Blob Area in .gitlet/Blobs.
  *  @author Shixuan (Wayne) Li
  */
-public class Blob {
+class Blob {
 
     /** Get the blob area ready. */
     Blob() {

@@ -29,25 +29,25 @@ class Doc {
     }
 
     /** Get my name.
-     * @return -- my name. */
+     * @return my name */
     String myName() {
         return _myName;
     }
 
     /** Get my hash.
-     * @return -- my hash. */
+     * @return my hash */
     String myHash() {
         return _myHash;
     }
 
     /** Get my path.
-     * @return -- my path. */
+     * @return my path */
     String myPath() {
         return _myPath;
     }
 
     /** Get the hash id base on 'this' file content.
-     * @return -- generated hash. */
+     * @return generate hash. */
     private String getHash() {
         File file = new File(_myPath);
         byte[] data = readContents(file);
