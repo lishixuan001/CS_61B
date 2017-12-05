@@ -358,7 +358,6 @@ public class Commit {
     /** Auto-collect file hashes in staged area.
      * @return -- applied to get files that need to be commited. */
     private String[] getFilesFromStaged() {
-        //        return ListToStrings(_staged.getNextCommitFiles());
         ArrayList<String> files = new ArrayList<>();
         String[] parentfiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
         if (parentfiles == null) {
@@ -366,7 +365,7 @@ public class Commit {
         }
         for (String parentFile : parentfiles) {
             String parentFileName = _blobs.getNameOf(parentFile);
-            if (!existFileNameInRemoved(parentFileName)) {
+            if (!existFileNameInRemoved(parentFileName) && !_staged.hasFileName(parentFileName)) {
                 files.add(parentFile);
             }
         }

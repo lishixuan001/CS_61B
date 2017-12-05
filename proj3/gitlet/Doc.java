@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static gitlet.Utils.*;
@@ -43,11 +44,8 @@ class Doc {
     /** Get the hash id base on 'this' file content. */
     private String getHash() {
         File file = new File(_myPath);
-        String[] content = readFrom(file);
-        if (content == null || content.length <= 0) {
-            return sha1(_myName);
-        }
-        return sha1(_myName, Arrays.toString(content[0].getBytes()));
+        byte[] data = readContents(file);
+        return sha1(_myName, data);
     }
 
     /** Set the local parameters. */

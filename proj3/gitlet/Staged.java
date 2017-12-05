@@ -84,6 +84,7 @@ class Staged {
     void add(Doc doc) {
         String hash = doc.myHash();
         String name = doc.myName();
+
         if (_blobs.hasFileHash(hash)) {
             if (_staged.hasFileName(name)) {
                 _staged.deleteByName(name);

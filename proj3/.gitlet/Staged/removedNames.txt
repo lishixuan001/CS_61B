@@ -1,2 +1,0 @@
-test0.txt
-deleted1.txt
