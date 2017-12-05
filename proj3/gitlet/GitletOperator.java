@@ -439,10 +439,10 @@ class GitletOperator {
         Commit lastCommitOfCurrent = Commit.restore(_branch.myLatestCommit());
         Commit lastCommitOfGiven = Commit.restore(givenBranch.myLatestCommit());
 
-        if (splitCommitHash.equals(lastCommitOfGiven)) {
+        if (splitCommitHash.equals(lastCommitOfGiven.myHash())) {
             SystemExit("Given branch is an ancestor of the current branch.");
         }
-        if (splitCommitHash.equals(lastCommitOfCurrent)) {
+        if (splitCommitHash.equals(lastCommitOfCurrent.myHash())) {
             File source = new File(PATH_BRANCHES + givenBranch.myName() + "/" + _commitsFolder);
             File target = new File(PATH_BRANCHES + _branch.myName() + "/" + _commitsFolder);
             if (target.exists()) {
