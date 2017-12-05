@@ -418,6 +418,9 @@ public class GitletOperator {
         String currentBranch = getCurrentBranch();
         String[] removed = readFrom(_removedNames);
         boolean conflictOccur = false;
+        if (!_staged.isEmpty() || removed.length >= 1) {
+            SystemExit("You have uncommitted changes.");
+        }
         for (File file : getFilesInFile(PATH_WORKING)) {
             String fileName = file.getName();
             if (fileName.equals(_gitletPath)) {
@@ -426,9 +429,6 @@ public class GitletOperator {
             if (!isTrackedByBranch(fileName, currentBranch)) {
                 SystemExit("There is an untracked file in the way; delete it or add it first.");
             }
-        }
-        if (!_staged.isEmpty() || removed.length >= 1) {
-            SystemExit("You have uncommitted changes.");
         }
         if (!hasBranchName(givenBranchName)) {
             SystemExit("A branch with that name does not exist.");
