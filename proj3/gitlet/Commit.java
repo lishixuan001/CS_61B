@@ -102,19 +102,19 @@ public class Commit {
 
         if (!InitOrMerge) {
             if (_staged.isEmptyForCommit() && _staged.isEmptyRemovedFile()) {
-                SystemExit("No changes added to the commit.");
+                doSystemExit("No changes added to the commit.");
             }
 
             String[] lastFiles = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + FILES_FOLDER);
 
             if (lastFiles == null || lastFiles.length <= 0) {
                 if (_files == null) {
-                    SystemExit("No changes added to the commit.");
+                    doSystemExit("No changes added to the commit.");
                 }
             }
             else {
                 if (Arrays.equals(_files, lastFiles)) {
-                    SystemExit("No changes added to the commit.");
+                    doSystemExit("No changes added to the commit.");
                 }
             }
         }
@@ -124,7 +124,7 @@ public class Commit {
         writeInto(_myPath + TIMESTAMP_FOLDER, false, _timeStamp);
         writeInto(_myPath + MESSAGE_FOLDER, false, _message);
         writeInto(_myPath + FILES_FOLDER, false, _files);
-        writeInto(_myPath + BRANCHES_FOLDER, false, SetToStrings(_branches));
+        writeInto(_myPath + BRANCHES_FOLDER, false, transSetToStrings(_branches));
         writeInto(_myPath + ISMERGED_FOLDER, false, String.valueOf(_isMerged));
 
         for (String file : getAllDirectorysFrom(PATH_STAGED)) {
@@ -245,7 +245,7 @@ public class Commit {
         if (files.size() <= 0) {
             return null;
         }
-        return ListToStrings(files);
+        return transListToStrings(files);
     }
 
     /** Get the hash of the file in this commit by its name. Assume exist.
@@ -273,9 +273,9 @@ public class Commit {
     /** Add parent branch to this commit.
      * @param branch -- name of the branch. */
     void addParent(String branch) {
-        ArrayList<String> currentParents = StringsToList(_parents);
+        ArrayList<String> currentParents = transStringsToList(_parents);
         currentParents.add(branch);
-        _parents = ListToStrings(currentParents);
+        _parents = transListToStrings(currentParents);
         writeInto(_myPath + PARENT_FOLDER, true, branch);
     }
 
