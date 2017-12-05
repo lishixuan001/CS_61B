@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static gitlet.Blob.*;
 import static gitlet.Utils.*;
 import static gitlet.Commit.*;
 import static gitlet.Branch.*;
@@ -21,7 +22,8 @@ class GitletOperator {
     GitletOperator() {
         new GitletOperator(null);
     }
-    /** Initialize the Gitlet System for running. */
+    /** Initialize the Gitlet System for running.
+     * @param input -- user input. */
     GitletOperator(String input) {
         _input = input;
         _blobs = new Blob();
@@ -33,7 +35,9 @@ class GitletOperator {
     void process() {
         doCommand(_input);
     }
-    /** Process if it's "commit" or "find". */
+    /** Process if it's "commit" or "find".
+     * @param cmnd -- command
+     * @param operands -- operands. */
     void process(String cmnd, String[] operands) {
         if (cmnd.equals("commit")) {
             doCommit(operands);
@@ -42,7 +46,8 @@ class GitletOperator {
         }
     }
 
-    /** Perform the next command from our input source. */
+    /** Perform the next command from our input source.
+     * @param input -- input. */
     private void doCommand(String input) {
         try {
             Command cmnd = Command.parseCommand(input);
@@ -52,7 +57,8 @@ class GitletOperator {
         }
     }
 
-    /** Function for "init". */
+    /** Function for "init".
+     * @param unused  -- none. */
     private void doInit(String[] unused) {
         if (isInitialized()) {
             SystemExit("A Gitlet version-control system already exists in the current directory.");
@@ -64,7 +70,8 @@ class GitletOperator {
         new Commit().init();
     }
 
-    /** Function for "add [file name]". */
+    /** Function for "add [file name]".
+     * @param operands  -- file name. */
     private void doAdd(String[] operands) {
         doTest(operands);
         String filename = operands[0];
@@ -78,7 +85,8 @@ class GitletOperator {
         _staged.add(file);
     }
 
-    /** Function for "commit [message]". */
+    /** Function for "commit [message]".
+     * @param operands -- commit message. */
     private void doCommit(String[] operands) {
         doTest(operands);
         String msg = operands[0];
@@ -86,7 +94,8 @@ class GitletOperator {
         newCommit.createCommit();
     }
 
-    /** Function for "rm [file name]". */
+    /** Function for "rm [file name]".
+     * @param operands -- file name. */
     private void doRm(String[] operands) {
         doTest(operands);
 
@@ -119,6 +128,7 @@ class GitletOperator {
                 for (String commit : headCommit.myParents()) {
                     System.out.print(" " + commit.substring(0, 7));
                 }
+                System.out.println();
             }
             System.out.println("Date: " + headCommit.myDate());
             System.out.println(headCommit.myMessage());
@@ -184,11 +194,13 @@ class GitletOperator {
         System.out.println();
 
         System.out.println("=== Staged Files ===");
+        HashMap<String, String> staged = new HashMap<>();
         ArrayList<String> stagedNames = new ArrayList<>();
         ArrayList<String> stagedHashs = getAllDirectorysFrom(PATH_STAGED);
         for (String stagedHash : stagedHashs) {
             String stagedName = _staged.getNameByHash(stagedHash);
             stagedNames.add(stagedName);
+            staged.put(stagedName, stagedHash);
         }
         Collections.sort(stagedNames);
 
@@ -201,23 +213,58 @@ class GitletOperator {
         ArrayList<String> removed = new ArrayList<>();
         removed.addAll(StringsToList(readFrom(_removedNames)));
         Collections.sort(removed);
+
         for (String file : removed) {
             System.out.println(file);
         }
         System.out.println();
 
-        // FIXME -- Do these for Extra Credits
-        System.out.println("=== Modifications Not Staged For Commit ===");
         ArrayList<String> modified = new ArrayList<>();
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        for (String name : stagedNames) {
+            File fileInWorking = new File(PATH_WORKING + name);
+            if (!fileInWorking.exists()) {
+                modified.add(name + " (deleted)");
+            } else {
+                Doc docInWorking = new Doc(name, PATH_WORKING);
+                if (!docInWorking.myHash().equals(staged.get(name))) {
+                    modified.add(name + " (modified)");
+                }
+            }
+        }
+        String[] filesInCurrentCommit = readFrom(PATH_COMMITS + currentHeadCommit() + "/" + _filesFolder);
+        if (filesInCurrentCommit != null) {
+            for (String fileHash : filesInCurrentCommit) {
+                String fileName = _blobs.getNameOf(fileHash);
+                if (!_staged.hasFileName(fileName)) {
+                    File fileInWorking = new File(PATH_WORKING +fileName);
+                    if (!fileInWorking.exists() && existFileNameInRemoved(fileName)) {
+                        modified.add(fileName + " (deleted)");
+                    } else {
+                        Doc docInWorking = new Doc(fileName, PATH_WORKING);
+                        if (!docInWorking.myHash().equals(fileHash)) {
+                            modified.add(fileName + " (modified)");
+                        }
+                    }
+                }
+            }
+        }
 
-        // Gather all files in Staged and in nextCommit.txt
+        Collections.sort(modified);
 
-        // for the gathered commits:
-        // if not in Staged: if in nextCommit.txt: modified/deleted
-        //               else: should not happen
-        // else: if in Staged: modified
+        for (String name : modified) {
+            System.out.println(name);
+        }
+        System.out.println();
 
-        // Untracked files
+        System.out.println("=== Untracked Files ===");
+        for (File file : getFilesInFile(PATH_WORKING)) {
+            String fileName = file.getName();
+            if (!isEverTracked(fileName) && !_staged.hasFileName(fileName)) {
+                System.out.println(fileName);
+            }
+        }
+        System.out.println();
     }
 
     /** Function for "branch [branch name]". */
@@ -476,6 +523,22 @@ class GitletOperator {
         if (conflictOccur) {
             SystemExit("Encountered a merge conflict.");
         }
+    }
+
+    /** Function for add-remote [remote name] [name of remote directory]/.gitlet. */
+    private void doAddRemote(String[] operands) {
+        // FIXME -- EXTRA CREDIT
+        String remoteName = operands[0];
+        String remoteDirectory = operands[1];
+        System.out.println("[" + remoteName + "]");
+        System.out.println("[" + remoteDirectory + "]");
+    }
+
+    /** Function for rm-remote [remote name]. */
+    private void doRmRemote(String[] operands) {
+        // FIXME -- EXTRA CREDIT
+        String remoteName = operands[0];
+        System.out.println("[" + remoteName + "]");
     }
 
     /** Function for "help". */
@@ -741,6 +804,8 @@ class GitletOperator {
         _commands.put(CHECKOUTB, this::doCheckoutB);
         _commands.put(RESET, this::doReset);
         _commands.put(MERGE, this::doMerge);
+        _commands.put(ADDREMOTE, this::doAddRemote);
+        _commands.put(RMREMOTE, this::doRmRemote);
         _commands.put(CLEAN, this::doClean);
         _commands.put(HELP, this::doHelp);
         _commands.put(ERROR, this::doError);

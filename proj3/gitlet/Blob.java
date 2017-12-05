@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import static gitlet.Doc.*;
 import static gitlet.Staged.*;
+import static gitlet.Branch.*;
 import static gitlet.GitletOperator.*;
 
 /** Blob Area in .gitlet/Blobs.
@@ -90,6 +91,18 @@ public class Blob {
             target.delete();
         }
         copyFiles(source, target);
+    }
+
+    /** Check if a file name is ever tracked.
+     * @param fileName -- input
+     * @return -- check result. */
+    static boolean isEverTracked(String fileName) {
+        for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
+            if (_blobs.getNameOf(fileHash).equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** All files inside Staged Area. */

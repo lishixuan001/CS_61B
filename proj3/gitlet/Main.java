@@ -70,6 +70,11 @@ public class Main {
         "checkout",
         "reset",
         "merge",
+        "fetch",
+        "add-remote",
+        "rm-remote",
+        "push",
+        "pull",
         "--help",
         "clean",
     };

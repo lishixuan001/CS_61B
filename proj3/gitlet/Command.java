@@ -25,6 +25,8 @@ class Command {
         CHECKOUTF("checkout\\s--\\s+(\\S+)"),
         CHECKOUTCF("checkout\\s+(\\S+)\\s--\\s+(\\S+)"),
         CHECKOUTB("checkout\\s+(\\S+)"),
+        ADDREMOTE("add-remote\\s+(\\S+)\\s+(\\S+)"),
+        RMREMOTE("rm-remote\\s+(\\S+)"),
         HELP("--help"),
         /* Special "commands" internally generated. */
         /** Syntax error in command. */

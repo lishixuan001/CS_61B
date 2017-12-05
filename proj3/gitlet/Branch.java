@@ -154,20 +154,21 @@ public class Branch {
 
     /** Check if a file with filename in WorkingArea is tracked by the branch.
      * @param filename -- file name as input.
-     * @param branch -- branch name as input.
+     * @param branchName -- branch name as input.
      * @return -- check result. */
-    static boolean isTrackedByBranch(String filename, String branch) {
-        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
-            for (String file : readFrom(PATH_COMMITS
-                    + hash + "/" + _filesFolder)) {
-                if (_blobs.getNameOf(file).equals(filename)) {
-                    for (String bran : readFrom(PATH_COMMITS
-                            + hash + "/" + _branchesFolder)) {
-                        if (bran.equals(branch)) {
-                            return true;
-                        }
-                    }
-                }
+    static boolean isTrackedByBranch(String filename, String branchName) {
+        Branch branch = Branch.restore(branchName);
+        if (branch == null) {
+            return false;
+        }
+        ArrayList<String> commits = branch.myCommits();
+        if (commits == null) {
+            return false;
+        }
+        for (String commitHash : commits) {
+            Commit commit = Commit.restore(commitHash);
+            if (commit.containsFileName(filename)) {
+                return true;
             }
         }
         return false;
