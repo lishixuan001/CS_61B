@@ -34,7 +34,3 @@ Merged other into master\.
 ${ARBLINES}
 <<<*
 I blank-status2.inc
-
-g clean; g init; g add f.txt; g add g.txt; g commit "Two files"; g branch other;
-g add h.txt; g rm g.txt; g commit "Add h.txt and remove g.txt"; g checkout other;
-git rm f.txt; g add k.txt; g commit "Add k.txt and remove f.txt"; git checkout master

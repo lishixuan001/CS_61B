@@ -443,11 +443,6 @@ public class GitletOperator {
         Branch givenBranch = new Branch().restoreBranch(givenBranchName);
         Commit lastCommitOfGiven = new Commit().restoreCommit(givenBranch.myLatestCommit());
 
-        // FIXME -- DELETE -- TEST COMMIT
-        System.out.println("splitCommit: " + splitCommit.myMessage());
-        System.out.println("Current: " + lastCommitOfCurrent.myMessage());
-        System.out.println("Given: " + lastCommitOfGiven.myMessage());
-
         if (splitCommitHash.equals(lastCommitOfGiven.myHash())) {
             SystemExit("Given branch is an ancestor of the current branch.");
         }
@@ -472,8 +467,8 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedAndBothModifiedSameWay) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE2-1");
+//                // FIXME -- DELETE
+//                System.out.println("HERE2-1 - " + fileName);
 
                 continue;
             }
@@ -483,8 +478,8 @@ public class GitletOperator {
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (newFileExistOnlyInGiven) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE5");
+//                // FIXME -- DELETE
+//                System.out.println("HERE5 - " + fileName);
 
                 File fileShouldBeCreated = new File(PATH_WORKING + fileName);
                 if (fileShouldBeCreated.exists()) {
@@ -503,6 +498,10 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedInDiffWays || newFileButModifiedInDiffWays) {
+
+////                 FIXME -- DELETE
+//                System.out.println("Conflict-Type1 - " + fileName);
+
                 conflictOccur = true;
                 writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
                 String currentFileHash = lastCommitOfCurrent.getHashByName(fileName);
@@ -524,8 +523,8 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedGivenAndUnchangedCurr) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE1");
+//                // FIXME -- DELETE
+//                System.out.println("HERE1 - " + fileName);
 
                 File fileShouldBeUpdated = new File(PATH_WORKING + fileName);
                 if (fileShouldBeUpdated.exists()) {
@@ -540,8 +539,8 @@ public class GitletOperator {
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (existedButBothDeleted) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE2-2");
+//                // FIXME -- DELETE
+//                System.out.println("HERE2-2 - " + fileName);
 
                 continue;
             }
@@ -552,8 +551,8 @@ public class GitletOperator {
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedUnchangedGivenButModifiedCurr) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE3");
+//                // FIXME -- DELETE
+//                System.out.println("HERE3 - " + fileName);
 
                 continue;
             }
@@ -561,16 +560,10 @@ public class GitletOperator {
             // Condition 6
             boolean existedButDeletedGivenAndUnchangedCurr = !lastCommitOfGiven.containsFileName(fileName)
                     && lastCommitOfCurrent.containsFileHash(fileHash);
-
-            // FIXME -- DELETE -- TEST COMMIT
-//            System.out.println();
-////            System.out.println("Try6");
-//            System.out.println(fileName);
-
             if (existedButDeletedGivenAndUnchangedCurr) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE6");
+//                // FIXME -- DELETE
+//                System.out.println("HERE6 - " + fileName);
 
                 doRm(new String[] {fileName});
             }
@@ -580,8 +573,8 @@ public class GitletOperator {
                     && !lastCommitOfCurrent.containsFileName(fileName);
             if (existedUnchangedGivenButDeletedCurr) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE7");
+//                // FIXME -- DELETE
+//                System.out.println("HERE7 - " + fileName);
 
                 continue;
             }
@@ -593,6 +586,10 @@ public class GitletOperator {
                     && lastCommitOfCurrent.containsFileName(fileName)
                     && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButCurrModifedAndGivenDeleted || existedButGivenModifedAndCurrDeleted) {
+
+//                // FIXME -- DELETE
+//                System.out.println("Conflict-Type2 - " + fileName);
+
                 conflictOccur = true;
                 File conflictFile = new File(PATH_WORKING + fileName);
                 if (!conflictFile.exists()) {
@@ -629,19 +626,17 @@ public class GitletOperator {
                     && !lastCommitOfGiven.containsFileName(fileName);
             if (newFileExistOnlyInCurr) {
 
-                // FIXME -- DELETE
-                System.out.println("HERE4");
+//                // FIXME -- DELETE
+//                System.out.println("HERE4 - " + fileName);
 
                 continue;
             }
         }
 
-////        doCommit(new String[] {String.format("Merged %s into %s.", givenBranchName, currentBranch)});
-//        Commit mergedCommit = new Commit(String.format("Merged %s into %s.", givenBranchName, currentBranch));
-//        mergedCommit.createCommit(true);
-////        Commit mergedCommit = new Commit().restoreCommit(_branch.myLatestCommit());
-//        mergedCommit.tagAsMerged();
-//        mergedCommit.addParent(givenBranchName);
+        Commit mergedCommit = new Commit(String.format("Merged %s into %s.", givenBranchName, currentBranch));
+        mergedCommit.createCommit(true);
+        mergedCommit.tagAsMerged();
+        mergedCommit.addParent(lastCommitOfGiven.myHash());
 
         if (conflictOccur) {
             SystemExit("Encountered a merge conflict.");

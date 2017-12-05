@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.ArrayList;
 
 import static gitlet.CommitUtilis.*;
+import static gitlet.Doc._nameFolder;
 import static gitlet.Utils.*;
 import static gitlet.Staged.*;
 import static gitlet.GitletOperator.*;
@@ -115,7 +116,7 @@ public class Commit {
 
     /** Create commit (Record the commit information).
      * @param InitOrMerge -- if is init.*/
-    private void createCommit(boolean InitOrMerge) {
+    public void createCommit(boolean InitOrMerge) {
 
         if (!InitOrMerge) {
             if (_staged.isEmptyForCommit() && _staged.isEmptyRemovedFile()) {
@@ -144,8 +145,8 @@ public class Commit {
         writeInto(_myPath + _branchesFolder, false, SetToStrings(_branches));
         writeInto(_myPath + _isMergedFolder, false, String.valueOf(_isMerged));
 
-        for (Doc doc : _staged.files()) {
-            _blobs.add(doc);
+        for (String file : getAllDirectorysFrom(PATH_STAGED)) {
+            _blobs.add(file);
         }
 
         _staged.clearRemovedFiles();

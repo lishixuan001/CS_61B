@@ -61,11 +61,11 @@ public class Blob {
     }
 
     /** Check and add from Staged Area.
-     * @param doc -- doc to be added.*/
-    void add(Doc doc) {
+     * @param hash -- doc to be added.*/
+    void add(String hash) {
         try {
-            Files.move(new File(PATH_STAGED + doc.myHash()).toPath(),
-                    new File(PATH_BLOBS + doc.myHash()).toPath(),
+            Files.move(new File(PATH_STAGED + hash).toPath(),
+                    new File(PATH_BLOBS + hash).toPath(),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
