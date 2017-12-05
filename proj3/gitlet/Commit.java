@@ -45,9 +45,7 @@ public class Commit {
         _branches.add(currentBranch);
         _myHash = getHashName();
         _myPath = PATH_COMMITS + _myHash + "/";
-        if (_parents.length >= 2) {
-            _isMerged = true;
-        }
+        _isMerged = getIfMerged();
     }
 
     /** Mostly for restore use, since can set all parameters.
@@ -58,7 +56,7 @@ public class Commit {
      * @param branches -- branches it got pointed to
      * @param timeStamp -- time the commit is created. */
     Commit(String id, String[] parents, String[] timeStamp, String[] message,
-           String[] files, String[] branches) {
+           String[] files, String[] branches, boolean isMerged) {
         _parents = parents;
         _timeStamp = timeStamp[0];
         _message = message[0];
@@ -66,9 +64,7 @@ public class Commit {
         _branches = new HashSet<>(Arrays.asList(branches));
         _myHash = id;
         _myPath = PATH_COMMITS + _myHash + "/";
-        if (_parents.length >= 2) {
-            _isMerged = true;
-        }
+        _isMerged = isMerged;
     }
 
     /** Restore a Commit by commit id.
@@ -83,7 +79,8 @@ public class Commit {
                     message = readFrom(path + _messageFolder),
                     files = readFrom(path + _filesFolder),
                     branches = readFrom(path + _branchesFolder);
-            return new Commit(id, parents, timeStamp, message, files, branches);
+            boolean isMerged = Boolean.parseBoolean(readFrom(path + _isMergedFolder)[0]);
+            return new Commit(id, parents, timeStamp, message, files, branches, isMerged);
 
         } else {
             return null;
@@ -100,6 +97,7 @@ public class Commit {
         _branches.add(DEFAULT_BRANCH);
         _myHash = INIT_COMMIT;
         _myPath = PATH_COMMITS + _myHash + "/";
+        _isMerged = false;
         createCommit(true);
     }
 
@@ -123,10 +121,10 @@ public class Commit {
     }
 
     /** Create commit (Record the commit information).
-     * @param isInit -- if is init.*/
-    private void createCommit(boolean isInit) {
+     * @param InitOrMerge -- if is init.*/
+    void createCommit(boolean InitOrMerge) {
 
-        if (!isInit) {
+        if (!InitOrMerge) {
             if (_staged.isEmptyForCommit() && isEmptyRemovedFile()) {
                 SystemExit("No changes added to the commit.");
             }
@@ -151,6 +149,7 @@ public class Commit {
         writeInto(_myPath + _messageFolder, false, _message);
         writeInto(_myPath + _filesFolder, false, _files);
         writeInto(_myPath + _branchesFolder, false, SetToStrings(_branches));
+        writeInto(_myPath + _isMergedFolder, false, String.valueOf(_isMerged));
 
         for (Doc doc : _staged.files()) {
             _blobs.add(doc);
@@ -197,6 +196,17 @@ public class Commit {
     /** Change the commit's attribute to an merged commit. */
     void tagAsMerged() {
         _isMerged = true;
+        writeInto(_myPath + _isMergedFolder, false, String.valueOf(true));
+    }
+
+    /** Read file and get if isMerged.
+     * @return -- Check result. */
+    private boolean getIfMerged() {
+        String[] isMerged = readFrom(_myPath + _isMergedFolder);
+        if (isMerged == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(isMerged[0]);
     }
 
     /** Add parent branch to this commit.
@@ -439,7 +449,8 @@ public class Commit {
             _messageFolder = "message.txt",
             _timeStampFolder = "timeStamp.txt",
             _filesFolder = "files.txt",
-            _branchesFolder = "branches.txt";
+            _branchesFolder = "branches.txt",
+            _isMergedFolder = "isMerged.txt";
     /** If this committed is created by merging. */
     private boolean _isMerged = false;
 

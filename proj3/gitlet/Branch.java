@@ -181,14 +181,24 @@ public class Branch {
     static String getSplitCommit(String branchName1, String branchName2) {
         Branch branch1 = Branch.restore(branchName1);
         String commitHash1 = branch1.myLatestCommit();
-        Commit commit1 = Commit.restore(commitHash1);
+
+        // FIXME -- DELETE
+//        System.out.println(commit1.myBranches());
+//        System.out.println(commit1.containsBranch(branchName2));
 
         while (true) {
-            if (commit1.containsBranch(branchName2) || !commit1.isMerged()) {
+            Commit commit1 = Commit.restore(commitHash1);
+            if (commit1.containsBranch(branchName2) && !commit1.isMerged()) {
+
+                System.out.println(commit1.myHash());
+                System.out.println(commit1.myBranches());
+                System.out.println(commit1.containsBranch(branchName2));
+
                 return commit1.myHash();
             }
             if (commit1.hasParents()) {
-                commit1 = Commit.restore(commit1.myParents()[0]);
+//                commit1 = Commit.restore(commit1.myParents()[0]);
+                commitHash1 = commit1.myParents()[0];
             } else {
                 break;
             }
