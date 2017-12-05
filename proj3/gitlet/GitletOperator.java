@@ -322,10 +322,7 @@ public class GitletOperator {
         String commitId = operands[0];
         String filename = operands[1];
 
-        if (commitId.length() <= 7) {
-            commitId = fullLengthIdOf(commitId);
-        }
-
+        commitId = fullLengthIdOf(commitId);
         if (commitId == null || !existCommit(commitId)) {
             SystemExit("No commit with that id exists.");
         }
@@ -374,9 +371,7 @@ public class GitletOperator {
         doTest(operands);
         String commitId = operands[0];
 
-        if (commitId.length() <= 7) {
-            commitId = fullLengthIdOf(commitId);
-        }
+        commitId = fullLengthIdOf(commitId);
         if (commitId == null || !existCommit(commitId)) {
             SystemExit("No commit with that id exists.");
         }
@@ -387,19 +382,17 @@ public class GitletOperator {
             if (fileName.equals(_gitletPath)) {
                 continue;
             }
-            Doc doc = new Doc(fileName, PATH_WORKING);
             if (!isTrackedByBranch(fileName, currentBranch)) {
-                boolean willBeDeleted = !commit.containsFileName(fileName);
-                boolean willBeModified = commit.containsFileName(fileName) &&
-                        commit.containsFileHash(doc.myHash());
-                if (willBeDeleted || willBeModified) {
+                if (isTrackedByCommit(fileName, commitId)) {
                     SystemExit("There is an untracked file in the way; delete it or add it first.");
                 }
             }
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
             if (!file.getName().equals( _gitletPath)) {
-                delete(file);
+                if (isTrackedByCommit(file.getName(), commitId)) {
+                    delete(file);
+                }
             }
         }
         for (String hash : commit.myFiles()) {
@@ -408,6 +401,10 @@ public class GitletOperator {
             File target = new File(PATH_WORKING + filename);
             copyFiles(source, target);
         }
+        for (String stagedFile : getAllDirectorysFrom(PATH_STAGED)) {
+            deleteDirectory(new File(PATH_STAGED + stagedFile));
+        }
+        _branch.changeMyHeadCommitTo(commitId);
     }
 
     /** Function for "merge [branch name]". */
@@ -794,8 +791,9 @@ public class GitletOperator {
      * @return -- full length version of the id. */
     public String fullLengthIdOf(String id) {
         String fullId = null;
+        int length = id.length();
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
-            String partHash = hash.substring(0, 7);
+            String partHash = hash.substring(0, length);
             if (partHash.equals(id)) {
                 fullId = hash;
             }
