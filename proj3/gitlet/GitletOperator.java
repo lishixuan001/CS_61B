@@ -348,12 +348,14 @@ class GitletOperator {
             SystemExit("No need to checkout the current branch.");
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (!isTrackedByBranch(file.getName(), currentBranch)) {
-                SystemExit("There is an untracked file in the way; delete it or add it first.");
+            if (!file.getName().equals( _gitletPath)) {
+                if (!isTrackedByBranch(file.getName(), currentBranch)) {
+                    SystemExit("There is an untracked file in the way; delete it or add it first.");
+                }
             }
         }
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (!isTrackedByBranch(file.getName(), branchName)) {
+            if (!file.getName().equals( _gitletPath)) {
                 delete(file);
             }
         }
@@ -384,8 +386,6 @@ class GitletOperator {
             }
             Doc doc = new Doc(fileName, PATH_WORKING);
             if (!isTrackedByBranch(fileName, currentBranch)) {
-                // FIXME -- IF WILL BE MODIFIED OR DELETED
-
                 boolean willBeDeleted = !commit.containsFileName(fileName);
                 boolean willBeModified = commit.containsFileName(fileName) &&
                         commit.containsFileHash(doc.myHash());
