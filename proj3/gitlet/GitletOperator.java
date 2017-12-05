@@ -347,10 +347,22 @@ public class GitletOperator {
         if (currentBranch.equals(branchName)) {
             SystemExit("No need to checkout the current branch.");
         }
+//        for (File file : getFilesInFile(PATH_WORKING)) {
+//            if (!file.getName().equals( _gitletPath)) {
+//                if (!isTrackedByBranch(file.getName(), currentBranch)) {
+//                    SystemExit("There is an untracked file in the way; delete it or add it first.");
+//                }
+//            }
+//        }
+        rewriteCurrentBranch(branchName);
+        Commit commit = new Commit().restoreCommit(currentHeadCommit());
         for (File file : getFilesInFile(PATH_WORKING)) {
-            if (!file.getName().equals( _gitletPath)) {
-                if (!isTrackedByBranch(file.getName(), currentBranch)) {
-                    SystemExit("There is an untracked file in the way; delete it or add it first.");
+            String fileName = file.getName();
+            if (!fileName.equals(_gitletPath)) {
+                if (!isTrackedByBranch(fileName, currentBranch)) {
+                    if (isTrackedByCommit(fileName, commit.myHash())) {
+                        SystemExit("There is an untracked file in the way; delete it or add it first.");
+                    }
                 }
             }
         }
@@ -359,8 +371,8 @@ public class GitletOperator {
                 delete(file);
             }
         }
-        rewriteCurrentBranch(branchName);
-        Commit commit = new Commit().restoreCommit(currentHeadCommit());
+//        rewriteCurrentBranch(branchName);
+//        Commit commit = new Commit().restoreCommit(currentHeadCommit());
         for (String hash : commit.myFiles()) {
             _blobs.checkOutByHash(hash);
         }
@@ -379,12 +391,11 @@ public class GitletOperator {
         Commit commit = new Commit().restoreCommit(commitId);
         for (File file : getFilesInFile(PATH_WORKING)) {
             String fileName = file.getName();
-            if (fileName.equals(_gitletPath)) {
-                continue;
-            }
-            if (!isTrackedByBranch(fileName, currentBranch)) {
-                if (isTrackedByCommit(fileName, commitId)) {
-                    SystemExit("There is an untracked file in the way; delete it or add it first.");
+            if (!fileName.equals(_gitletPath)) {
+                if (!isTrackedByBranch(fileName, currentBranch)) {
+                    if (isTrackedByCommit(fileName, commitId)) {
+                        SystemExit("There is an untracked file in the way; delete it or add it first.");
+                    }
                 }
             }
         }
