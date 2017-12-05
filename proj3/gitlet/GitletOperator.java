@@ -7,16 +7,19 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static gitlet.Blob.*;
-import static gitlet.Utils.*;
+import static gitlet.Branch._commitsFolder;
+import static gitlet.BranchUtilis.*;
 import static gitlet.Commit.*;
-import static gitlet.Branch.*;
+import static gitlet.CommitUtilis.*;
+import static gitlet.Doc._nameFolder;
+import static gitlet.Utils.*;
 import static gitlet.Command.Type.*;
 import static gitlet.Staged.*;
 
 /** Operator form Gitlet System.
  *  @author Shixuan (Wayne) Li
  */
-class GitletOperator {
+public class GitletOperator {
 
     /** Another way to start an operator. */
     GitletOperator() {
@@ -28,7 +31,7 @@ class GitletOperator {
         _input = input;
         _blobs = new Blob();
         _staged = new Staged();
-        _branch = Branch.restore();
+        _branch = new Branch().restoreBranch();
     }
 
     /** Process the user commands. */
@@ -112,14 +115,14 @@ class GitletOperator {
 
         if (isTrackedByCommit(filename, currentHeadCommit())) {
             deleteFromWorking(filename);
-            addToRemovedNames(filename);
+            _staged.addToRemovedNames(filename);
         }
     }
 
     /** Function for "log". */
     private void doLog(String[] unused) {
         doTest(unused);
-        Commit headCommit = Commit.restore(currentHeadCommit());
+        Commit headCommit = new Commit().restoreCommit(currentHeadCommit());
         while(true) {
             System.out.println("===");
             System.out.println("commit " + headCommit.myHash());
@@ -135,7 +138,7 @@ class GitletOperator {
             System.out.println();
 
             if (headCommit.hasParents()) {
-                headCommit = Commit.restore(headCommit.myParents()[0]);
+                headCommit = new Commit().restoreCommit(headCommit.myParents()[0]);
             } else {
                 return;
             }
@@ -146,7 +149,7 @@ class GitletOperator {
     private void doGlobalLog(String[] unused) {
         doTest(unused);
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
-            Commit headCommit = Commit.restore(hash);
+            Commit headCommit = new Commit().restoreCommit(hash);
             System.out.println("===");
             System.out.println("commit " + headCommit.myHash());
             if (headCommit.isMerged()) {
@@ -238,7 +241,7 @@ class GitletOperator {
                 String fileName = _blobs.getNameOf(fileHash);
                 if (!_staged.hasFileName(fileName)) {
                     File fileInWorking = new File(PATH_WORKING +fileName);
-                    if (!fileInWorking.exists() && !existFileNameInRemoved(fileName)) {
+                    if (!fileInWorking.exists() && !_staged.existFileNameInRemoved(fileName)) {
                         modified.add(fileName + " (deleted)");
                     } else {
                         if (fileInWorking.exists()) {
@@ -306,7 +309,7 @@ class GitletOperator {
         doTest(operands);
         String filename = operands[0];
         String currentCommit = currentHeadCommit();
-        Commit commit = Commit.restore(currentCommit);
+        Commit commit = new Commit().restoreCommit(currentCommit);
         if (!commit.containsFileName(filename)) {
             SystemExit("File does not exist in that commit.");
         }
@@ -327,7 +330,7 @@ class GitletOperator {
             SystemExit("No commit with that id exists.");
         }
 
-        Commit commit = Commit.restore(commitId);
+        Commit commit = new Commit().restoreCommit(commitId);
 
         if (!commit.containsFileName(filename)) {
             SystemExit("File does not exist in that commit.");
@@ -360,7 +363,7 @@ class GitletOperator {
             }
         }
         rewriteCurrentBranch(branchName);
-        Commit commit = Commit.restore(currentHeadCommit());
+        Commit commit = new Commit().restoreCommit(currentHeadCommit());
         for (String hash : commit.myFiles()) {
             _blobs.checkOutByHash(hash);
         }
@@ -378,7 +381,7 @@ class GitletOperator {
             SystemExit("No commit with that id exists.");
         }
         String currentBranch = getCurrentBranch();
-        Commit commit = Commit.restore(commitId);
+        Commit commit = new Commit().restoreCommit(commitId);
         for (File file : getFilesInFile(PATH_WORKING)) {
             String fileName = file.getName();
             if (fileName.equals(_gitletPath)) {
@@ -434,30 +437,16 @@ class GitletOperator {
             SystemExit("Cannot merge a branch with itself.");
         }
 
-        // FIXME -- TEST BRANCH NAMES
-        System.out.println("C: " + currentBranch + " G: " + givenBranchName);
-
         String splitCommitHash = getSplitCommit(currentBranch, givenBranchName);
-
-        // FIXME -- DELETE
-        System.out.println("splitHash: " + splitCommitHash);
-
-        Commit splitCommit = Commit.restore(splitCommitHash);
-
-        // FIXME -- DELETE
-        System.out.println("againTestSplit: " + splitCommit.myHash());
-        System.out.println("againTestSplit: " + splitCommit.myMessage());
-
-        Commit lastCommitOfCurrent = Commit.restore(_branch.myLatestCommit());
-        Branch givenBranch = Branch.restore(givenBranchName);
-        Commit lastCommitOfGiven = Commit.restore(givenBranch.myLatestCommit());
+        Commit splitCommit = new Commit().restoreCommit(splitCommitHash);
+        Commit lastCommitOfCurrent = new Commit().restoreCommit(_branch.myLatestCommit());
+        Branch givenBranch = new Branch().restoreBranch(givenBranchName);
+        Commit lastCommitOfGiven = new Commit().restoreCommit(givenBranch.myLatestCommit());
 
         // FIXME -- DELETE -- TEST COMMIT
         System.out.println("splitCommit: " + splitCommit.myMessage());
         System.out.println("Current: " + lastCommitOfCurrent.myMessage());
         System.out.println("Given: " + lastCommitOfGiven.myMessage());
-
-
 
         if (splitCommitHash.equals(lastCommitOfGiven.myHash())) {
             SystemExit("Given branch is an ancestor of the current branch.");
@@ -469,19 +458,13 @@ class GitletOperator {
                 delete(target);
             }
             copyFiles(source, target);
-            _branch = Branch.restore();
+            _branch = new Branch().restoreBranch();
             _branch.changeMyHeadCommitTo(_branch.myLatestCommit());
             SystemExit("Current branch fast-forwarded.");
         }
 
-
         for (String fileHash : lastCommitOfGiven.myFiles()) {
             String fileName = _blobs.getNameOf(fileHash);
-
-            // FIXME -- DELETE -- TEST COMMIT
-//            System.out.println();
-//            System.out.println(fileName);
-//            System.out.println();
 
             // Condition 2-1
             boolean existedAndBothModifiedSameWay = splitCommit.containsFileName(fileName)
@@ -656,7 +639,7 @@ class GitletOperator {
 ////        doCommit(new String[] {String.format("Merged %s into %s.", givenBranchName, currentBranch)});
 //        Commit mergedCommit = new Commit(String.format("Merged %s into %s.", givenBranchName, currentBranch));
 //        mergedCommit.createCommit(true);
-////        Commit mergedCommit = Commit.restore(_branch.myLatestCommit());
+////        Commit mergedCommit = new Commit().restoreCommit(_branch.myLatestCommit());
 //        mergedCommit.tagAsMerged();
 //        mergedCommit.addParent(givenBranchName);
 
@@ -751,6 +734,80 @@ class GitletOperator {
         }
     }
 
+    /** See if there already exist a branch with the name.
+     * @param branchName -- input.
+     * @return -- check result. */
+    public boolean hasBranchName(String branchName) {
+        for (String branch : getAllDirectorysFrom(PATH_BRANCHES)) {
+            if (branch.equals(branchName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Search if there is a commit in .gitlet/Commits with the message.
+     * @param message -- message to be searched.
+     * @return -- check result. */
+    public boolean hasCommitWithMsg(String message) {
+        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.myMessage().equals(message)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Add branch to the commit.
+     * @param hash -- hash of the commit
+     * @param branch -- name of the branch. */
+    public void addBranchTo(String hash, String branch) {
+        writeInto(PATH_COMMITS + hash + "/" + _branchesFolder, true, branch);
+    }
+
+    /** Get hashs of the commit with the message.
+     * @param message -- message to be searched.
+     * @return -- commits' hashes as a searched result. */
+    public ArrayList<String> getCommitsWithMsg(String message) {
+        ArrayList<String> result = new ArrayList<>();
+        for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.myMessage().equals(message)) {
+                result.add(commitHash);
+            }
+        }
+        return result;
+    }
+
+    /** Delete branch from the commit.
+     * @param hash -- hash of the commit
+     * @param branch -- name of the branch. */
+    public void deleteBranchFrom(String hash, String branch) {
+        File commit = new File(PATH_COMMITS + hash + "/" + _branchesFolder);
+        String[] currentBranchs = readFrom(commit);
+        clearFile(commit);
+        for (String currentbranch : currentBranchs) {
+            if (!currentbranch.equals(branch)) {
+                writeInto(commit, true, currentbranch);
+            }
+        }
+    }
+
+    /** Restore a Commit with 7-digit id. Assume exist.
+     * @param id -- 7-digit version commit id.
+     * @return -- full length version of the id. */
+    public String fullLengthIdOf(String id) {
+        String fullId = null;
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            String partHash = hash.substring(0, 7);
+            if (partHash.equals(id)) {
+                fullId = hash;
+            }
+        }
+        return fullId;
+    }
+
     /** Clear a file with input "File". */
     static void clearFile(File file) {
         clearFile(file.getPath());
@@ -774,6 +831,40 @@ class GitletOperator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /** Check the existence of a commit with id.
+     * @param id -- hash of the commit.
+     * @return -- check result. */
+    public boolean existCommit(String id) {
+        for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
+            if (hash.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Get the split commit of the two branches.
+     * @param branchName1 -- branch name of the first branch as input.
+     * @param branchName2 -- branch name of the second branch as input.
+     * @return -- the hash of the split commit of the two branches. */
+    public String getSplitCommit(String branchName1, String branchName2) {
+        Branch branch1 = new Branch().restoreBranch(branchName1);
+        String commitHash1 = branch1.myLatestCommit();
+
+        while (true) {
+            Commit commit1 = new Commit().restoreCommit(commitHash1);
+            if (commit1.containsBranch(branchName2) && !commit1.isMerged()) {
+                return commit1.myHash();
+            }
+            if (commit1.hasParents()) {
+                commitHash1 = commit1.myParents()[0];
+            } else {
+                break;
+            }
+        }
+        return null;
     }
 
     /** WriteInto with input as "File". */
@@ -809,7 +900,36 @@ class GitletOperator {
     /** Convenience for re-writing currentBranch.txt. */
     static void rewriteCurrentBranch(String branchName) {
         writeInto(PATH_CURRENTBRANCH, false, branchName);
-        _branch = Branch.restore(branchName);
+        _branch = new Branch().restoreBranch(branchName);
+    }
+
+    /** Check if a file with filename in WorkingArea is tracked by the branch.
+     * @param filename -- file name as input.
+     * @param branchName -- branch name as input.
+     * @return -- check result. */
+    public boolean isTrackedByBranch(String filename, String branchName) {
+        Branch branch = new Branch().restoreBranch(branchName);
+        if (branch == null) {
+            return false;
+        }
+        ArrayList<String> commits = branch.myCommits();
+        if (commits == null) {
+            return false;
+        }
+        for (String commitHash : commits) {
+            Commit commit = new Commit().restoreCommit(commitHash);
+            if (commit.containsFileName(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Delete branch.
+     * @param branchName -- branch name to be deleted. */
+    public void deleteBranch(String branchName) {
+        File branch = new File(PATH_BRANCHES + branchName);
+        deleteDirectory(branch);
     }
 
     /** Get Files in File. */
@@ -887,6 +1007,18 @@ class GitletOperator {
         }
     }
 
+    /** Check if a file name is ever tracked.
+     * @param fileName -- input
+     * @return -- check result. */
+    public boolean isEverTracked(String fileName) {
+        for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
+            if (_blobs.getNameOf(fileHash).equals(fileName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Copy Plain files form source to target. */
     private static void copyPlains(File source, File target){
         try {
@@ -908,6 +1040,23 @@ class GitletOperator {
     /** Delete from Working directory. */
     static void deleteFromWorking(String filename) {
         new File(PATH_WORKING + filename).delete();
+    }
+
+    /** Check if a file name is tracked by the commit. Assume exist commit.
+     * @param filename -- input
+     * @return check result. */
+    public boolean isTrackedByCommit(String filename, String commitHash) {
+        String[] filesInCommit = readFrom(PATH_COMMITS + commitHash + "/" + _filesFolder);
+        if (filesInCommit == null) {
+            return false;
+        }
+        for (String commitFile : filesInCommit) {
+            String commitFileName = _blobs.getNameOf(commitFile);
+            if (commitFileName.equals(filename)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Delete directory. */
@@ -968,7 +1117,7 @@ class GitletOperator {
     /** Initialized branch -> *master */
     static final String DEFAULT_BRANCH = "master";
     /** Default hash for "initial commit"*/
-    static final String INIT_COMMIT = sha1(INIT_MESSAGE, getDate(INIT_DATE));
+    static final String INIT_COMMIT = sha1(INIT_MESSAGE, DATE_FORMAT.format(INIT_DATE));
 
     /** Convenience for directory on Working Area. */
     static final String PATH_WORKING = "./";

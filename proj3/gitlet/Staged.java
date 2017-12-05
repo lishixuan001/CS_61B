@@ -12,6 +12,15 @@ import static gitlet.GitletOperator.*;
  */
 class Staged {
 
+    /** All files inside Staged Area. */
+    private ArrayList<Doc> _files = new ArrayList<>();
+    /** Recording the commit-files for next commit. */
+    private ArrayList<String> _nextCommit = new ArrayList<>();
+    /** Convenience showing content folder. */
+    static final String _contentFolder = "/content/";
+    /** Removed names. */
+    static final String _removedNames = PATH_STAGED + "removedNames.txt";
+
     /** Get the staged area ready. */
     Staged() {
         _files = getAllDocs();
@@ -163,19 +172,19 @@ class Staged {
     }
 
     /** Clear the _removedFiles. */
-    static void clearRemovedFiles() {
+    void clearRemovedFiles() {
         clearFile(_removedNames);
     }
 
     /** Write into _removedNames.
      * @param filename -- filename of the removed.*/
-    static void addToRemovedNames(String filename) {
+    void addToRemovedNames(String filename) {
         writeInto(_removedNames, true, filename);
     }
 
     /** Check if removed is empty.
      * @return -- check result. */
-    static boolean isEmptyRemovedFile() {
+    public boolean isEmptyRemovedFile() {
         String[] existedNames = readFrom(_removedNames);
         if (existedNames == null) {
             return true;
@@ -185,7 +194,7 @@ class Staged {
 
     /** Delete name from removed names. Assume exist.
      * @param filename -- filename to be deleted from the removed. */
-    static void deleteFromRemovedNames(String filename) {
+    void deleteFromRemovedNames(String filename) {
         String[] existedNames = readFrom(_removedNames);
         if (existedNames == null) {
             return;
@@ -201,7 +210,7 @@ class Staged {
     /** Check if a file name exist in RemovedNames.
      * @param filename -- input.
      * @return -- check result. */
-    static boolean existFileNameInRemoved(String filename) {
+    public boolean existFileNameInRemoved(String filename) {
         String[] existedNames = readFrom(_removedNames);
         if (existedNames == null) {
             return false;
@@ -219,7 +228,7 @@ class Staged {
     /** Check if has a filename in staged.
      * @param filename -- input
      * @return -- check result. */
-    boolean hasFileName(String filename) {
+    public boolean hasFileName(String filename) {
         ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
         if (files.size() <= 0) {
             return false;
@@ -235,14 +244,5 @@ class Staged {
         }
         return false;
     }
-
-    /** All files inside Staged Area. */
-    private static ArrayList<Doc> _files = new ArrayList<>();
-    /** Recording the commit-files for next commit. */
-    private static ArrayList<String> _nextCommit = new ArrayList<>();
-    /** Convenience showing content folder. */
-    static final String _contentFolder = "/content/";
-    /** Removed names. */
-    static final String _removedNames = PATH_STAGED + "removedNames.txt";
 
 }

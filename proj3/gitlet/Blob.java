@@ -8,13 +8,15 @@ import java.util.ArrayList;
 
 import static gitlet.Doc.*;
 import static gitlet.Staged.*;
-import static gitlet.Branch.*;
 import static gitlet.GitletOperator.*;
 
 /** Blob Area in .gitlet/Blobs.
  *  @author Shixuan (Wayne) Li
  */
 public class Blob {
+
+    /** All files inside Staged Area. */
+    private ArrayList<String> _files = new ArrayList<>();
 
     /** Get the blob area ready. */
     Blob() {
@@ -40,7 +42,7 @@ public class Blob {
 
     /** Get my files' hashes.
      * @return -- Get all file hashes. */
-    static ArrayList<String> myFiles() {
+    ArrayList<String> myFiles() {
         ArrayList<String> result = new ArrayList<>();
         result.addAll(_files);
         return result;
@@ -93,19 +95,6 @@ public class Blob {
         copyFiles(source, target);
     }
 
-    /** Check if a file name is ever tracked.
-     * @param fileName -- input
-     * @return -- check result. */
-    static boolean isEverTracked(String fileName) {
-        for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
-            if (_blobs.getNameOf(fileHash).equals(fileName)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    /** All files inside Staged Area. */
-    private static ArrayList<String> _files = new ArrayList<>();
 
 }

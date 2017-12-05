@@ -12,6 +12,9 @@ import static gitlet.GitletOperator.*;
  */
 class Doc {
 
+    /** Set the local parameters. */
+    private String _myName, _myPath, _myHash;
+
     /** Create Doc Class by filename and filepath. */
     Doc(String filename, String filepath) {
         _myName = filename;
@@ -48,8 +51,7 @@ class Doc {
         return sha1(_myName, data);
     }
 
-    /** Set the local parameters. */
-    private String _myName, _myPath, _myHash;
+
     /** Convenience for name.txt folder. */
     static final String _nameFolder = "name.txt";
 
