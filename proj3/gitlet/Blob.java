@@ -15,9 +15,6 @@ import static gitlet.GitletOperator.*;
  */
 public class Blob {
 
-    /** All files inside Staged Area. */
-    private ArrayList<String> _files = new ArrayList<>();
-
     /** Get the blob area ready. */
     Blob() {
         _files = getAllDocs();
@@ -40,12 +37,48 @@ public class Blob {
         new File(PATH_BLOBS).mkdir();
     }
 
+    /** Check and add from Staged Area.
+     * @param hash -- doc to be added.*/
+    void add(String hash) {
+        try {
+            Files.move(new File(PATH_STAGED + hash).toPath(),
+                    new File(PATH_BLOBS + hash).toPath(),
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /* **********************************
+     *          Access-Methods          *
+     ********************************** */
+
     /** Get my files' hashes.
      * @return -- Get all file hashes. */
     ArrayList<String> myFiles() {
         ArrayList<String> result = new ArrayList<>();
         result.addAll(_files);
         return result;
+    }
+
+    /* **********************************
+     *              Methods             *
+     ********************************** */
+
+    /** Get name of a hash.
+     * @param hash -- input.
+     * @return -- name of the hash. */
+    String getNameOf(String hash) {
+        if (hasFileHash(hash)) {
+            String[] name = readFrom(PATH_BLOBS + hash + "/" + _nameFolder);
+            if (name != null) {
+                return name[0];
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     /** Check if has file by hash.
@@ -60,29 +93,6 @@ public class Blob {
         return false;
     }
 
-    /** Check and add from Staged Area.
-     * @param hash -- doc to be added.*/
-    void add(String hash) {
-        try {
-            Files.move(new File(PATH_STAGED + hash).toPath(),
-                    new File(PATH_BLOBS + hash).toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /** Get name of a hash.
-     * @param hash -- input.
-     * @return -- name of the hash. */
-    String getNameOf(String hash) {
-        if (hasFileHash(hash)) {
-            return readFrom(PATH_BLOBS + hash + "/" + _nameFolder)[0];
-        } else {
-            return null;
-        }
-    }
-
     /** Checkout file based on filename to WorkingArea. Assume exist.
      * @param hash -- file hash. */
     void checkOutByHash(String hash) {
@@ -95,6 +105,7 @@ public class Blob {
         copyFiles(source, target);
     }
 
-
+    /** All files inside Staged Area. */
+    private ArrayList<String> _files = new ArrayList<>();
 
 }

@@ -15,7 +15,7 @@ import static gitlet.Staged.*;
 /** Operator form Gitlet System.
  *  @author Shixuan (Wayne) Li
  */
-public class GitletOperator {
+class GitletOperator {
 
     /** Another way to start an operator. */
     GitletOperator() {
@@ -680,7 +680,7 @@ public class GitletOperator {
     }
 
     /** Clear a file with input "File". */
-    static void clearFile(File file) {
+    private static void clearFile(File file) {
         clearFile(file.getPath());
     }
 
@@ -710,7 +710,7 @@ public class GitletOperator {
     }
 
     /** readFrom with input as "File". */
-    static String[] readFrom(File file) {
+    private static String[] readFrom(File file) {
         return readFrom(file.getPath());
     }
 
@@ -749,8 +749,11 @@ public class GitletOperator {
             target.mkdir();
         }
 
-        for (String f : source.list()) {
-            copyFiles(new File(source, f), new File(target, f));
+        String[] sourceFileList = source.list();
+        if (sourceFileList != null) {
+            for (String f : sourceFileList) {
+                copyFiles(new File(source, f), new File(target, f));
+            }
         }
     }
 
@@ -775,8 +778,11 @@ public class GitletOperator {
     /** Delete files and directories for doClean. */
     static void deleteFile(File f){
         if (f.isDirectory()) {
-            for (File c : f.listFiles())
-                deleteFile(c);
+            File[] subFiles = f.listFiles();
+            if (subFiles != null) {
+                for (File c : subFiles)
+                    deleteFile(c);
+            }
         }
         f.delete();
     }
@@ -788,7 +794,7 @@ public class GitletOperator {
     /** Check the existence of a commit with id.
      * @param id -- hash of the commit.
      * @return -- check result. */
-    public boolean existCommit(String id) {
+    private boolean existCommit(String id) {
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
             if (hash.equals(id)) {
                 return true;
@@ -800,7 +806,7 @@ public class GitletOperator {
     /** Search if there is a commit in .gitlet/Commits with the message.
      * @param message -- message to be searched.
      * @return -- check result. */
-    public boolean hasCommitWithMsg(String message) {
+    private boolean hasCommitWithMsg(String message) {
         for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
             Commit commit = new Commit().restoreCommit(commitHash);
             if (commit.myMessage().equals(message)) {
@@ -813,14 +819,14 @@ public class GitletOperator {
     /** Add branch to the commit.
      * @param hash -- hash of the commit
      * @param branch -- name of the branch. */
-    public void addBranchTo(String hash, String branch) {
+    private void addBranchTo(String hash, String branch) {
         writeInto(PATH_COMMITS + hash + "/" + _branchesFolder, true, branch);
     }
 
     /** Delete branch from the commit.
      * @param hash -- hash of the commit
      * @param branch -- name of the branch. */
-    public void deleteBranchFrom(String hash, String branch) {
+    private void deleteBranchFrom(String hash, String branch) {
         File commit = new File(PATH_COMMITS + hash + "/" + _branchesFolder);
         String[] currentBranchs = readFrom(commit);
         clearFile(commit);
@@ -834,7 +840,7 @@ public class GitletOperator {
     /** Get hashs of the commit with the message.
      * @param message -- message to be searched.
      * @return -- commits' hashes as a searched result. */
-    public ArrayList<String> getCommitsWithMsg(String message) {
+    private ArrayList<String> getCommitsWithMsg(String message) {
         ArrayList<String> result = new ArrayList<>();
         for (String commitHash : getAllDirectorysFrom(PATH_COMMITS)) {
             Commit commit = new Commit().restoreCommit(commitHash);
@@ -848,7 +854,7 @@ public class GitletOperator {
     /** Restore a Commit with 7-digit id. Assume exist.
      * @param id -- 7-digit version commit id.
      * @return -- full length version of the id. */
-    public String fullLengthIdOf(String id) {
+    private String fullLengthIdOf(String id) {
         String fullId = null;
         int length = id.length();
         for (String hash : getAllDirectorysFrom(PATH_COMMITS)) {
@@ -863,7 +869,7 @@ public class GitletOperator {
     /** Check if a file name is tracked by the commit. Assume exist commit.
      * @param filename -- input
      * @return check result. */
-    public boolean isTrackedByCommit(String filename, String commitHash) {
+    private boolean isTrackedByCommit(String filename, String commitHash) {
         String[] filesInCommit = readFrom(PATH_COMMITS + commitHash + "/" + _filesFolder);
         if (filesInCommit == null) {
             return false;
@@ -884,7 +890,7 @@ public class GitletOperator {
     /** See if there already exist a branch with the name.
      * @param branchName -- input.
      * @return -- check result. */
-    public boolean hasBranchName(String branchName) {
+    private boolean hasBranchName(String branchName) {
         for (String branch : getAllDirectorysFrom(PATH_BRANCHES)) {
             if (branch.equals(branchName)) {
                 return true;
@@ -895,7 +901,7 @@ public class GitletOperator {
 
     /** Delete branch.
      * @param branchName -- branch name to be deleted. */
-    public void deleteBranch(String branchName) {
+    private void deleteBranch(String branchName) {
         File branch = new File(PATH_BRANCHES + branchName);
         deleteFile(branch);
     }
@@ -903,7 +909,7 @@ public class GitletOperator {
     /** Check if a file name is ever tracked.
      * @param fileName -- input
      * @return -- check result. */
-    public boolean isEverTracked(String fileName) {
+    private boolean isEverTracked(String fileName) {
         for (String fileHash : getAllDirectorysFrom(PATH_BLOBS)) {
             if (_blobs.getNameOf(fileHash).equals(fileName)) {
                 return true;
@@ -916,7 +922,7 @@ public class GitletOperator {
      * @param filename -- file name as input.
      * @param branchName -- branch name as input.
      * @return -- check result. */
-    public boolean isTrackedByBranch(String filename, String branchName) {
+    private boolean isTrackedByBranch(String filename, String branchName) {
         Branch branch = new Branch().restoreBranch(branchName);
         if (branch == null) {
             return false;
@@ -938,7 +944,7 @@ public class GitletOperator {
      * @param branchName1 -- branch name of the first branch as input.
      * @param branchName2 -- branch name of the second branch as input.
      * @return -- the hash of the split commit of the two branches. */
-    public String getSplitCommit(String branchName1, String branchName2) {
+    private String getSplitCommit(String branchName1, String branchName2) {
         Branch branch1 = new Branch().restoreBranch(branchName1);
         String commitHash1 = branch1.myLatestCommit();
 
@@ -972,7 +978,7 @@ public class GitletOperator {
     }
 
     /** Delete from Working directory. */
-    static void deleteFromWorking(String filename) {
+    private static void deleteFromWorking(String filename) {
         new File(PATH_WORKING + filename).delete();
     }
 
@@ -1004,17 +1010,6 @@ public class GitletOperator {
         return getAllDirectorysFrom(getFilesInFile(path));
     }
 
-    /** Get all plain files from File[]. */
-    static ArrayList<String> getAllPlainsFrom(File[] files) {
-        ArrayList<String> result = new ArrayList<>();
-        for (File file : files) {
-            if (file.isFile()) {
-                result.add(file.getName());
-            }
-        }
-        return result;
-    }
-
     /** Method converting ArrayList<String> to String[]. */
     static String[] ListToStrings(ArrayList<String> lst) {
         return lst.toArray(new String[lst.size()]);
@@ -1026,10 +1021,9 @@ public class GitletOperator {
     }
 
     /** Method converting String[] to ArrayList<String>.*/
-    static ArrayList<String> StringsToList(String[] str) {
-        return new ArrayList<>(Arrays.asList(str));
+    static ArrayList<String> StringsToList(String[] strs) {
+        return new ArrayList<>(Arrays.asList(strs));
     }
-
 
     /** Make system exit with a message. */
     static void SystemExit(String msg) {

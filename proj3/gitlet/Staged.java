@@ -12,15 +12,6 @@ import static gitlet.GitletOperator.*;
  */
 class Staged {
 
-    /** All files inside Staged Area. */
-    private ArrayList<Doc> _files = new ArrayList<>();
-    /** Recording the commit-files for next commit. */
-    private ArrayList<String> _nextCommit = new ArrayList<>();
-    /** Convenience showing content folder. */
-    static final String _contentFolder = "/content/";
-    /** Removed names. */
-    static final String _removedNames = PATH_STAGED + "removedNames.txt";
-
     /** Get the staged area ready. */
     Staged() {
         _files = getAllDocs();
@@ -34,58 +25,6 @@ class Staged {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /** Get files in Staged.
-     * @return -- return files in Staged. */
-    ArrayList<Doc> files() {
-        return _files;
-    }
-
-    /** Get all files in Staged. (Get names(hash) of all directories).
-     * @return -- gather all files in Staged. */
-    private ArrayList<Doc> getAllDocs() {
-        ArrayList<Doc> docs = new ArrayList<>();
-        ArrayList<String> hashs = getAllDirectorysFrom(PATH_STAGED);
-        if (!hashs.isEmpty()) {
-            for (String hash : hashs) {
-                String name = readFrom(PATH_STAGED + hash + "/" + _nameFolder)[0];
-                docs.add(new Doc(name, hash, PATH_STAGED + hash + _contentFolder));
-            }
-        }
-        return docs;
-    }
-
-    /** Check if has file by hash.
-     * @param fileHash -- file hash.
-     * @return -- check result. */
-    boolean hasFileHash(String fileHash) {
-        for (String hash : getAllDirectorysFrom(PATH_STAGED)) {
-            if (hash.equals(fileHash)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Show if Staged has new files.
-     * @return -- if is empty. */
-    boolean isEmpty() {
-        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
-        return files.isEmpty();
-    }
-
-    /** Show if Staged is empty without those in removed(marked) files. */
-    boolean isEmptyForCommit() {
-        if (_staged.isEmpty()) {
-            return true;
-        }
-        for (Doc doc : _staged.files()) {
-            if (!existFileNameInRemoved(doc.myName())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /** Add file folder with name.txt and content in Staged place. Assume exist.
@@ -111,17 +50,6 @@ class Staged {
         }
     }
 
-    /** Get file name by hash. Assume exist.
-     * @param hash -- input
-     * @return -- name of file. */
-    String getNameByHash(String hash) {
-        String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
-        if (name == null) {
-            return null;
-        }
-        return name[0];
-    }
-
     /** Copy over file from Working place.
      * @param doc -- doc to be copied over. */
     private void copyOverFromWorking(Doc doc) {
@@ -144,9 +72,104 @@ class Staged {
         }
     }
 
+    /** Show if Staged is empty without those in removed(marked) files. */
+    boolean isEmptyForCommit() {
+        if (_staged.isEmpty()) {
+            return true;
+        }
+        for (Doc doc : _staged.files()) {
+            if (!existFileNameInRemoved(doc.myName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /* **********************************
+     *          Access-Methods          *
+     ********************************** */
+
+    /** Get files in Staged.
+     * @return -- return files in Staged. */
+    ArrayList<Doc> files() {
+        return _files;
+    }
+
+    /* **********************************
+     *        Parameter-Building        *
+     ********************************** */
+
+    /** Get all files in Staged. (Get names(hash) of all directories).
+     * @return -- gather all files in Staged. */
+    private ArrayList<Doc> getAllDocs() {
+        ArrayList<Doc> docs = new ArrayList<>();
+        ArrayList<String> hashs = getAllDirectorysFrom(PATH_STAGED);
+        if (!hashs.isEmpty()) {
+            for (String hash : hashs) {
+                String name = readFrom(PATH_STAGED + hash + "/" + _nameFolder)[0];
+                docs.add(new Doc(name, hash, PATH_STAGED + hash + _contentFolder));
+            }
+        }
+        return docs;
+    }
+
+    /* **********************************
+     *              Methods             *
+     ********************************** */
+
+    /** Show if Staged has new files.
+     * @return -- if is empty. */
+    boolean isEmpty() {
+        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
+        return files.isEmpty();
+    }
+
+    /** Get file name by hash. Assume exist.
+     * @param hash -- input
+     * @return -- name of file. */
+    String getNameByHash(String hash) {
+        String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+        if (name == null) {
+            return null;
+        }
+        return name[0];
+    }
+
+    /** Check if has a filename in staged.
+     * @param filename -- input
+     * @return -- check result. */
+    boolean hasFileName(String filename) {
+        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
+        if (files.size() <= 0) {
+            return false;
+        }
+        for (String hash : files) {
+            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
+            if (name == null) {
+                return false;
+            }
+            if (name[0].equals(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Check if has file by hash.
+     * @param fileHash -- file hash.
+     * @return -- check result. */
+    boolean hasFileHash(String fileHash) {
+        for (String hash : getAllDirectorysFrom(PATH_STAGED)) {
+            if (hash.equals(fileHash)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Delete file in Staged by hash.
      * @param hash -- hash of file to be deleted. */
-    void deleteByHash(String hash) {
+    private void deleteByHash(String hash) {
         File folder = new File(PATH_STAGED + hash);
         if (folder.exists()) {
             deleteFile(folder);
@@ -171,16 +194,9 @@ class Staged {
         }
     }
 
-    /** Clear the _removedFiles. */
-    void clearRemovedFiles() {
-        clearFile(_removedNames);
-    }
-
-    /** Write into _removedNames.
-     * @param filename -- filename of the removed.*/
-    void addToRemovedNames(String filename) {
-        writeInto(_removedNames, true, filename);
-    }
+    /* **********************************
+     *          About-Removed           *
+     ********************************** */
 
     /** Check if removed is empty.
      * @return -- check result. */
@@ -190,6 +206,17 @@ class Staged {
             return true;
         }
         return false;
+    }
+
+    /** Clear the _removedFiles. */
+    void clearRemovedFiles() {
+        clearFile(_removedNames);
+    }
+
+    /** Write into _removedNames.
+     * @param filename -- filename of the removed.*/
+    void addToRemovedNames(String filename) {
+        writeInto(_removedNames, true, filename);
     }
 
     /** Delete name from removed names. Assume exist.
@@ -210,7 +237,7 @@ class Staged {
     /** Check if a file name exist in RemovedNames.
      * @param filename -- input.
      * @return -- check result. */
-    public boolean existFileNameInRemoved(String filename) {
+    boolean existFileNameInRemoved(String filename) {
         String[] existedNames = readFrom(_removedNames);
         if (existedNames == null) {
             return false;
@@ -223,26 +250,13 @@ class Staged {
         return false;
     }
 
-    /** */
-
-    /** Check if has a filename in staged.
-     * @param filename -- input
-     * @return -- check result. */
-    public boolean hasFileName(String filename) {
-        ArrayList<String> files = getAllDirectorysFrom(PATH_STAGED);
-        if (files.size() <= 0) {
-            return false;
-        }
-        for (String hash : files) {
-            String[] name = readFrom(PATH_STAGED + hash + "/" + _nameFolder);
-            if (name == null) {
-                return false;
-            }
-            if (name[0].equals(filename)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    /** All files inside Staged Area. */
+    private ArrayList<Doc> _files = new ArrayList<>();
+    /** Recording the commit-files for next commit. */
+    private ArrayList<String> _nextCommit = new ArrayList<>();
+    /** Convenience showing content folder. */
+    static final String _contentFolder = "/content/";
+    /** Removed names. */
+    static final String _removedNames = PATH_STAGED + "removedNames.txt";
 
 }

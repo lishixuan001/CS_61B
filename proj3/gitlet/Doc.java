@@ -1,19 +1,13 @@
 package gitlet;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import static gitlet.Utils.*;
-import static gitlet.GitletOperator.*;
 
 /** Representing a full doc file.
  *  @author Shixuan (Wayne) Li
  */
 class Doc {
-
-    /** Set the local parameters. */
-    private String _myName, _myPath, _myHash;
 
     /** Create Doc Class by filename and filepath. */
     Doc(String filename, String filepath) {
@@ -51,7 +45,8 @@ class Doc {
         return sha1(_myName, data);
     }
 
-
+    /** Set the local parameters. */
+    private String _myName, _myPath, _myHash;
     /** Convenience for name.txt folder. */
     static final String _nameFolder = "name.txt";
 
