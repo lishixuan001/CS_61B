@@ -20,9 +20,9 @@ public class Branch {
      * @param name -- branch name. */
     Branch(String name) {
         _name = name;
-        _commits = _branch.myCommits();
+        _commits = myBranch().myCommits();
         _myPath = PATH_BRANCHES + _name + "/";
-        _headCommit = _branch.myHeadCommit();
+        _headCommit = myBranch().myHeadCommit();
     }
 
     /** Mostly for restoring.
@@ -66,7 +66,7 @@ public class Branch {
             _myPath = PATH_BRANCHES + _name + "/";
             createBranch();
             _commits.add(INIT_COMMIT);
-            _branch = restoreBranch(DEFAULT_BRANCH);
+            setMyBranch(restoreBranch(DEFAULT_BRANCH));
             _headCommit = null;
         } catch (IOException e) {
             e.printStackTrace();

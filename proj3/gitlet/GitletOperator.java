@@ -1176,14 +1176,74 @@ class GitletOperator {
         COMMANDS.put(EOF, this::doEOF);
     }
 
+
+    /** My Current Branch.
+     * @return -- _branch. */
+    static Branch myBranch() {
+        return _branch;
+    }
+
+    /** Set Current Branch.
+     * @param branch -- branch to be set. */
+    static void setMyBranch(Branch branch) {
+        _branch = branch;
+    }
+
+    /** Add Commit to Current Branch.
+     * @param commitId -- commit to be added. */
+    static void addCommitToMyBranch(String commitId) {
+        _branch.addCommit(commitId);
+    }
+
+    /** Change Head Commit for Current Branch.
+     * @param commitId -- head commit to be set. */
+    static void changeHeadCommitForMyBranch(String commitId) {
+        _branch.changeMyHeadCommitTo(commitId);
+    }
+
+    /** My Staged Area.
+     * @return -- _staged. */
+    static Staged myStaged() {
+        return _staged;
+    }
+
+    /** Clear Removed Files for My Staged. */
+    static void clearRemovedInMyStaged() {
+        _staged.clearRemovedFiles();
+    }
+
+    /** Delete by Name in My Staged.
+     * @param fileName -- file name to be deleted. */
+    static void deleteByNameInMyStaged(String fileName) {
+        _staged.deleteByName(fileName);
+    }
+
+    /** Delete by Hash in My Staged.
+     * @param fileHash -- file hash to be deleted. */
+    static void deleteByHashInMyStaged(String fileHash) {
+        _staged.deleteByHash(fileHash);
+    }
+
+    /** My Blob Area.
+     * @return -- _blobs. */
+    static Blob myBlobs() {
+        return _blobs;
+    }
+
+    /** Add File to Blobs.
+     * @param fileHash -- file hash in Staged to be added. */
+    static void addFileToBlobs(String fileHash) {
+        _blobs.add(fileHash);
+    }
+
     /** The user input command and operands as a String. */
     private String _input;
-    /** The current Blobs Area. */
-    static Blob _blobs;
-    /** The current Staged Area. */
-    static Staged _staged;
     /** The current branch. */
-    static Branch _branch;
+    private static Branch _branch;
+    /** The current Staged Area. */
+    private static Staged _staged;
+    /** The current Blobs Area. */
+    private static Blob _blobs;
 
     /** Pace for the method copyFile. */
     private static final int PACE = 1024;

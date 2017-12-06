@@ -33,19 +33,14 @@ class Staged {
         String hash = doc.myHash();
         String name = doc.myName();
 
-        if (_blobs.hasFileHash(hash)) {
-            if (_staged.hasFileName(name)) {
-                _staged.deleteByName(name);
-            }
-        } else {
-            if (_staged.hasFileName(name)) {
-                _staged.deleteByName(name);
-            }
+        if (myStaged().hasFileName(name)) {
+            deleteByNameInMyStaged(name);
+        }
+        if (!myBlobs().hasFileHash(hash)) {
             copyOverFromWorking(doc);
             _files.add(new Doc(name, hash,
                     PATH_STAGED + hash + CONTENT_FOLDER));
         }
-
         if (existFileNameInRemoved(name)) {
             deleteFromRemovedNames(name);
         }
@@ -79,10 +74,10 @@ class Staged {
     /** Show if Staged is empty without those in removed(marked) files.
      * @return -- check result */
     boolean isEmptyForCommit() {
-        if (_staged.isEmpty()) {
+        if (myStaged().isEmpty()) {
             return true;
         }
-        for (Doc doc : _staged.files()) {
+        for (Doc doc : myStaged().files()) {
             if (!existFileNameInRemoved(doc.myName())) {
                 return false;
             }
@@ -176,7 +171,7 @@ class Staged {
 
     /** Delete file in Staged by hash.
      * @param hash -- hash of file to be deleted. */
-    private void deleteByHash(String hash) {
+    void deleteByHash(String hash) {
         File folder = new File(PATH_STAGED + hash);
         if (folder.exists()) {
             deleteFile(folder);
@@ -194,7 +189,7 @@ class Staged {
                 return;
             }
             if (name[0].equals(filename)) {
-                _staged.deleteByHash(hash);
+                deleteByHash(hash);
                 _files.remove(hash);
                 return;
             }

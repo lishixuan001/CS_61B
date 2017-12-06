@@ -104,7 +104,8 @@ public class Commit {
     void createCommit(boolean initOrMerge) {
 
         if (!initOrMerge) {
-            if (_staged.isEmptyForCommit() && _staged.isEmptyRemovedFile()) {
+            if (myStaged().isEmptyForCommit()
+                    && myStaged().isEmptyRemovedFile()) {
                 doSystemExit("No changes added to the commit.");
             }
 
@@ -130,13 +131,13 @@ public class Commit {
         writeInto(_myPath + BRANCHES_FOLDER, false, doSetToStrings(_branches));
         writeInto(_myPath + ISMERGED_FOLDER, false, String.valueOf(_isMerged));
 
-        for (String file : getAllDirectorysFrom(PATH_STAGED)) {
-            _blobs.add(file);
+        for (String fileHash : getAllDirectorysFrom(PATH_STAGED)) {
+            addFileToBlobs(fileHash);
         }
 
-        _staged.clearRemovedFiles();
-        _branch.addCommit(_myHash);
-        _branch.changeMyHeadCommitTo(_myHash);
+        clearRemovedInMyStaged();
+        addCommitToMyBranch(_myHash);
+        changeHeadCommitForMyBranch(_myHash);
     }
 
     /* **********************************
@@ -234,16 +235,16 @@ public class Commit {
                 + currentHeadCommit() + "/" + FILES_FOLDER);
         if (parentfiles != null) {
             for (String parentFile : parentfiles) {
-                String parentFileName = _blobs.getNameOf(parentFile);
-                if (!_staged.existFileNameInRemoved(parentFileName)
-                        && !_staged.hasFileName(parentFileName)) {
+                String parentFileName = myBlobs().getNameOf(parentFile);
+                if (!myStaged().existFileNameInRemoved(parentFileName)
+                        && !myStaged().hasFileName(parentFileName)) {
                     files.add(parentFile);
                 }
             }
         }
         for (String stagedFile : getAllDirectorysFrom(PATH_STAGED)) {
-            String stagedFileName = _staged.getNameByHash(stagedFile);
-            if (!_staged.existFileNameInRemoved(stagedFileName)) {
+            String stagedFileName = myStaged().getNameByHash(stagedFile);
+            if (!myStaged().existFileNameInRemoved(stagedFileName)) {
                 files.add(stagedFile);
             }
         }
@@ -259,8 +260,8 @@ public class Commit {
     String getHashByName(String filename) {
         String[] hashs = readFrom(_myPath + FILES_FOLDER);
         for (String hash : hashs) {
-            if (_blobs.hasFileHash(hash)) {
-                String name = _blobs.getNameOf(hash);
+            if (myBlobs().hasFileHash(hash)) {
+                String name = myBlobs().getNameOf(hash);
                 if (name.equals(filename)) {
                     return hash;
                 }
@@ -297,8 +298,8 @@ public class Commit {
             return false;
         }
         for (String hash : hashs) {
-            if (_blobs.hasFileHash(hash)) {
-                String name = _blobs.getNameOf(hash);
+            if (myBlobs().hasFileHash(hash)) {
+                String name = myBlobs().getNameOf(hash);
                 if (name.equals(filename)) {
                     return true;
                 }
