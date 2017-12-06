@@ -56,6 +56,28 @@ public class Commit {
         _isMerged = isMerged;
     }
 
+    /** Used to restore remote commit, since can set all parameters.
+     * @param myPath -- remote commit path
+     * @param id -- commit hash
+     * @param parents -- parents
+     * @param message -- log message
+     * @param files -- contained files
+     * @param branches -- branches it got pointed to
+     * @param timeStamp -- time the commit is created.
+     * @param isMerged -- if is a merged commit */
+    private Commit(String myPath, String id, String[] parents,
+                   String[] timeStamp, String[] message, String[] files,
+                   String[] branches, boolean isMerged) {
+        _parents = parents;
+        _timeStamp = timeStamp[0];
+        _message = message[0];
+        _files = files;
+        _branches = new HashSet<>(Arrays.asList(branches));
+        _myHash = id;
+        _myPath = myPath;
+        _isMerged = isMerged;
+    }
+
     /** Restore a Commit by commit id.
      * @param id -- input
      * @return -- restored commit. */
@@ -74,6 +96,31 @@ public class Commit {
             }
             boolean isMerged = Boolean.parseBoolean(isMergedString[0]);
             return new Commit(id, parents, timeStamp,
+                    message, files, branches, isMerged);
+        } else {
+            return null;
+        }
+    }
+
+    /** Restore remote commit.
+     * @param id -- input
+     * @param remoteDirectory -- input
+     * @return -- restored commit. */
+    Commit restoreRemoteCommit(String remoteDirectory, String id) {
+        String path = remoteDirectory + PATH_COMMITS + id + "/";
+        File file = new File(path);
+        if (file.exists()) {
+            String[] parents = readFrom(path + PARENT_FOLDER),
+                    timeStamp = readFrom(path + TIMESTAMP_FOLDER),
+                    message = readFrom(path + MESSAGE_FOLDER),
+                    files = readFrom(path + FILES_FOLDER),
+                    branches = readFrom(path + BRANCHES_FOLDER);
+            String[] isMergedString = readFrom(path + ISMERGED_FOLDER);
+            if (isMergedString == null) {
+                return null;
+            }
+            boolean isMerged = Boolean.parseBoolean(isMergedString[0]);
+            return new Commit(path, id, parents, timeStamp,
                     message, files, branches, isMerged);
         } else {
             return null;
@@ -184,6 +231,12 @@ public class Commit {
      * @return -- my message. */
     String myMessage() {
         return _message;
+    }
+
+    /** Get String format path.
+     * @return -- my path. */
+    String myPath() {
+        return _myPath;
     }
 
     /** Get if this commit is created by merging.

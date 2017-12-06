@@ -1,2 +1,2 @@
-remote1
-../testing/remote1/.gitlet/
+remote0
+./test/

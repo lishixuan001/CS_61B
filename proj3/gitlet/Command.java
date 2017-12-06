@@ -27,6 +27,9 @@ class Command {
         CHECKOUTB("checkout\\s+(\\S+)"),
         ADDREMOTE("add-remote\\s+(\\S+)\\s+(\\S+)"),
         RMREMOTE("rm-remote\\s+(\\S+)"),
+        PUSH("push\\s+(\\S+)\\s+(\\S+)"),
+        FETCH("fetch\\s+(\\S+)\\s+(\\S+)"),
+        PULL("pull\\s+(\\S+)\\s+(\\S+)"),
         HELP("--help"),
         /* Special "commands" internally generated. */
         /** Syntax error in command. */

@@ -45,7 +45,6 @@ class GitletOperator {
         _blobs = new Blob();
         _staged = new Staged();
         _branch = new Branch().restoreBranch();
-        _remote = new Remote().restoreRemote();
     }
 
     /** Process the user commands. */
@@ -332,6 +331,18 @@ class GitletOperator {
     private void doBranch(String[] operands) {
         doTest(operands);
         String branchName = operands[0];
+
+        if (branchName.contains("/")) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String[] parts = branchName.split("/");
+            for (String part : parts) {
+                stringBuilder.append(part).append(":");
+            }
+            int stringLength = stringBuilder.length();
+            stringBuilder.delete(stringLength - 1, stringLength);
+            branchName = stringBuilder.toString();
+        }
+
         if (hasBranchName(branchName)) {
             doSystemExit("A branch with that name already exists.");
         }
@@ -397,6 +408,17 @@ class GitletOperator {
     private void doCheckoutB(String[] operands) {
         doTest(operands);
         String branchName = operands[0];
+
+        if (branchName.contains("/")) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String[] parts = branchName.split("/");
+            for (String part : parts) {
+                stringBuilder.append(part).append(":");
+            }
+            int stringLength = stringBuilder.length();
+            stringBuilder.delete(stringLength - 1, stringLength);
+            branchName = stringBuilder.toString();
+        }
 
         if (!hasBranchName(branchName)) {
             doSystemExit("No such branch exists.");
@@ -740,22 +762,127 @@ class GitletOperator {
      * @param operands -- input */
     private void doAddRemote(String[] operands) {
         String remoteName = operands[0];
-        String remoteDirectory = operands[1] + "/.gitlet";
+        String remoteDirectory = operands[1];
         if (hasRemoteName(remoteName)) {
             doSystemExit("A remote with that name already exists.");
         }
+        String[] remoteHomeDirectory = remoteDirectory.split(".gitlet");
+        remoteDirectory = remoteHomeDirectory[0];
         addRemote(remoteName, remoteDirectory);
     }
 
     /** Function for rm-remote [remote name].
      * @param operands -- input */
     private void doRmRemote(String[] operands) {
-
         String remoteName = operands[0];
         if (!hasRemoteName(remoteName)) {
             doSystemExit("A remote with that name does not exist.");
         }
         deleteRemote(remoteName);
+    }
+
+    /** Function for push [remote name] [remote branch name].
+     * @param operands -- input */
+    private void doPush(String[] operands) {
+        String remoteName = operands[0];
+        String remoteBranchName = operands[1];
+
+        HashMap<String, String> remoteList = getRemoteList();
+        if (!remoteList.containsKey(remoteName)) {
+            doSystemExit("Remote directory not found.");
+        }
+        String remoteDirectory = remoteList.get(remoteName);
+        if (!new File(remoteDirectory + GITLET_PATH).exists()) {
+            doSystemExit("Remote directory not found.");
+        }
+
+        Remote remote = new Remote(remoteName, remoteDirectory);
+
+        if (!remote.hasBranch(remoteBranchName)) {
+            remote.createBranch(remoteBranchName);
+        }
+
+        remote.chooseBranch(remoteBranchName);
+        String remoteHead = remote.myHeadCommit();
+
+        if (!_branch.hasCommit(remoteHead)) {
+            doSystemExit("Please pull down remote changes before pushing.");
+        }
+
+        Commit localCommit = new Commit().restoreCommit(currentHeadCommit());
+
+        while (!localCommit.myHash().equals(remoteHead)) {
+            remote.addCommit(localCommit);
+            localCommit =
+                    new Commit().restoreCommit(localCommit.myParents()[0]);
+        }
+    }
+
+    /** Function for fetch [remote name] [remote branch name].
+     * @param operands -- input. */
+    private void doFetch(String[] operands) {
+        String remoteName = operands[0];
+        String remoteBranchName = operands[1];
+
+        HashMap<String, String> remoteList = getRemoteList();
+        if (!remoteList.containsKey(remoteName)) {
+            doSystemExit("Remote directory not found.");
+        }
+        String remoteDirectory = remoteList.get(remoteName);
+        if (!new File(remoteDirectory + GITLET_PATH).exists()) {
+            doSystemExit("Remote directory not found.");
+        }
+
+        Remote remote = new Remote(remoteName, remoteDirectory);
+
+        if (!remote.hasBranch(remoteBranchName)) {
+            doSystemExit("That remote does not have that branch.");
+        }
+
+        String fetchedBranchName = remoteName + ":" + remoteBranchName;
+        if (!hasBranchName(fetchedBranchName)) {
+            doBranch(new String[] {fetchedBranchName});
+        }
+
+        Branch fetchedBranch = new Branch().restoreBranch(fetchedBranchName);
+        for (String commit : remote.myCommits()) {
+            Commit remoteCommit =
+                    new Commit().restoreRemoteCommit(remoteDirectory, commit);
+            String remoteCommitHash = remoteCommit.myHash();
+            if (!existCommit(remoteCommitHash)) {
+                fetchedBranch.addCommit(remoteCommitHash);
+                fetchedBranch.changeMyHeadCommitTo(remoteCommitHash);
+
+                File sourceCommit =
+                        new File(remoteDirectory + PATH_COMMITS
+                                + remoteCommitHash);
+                File targetCommit =
+                        new File(PATH_COMMITS + remoteCommitHash);
+                copyFiles(sourceCommit, targetCommit);
+
+                for (String file : remoteCommit.myFiles()) {
+                    if (!_blobs.hasFileHash(file)) {
+                        File sourceFile =
+                                new File(remoteDirectory + PATH_BLOBS + file);
+                        File targetFile =
+                                new File(PATH_BLOBS + file);
+                        copyFiles(sourceFile, targetFile);
+                    }
+                }
+            }
+        }
+    }
+
+    /** Function for pull [remote name] [remote branch name].
+     * @param operands -- input. */
+    private void doPull(String[] operands) {
+        String remoteName = operands[0];
+        String remoteBranchName = operands[1];
+        String fetchedBranchName = remoteName + ":" + remoteBranchName;
+
+        doFetch(operands);
+        doMerge(new String[] {fetchedBranchName});
+
     }
 
     /** Function for "help".
@@ -949,8 +1076,9 @@ class GitletOperator {
         file.delete();
     }
 
-    /** Read Remote List into HashMap. */
-    private static HashMap<String, String> readRemoteList() {
+    /** Read Remote List into HashMap.
+     * @return -- get remote list as HashMap. */
+    private static HashMap<String, String> getRemoteList() {
         HashMap<String, String> result = new HashMap<>();
         String[] content = readFrom(REMOTE_LIST);
         if (content != null) {
@@ -1144,33 +1272,26 @@ class GitletOperator {
      *          Remote-Related          *
      ********************************** */
 
-    /** Get the name of the current remote.
-     * @return -- name and directory of the current remote. */
-    static String[] getCurrentRemoteInfo() {
-        String[] currentRemoteInfo = readFrom(CURRENT_REMOTE);
-        if (currentRemoteInfo == null) {
-            return null;
-        }
-        return currentRemoteInfo;
-    }
-
     /** Check if a remote name exist.
      * @param remoteName -- remote name
      * @return -- check result. */
     boolean hasRemoteName(String remoteName) {
-        HashMap<String, String> remoteList = readRemoteList();
+        HashMap<String, String> remoteList = getRemoteList();
         return remoteList.containsKey(remoteName);
     }
 
-    /** Add new remote to current Gitlet. */
+    /** Add new remote to current Gitlet.
+     * @param remoteName -- remote name
+     * @param remoteDirectory -- remote directory. */
     void addRemote(String remoteName, String remoteDirectory) {
         remoteDirectory = correctDirectoryFormat(remoteDirectory);
         writeInto(REMOTE_LIST, true, remoteName, remoteDirectory);
     }
 
-    /** Delete a remote from current Gitlet. */
+    /** Delete a remote from current Gitlet.
+     * @param remoteName -- remote name. */
     void deleteRemote(String remoteName) {
-        HashMap<String, String> remoteList = readRemoteList();
+        HashMap<String, String> remoteList = getRemoteList();
         clearFile(REMOTE_LIST);
         for (String key : remoteList.keySet()) {
             if (!key.equals(remoteName)) {
@@ -1179,7 +1300,9 @@ class GitletOperator {
         }
     }
 
-    /** Change directory separator to proper ones for the operating system. */
+    /** Change directory separator to proper ones for the operating system.
+     * @param path -- input
+     * @return -- corrected path. */
     private String correctDirectoryFormat(String path) {
         StringBuilder result = new StringBuilder();
         String[] steps = path.split(File.pathSeparator);
@@ -1304,6 +1427,9 @@ class GitletOperator {
         COMMANDS.put(MERGE, this::doMerge);
         COMMANDS.put(ADDREMOTE, this::doAddRemote);
         COMMANDS.put(RMREMOTE, this::doRmRemote);
+        COMMANDS.put(PUSH, this::doPush);
+        COMMANDS.put(FETCH, this::doFetch);
+        COMMANDS.put(PULL, this::doPull);
         COMMANDS.put(CLEAN, this::doClean);
         COMMANDS.put(HELP, this::doHelp);
         COMMANDS.put(ERROR, this::doError);
@@ -1370,11 +1496,6 @@ class GitletOperator {
         _blobs.add(fileHash);
     }
 
-    /** My current remote. */
-    static Remote myRemote() {
-        return _remote;
-    }
-
     /** The user input command and operands as a String. */
     private String _input;
     /** The current branch. */
@@ -1383,8 +1504,6 @@ class GitletOperator {
     private static Staged _staged;
     /** The current Blobs Area. */
     private static Blob _blobs;
-    /** The current Remote. */
-    private static Remote _remote;
 
     /** Pace for the method copyFile. */
     private static final int PACE = 1024;
@@ -1414,8 +1533,6 @@ class GitletOperator {
             PATH_BRANCHES + "currentBranch.txt";
     /** Convenience for directory on .gitlet/Remote. */
     static final String PATH_REMOTE = GITLET_PATH + "/" + "Remote/";
-    /** Convenience for directory on .gitlet/Remote/currentRemote.txt. */
-    static final String CURRENT_REMOTE = PATH_REMOTE + "currentRemote.txt";
     /** Convenience for directory on .gitlet/Remote/remoteList.txt. */
     static final String REMOTE_LIST = PATH_REMOTE + "remoteList.txt";
 

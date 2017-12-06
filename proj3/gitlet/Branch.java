@@ -25,6 +25,16 @@ public class Branch {
         _headCommit = myBranch().myHeadCommit();
     }
 
+    /** Create new branch at remote.
+     * @param remoteDirectory -- remote directory
+     * @param branchName -- branch name. */
+    Branch(String remoteDirectory, String branchName) {
+        _name = branchName;
+        _myPath = remoteDirectory + PATH_BRANCHES + _name + "/";
+        _commits = doStringsToList(new String[]{INIT_COMMIT});
+        _headCommit = INIT_COMMIT;
+    }
+
     /** Mostly for restoring.
      * @param name -- branch name.
      * @param commits -- commits in the branch. */
@@ -32,6 +42,17 @@ public class Branch {
         _name = name;
         _commits = doStringsToList(commits);
         _myPath = PATH_BRANCHES + _name + "/";
+        _headCommit = getMyHeadCommit();
+    }
+
+    /** For restore a remote Branch.
+     * @param name -- branch name.
+     * @param commits -- commits in the branch
+     * @param myPath -- remote branch's path. */
+    private Branch(String name, String[] commits, String myPath) {
+        _name = name;
+        _commits = doStringsToList(commits);
+        _myPath = myPath;
         _headCommit = getMyHeadCommit();
     }
 
@@ -50,6 +71,22 @@ public class Branch {
         if (file.exists()) {
             String[] commits = readFrom(path + COMMITS_FOLDER);
             return new Branch(branchName, commits);
+        } else {
+            return null;
+        }
+    }
+
+    /** Restore a remote branch.
+     * @param remoteDirectory -- remote directory
+     * @param branchName -- branchName to be restored
+     * @return -- restored branch. */
+    Branch restoreBranch(String remoteDirectory, String branchName) {
+        String path = remoteDirectory + PATH_BRANCHES + branchName + "/";
+        File file = new File(path);
+
+        if (file.exists()) {
+            String[] commits = readFrom(path + COMMITS_FOLDER);
+            return new Branch(branchName, commits, path);
         } else {
             return null;
         }
@@ -139,6 +176,27 @@ public class Branch {
     void addCommit(String id) {
         _commits.add(id);
         writeInto(_myPath + COMMITS_FOLDER, true, id);
+    }
+
+    /* **********************************
+     *              Methods             *
+     ********************************** */
+
+    /** Check if the branch has commit.
+     * @param commitId -- commit hash
+     * @return -- check if has commit */
+    boolean hasCommit(String commitId) {
+        Commit commit = new Commit().restoreCommit(_headCommit);
+        while (true) {
+            if (commit.myHash().equals(commitId)) {
+                return true;
+            }
+            commit = new Commit().restoreCommit(commit.myParents()[0]);
+            if (!commit.hasParents()) {
+                break;
+            }
+        }
+        return false;
     }
 
 
