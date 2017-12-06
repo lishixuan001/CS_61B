@@ -1,2 +1,0 @@
-remote0
-./test/
