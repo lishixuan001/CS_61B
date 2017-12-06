@@ -23,7 +23,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 
-import static gitlet.Branch.COMMITS_FOLDER;
+import static gitlet.Branch.*;
 import static gitlet.Commit.*;
 import static gitlet.Utils.*;
 import static gitlet.Command.Type.*;
@@ -45,6 +45,7 @@ class GitletOperator {
         _blobs = new Blob();
         _staged = new Staged();
         _branch = new Branch().restoreBranch();
+        _remote = new Remote().restoreRemote();
     }
 
     /** Process the user commands. */
@@ -85,6 +86,7 @@ class GitletOperator {
         _staged.init();
         new Branch().init();
         new Commit().init();
+        new Remote().init();
     }
 
     /** Function for "add [file name]".
@@ -494,10 +496,10 @@ class GitletOperator {
         doMergeCheckSpecialMerges(givenBranchName, splitCommitHash,
                 lastCommitOfCurrent.myHash(), lastCommitOfGiven.myHash());
 
-        boolean conflictByGiven = checkByGivenBranchSide(splitCommit,
+        boolean conflictByGiven = doCheckByGivenBranchSide(splitCommit,
                 lastCommitOfCurrent, lastCommitOfGiven);
 
-        boolean conflictBySplit = checkBySplitCommitSide(splitCommit,
+        boolean conflictBySplit = doCheckBySplitCommitSide(splitCommit,
                 lastCommitOfCurrent, lastCommitOfGiven);
 
         Commit mergedCommit = new Commit(String.format(
@@ -577,7 +579,7 @@ class GitletOperator {
      * @param lastCommitOfCurrent -- lastCommitOfCurrent
      * @param lastCommitOfGiven -- lastCommitOfGiven
      * @return -- if a conflict occurs. */
-    private boolean checkByGivenBranchSide(Commit splitCommit,
+    private boolean doCheckByGivenBranchSide(Commit splitCommit,
                                         Commit lastCommitOfCurrent,
                                         Commit lastCommitOfGiven) {
         boolean conflictOccur = false;
@@ -646,7 +648,7 @@ class GitletOperator {
      * @param lastCommitOfCurrent -- lastCommitOfCurrent
      * @param lastCommitOfGiven -- lastCommitOfGiven
      * @return -- if a conflict occurs. */
-    private boolean checkBySplitCommitSide(Commit splitCommit,
+    private boolean doCheckBySplitCommitSide(Commit splitCommit,
                                            Commit lastCommitOfCurrent,
                                            Commit lastCommitOfGiven) {
         boolean conflictOccur = false;
@@ -737,11 +739,12 @@ class GitletOperator {
     /** Function for add-remote [remote name] [name of remote]/.gitlet.
      * @param operands -- input */
     private void doAddRemote(String[] operands) {
-
         String remoteName = operands[0];
-        String remoteDirectory = operands[1];
-        System.out.println("[" + remoteName + "]");
-        System.out.println("[" + remoteDirectory + "]");
+        String remoteDirectory = operands[1] + "/.gitlet";
+        if (hasRemoteName(remoteName)) {
+            doSystemExit("A remote with that name already exists.");
+        }
+        addRemote(remoteName, remoteDirectory);
     }
 
     /** Function for rm-remote [remote name].
@@ -749,7 +752,10 @@ class GitletOperator {
     private void doRmRemote(String[] operands) {
 
         String remoteName = operands[0];
-        System.out.println("[" + remoteName + "]");
+        if (!hasRemoteName(remoteName)) {
+            doSystemExit("A remote with that name does not exist.");
+        }
+        deleteRemote(remoteName);
     }
 
     /** Function for "help".
@@ -943,6 +949,18 @@ class GitletOperator {
         file.delete();
     }
 
+    /** Read Remote List into HashMap. */
+    private static HashMap<String, String> readRemoteList() {
+        HashMap<String, String> result = new HashMap<>();
+        String[] content = readFrom(REMOTE_LIST);
+        if (content != null) {
+            for (int i = 0; i < content.length; i += 2) {
+                result.put(content[i], content[i + 1]);
+            }
+        }
+        return result;
+    }
+
     /* **********************************
      *          Commit-Related          *
      ********************************** */
@@ -1120,6 +1138,55 @@ class GitletOperator {
             }
         }
         return null;
+    }
+
+    /* **********************************
+     *          Remote-Related          *
+     ********************************** */
+
+    /** Get the name of the current remote.
+     * @return -- name and directory of the current remote. */
+    static String[] getCurrentRemoteInfo() {
+        String[] currentRemoteInfo = readFrom(CURRENT_REMOTE);
+        if (currentRemoteInfo == null) {
+            return null;
+        }
+        return currentRemoteInfo;
+    }
+
+    /** Check if a remote name exist.
+     * @param remoteName -- remote name
+     * @return -- check result. */
+    boolean hasRemoteName(String remoteName) {
+        HashMap<String, String> remoteList = readRemoteList();
+        return remoteList.containsKey(remoteName);
+    }
+
+    /** Add new remote to current Gitlet. */
+    void addRemote(String remoteName, String remoteDirectory) {
+        remoteDirectory = correctDirectoryFormat(remoteDirectory);
+        writeInto(REMOTE_LIST, true, remoteName, remoteDirectory);
+    }
+
+    /** Delete a remote from current Gitlet. */
+    void deleteRemote(String remoteName) {
+        HashMap<String, String> remoteList = readRemoteList();
+        clearFile(REMOTE_LIST);
+        for (String key : remoteList.keySet()) {
+            if (!key.equals(remoteName)) {
+                writeInto(REMOTE_LIST, true, key, remoteList.get(key));
+            }
+        }
+    }
+
+    /** Change directory separator to proper ones for the operating system. */
+    private String correctDirectoryFormat(String path) {
+        StringBuilder result = new StringBuilder();
+        String[] steps = path.split(File.pathSeparator);
+        for (String step : steps) {
+            result.append(step).append("/");
+        }
+        return result.toString();
     }
 
     /* **********************************
@@ -1303,6 +1370,11 @@ class GitletOperator {
         _blobs.add(fileHash);
     }
 
+    /** My current remote. */
+    static Remote myRemote() {
+        return _remote;
+    }
+
     /** The user input command and operands as a String. */
     private String _input;
     /** The current branch. */
@@ -1311,6 +1383,8 @@ class GitletOperator {
     private static Staged _staged;
     /** The current Blobs Area. */
     private static Blob _blobs;
+    /** The current Remote. */
+    private static Remote _remote;
 
     /** Pace for the method copyFile. */
     private static final int PACE = 1024;
@@ -1338,5 +1412,11 @@ class GitletOperator {
     /** Convenience for directory on .gitlet/Branches/currentBranch.txt. */
     static final String PATH_CURRENTBRANCH =
             PATH_BRANCHES + "currentBranch.txt";
+    /** Convenience for directory on .gitlet/Remote. */
+    static final String PATH_REMOTE = GITLET_PATH + "/" + "Remote/";
+    /** Convenience for directory on .gitlet/Remote/currentRemote.txt. */
+    static final String CURRENT_REMOTE = PATH_REMOTE + "currentRemote.txt";
+    /** Convenience for directory on .gitlet/Remote/remoteList.txt. */
+    static final String REMOTE_LIST = PATH_REMOTE + "remoteList.txt";
 
 }
