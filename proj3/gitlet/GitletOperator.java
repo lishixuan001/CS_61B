@@ -203,6 +203,24 @@ class GitletOperator {
     private void doStatus(String[] unused) {
         doTest(unused);
 
+        HashMap<String, String> staged = new HashMap<>();
+        ArrayList<String> stagedNames = new ArrayList<>();
+        ArrayList<String> stagedHashs = getAllDirectorysFrom(PATH_STAGED);
+        for (String stagedHash : stagedHashs) {
+            String stagedName = _staged.getNameByHash(stagedHash);
+            stagedNames.add(stagedName);
+            staged.put(stagedName, stagedHash);
+        }
+
+        doStatusBranches();
+        doStatusStagedFiles(stagedNames);
+        doStatusRemovedFiles();
+        doStatusModifiedFiles(staged, stagedNames);
+        doStatusUntrackedFiles();
+    }
+
+    /** Helper function showing Branches part for doStatus. */
+    private void doStatusBranches() {
         System.out.println("=== Branches ===");
         ArrayList<String> branches = new ArrayList<>();
         branches.addAll(getAllDirectorysFrom(PATH_BRANCHES));
@@ -216,23 +234,22 @@ class GitletOperator {
             }
         }
         System.out.println();
+    }
 
+    /** Helper function showing Staged Files part for doStatus.
+     * @param stagedNames -- all staged file names. */
+    private void doStatusStagedFiles(ArrayList<String> stagedNames) {
         System.out.println("=== Staged Files ===");
-        HashMap<String, String> staged = new HashMap<>();
-        ArrayList<String> stagedNames = new ArrayList<>();
-        ArrayList<String> stagedHashs = getAllDirectorysFrom(PATH_STAGED);
-        for (String stagedHash : stagedHashs) {
-            String stagedName = _staged.getNameByHash(stagedHash);
-            stagedNames.add(stagedName);
-            staged.put(stagedName, stagedHash);
-        }
         Collections.sort(stagedNames);
 
         for (String name : stagedNames) {
             System.out.println(name);
         }
         System.out.println();
+    }
 
+    /** Helper function showing Removed Files part for doStatus. */
+    private void doStatusRemovedFiles() {
         System.out.println("=== Removed Files ===");
         ArrayList<String> removed = new ArrayList<>();
         removed.addAll(doStringsToList(readFrom(REMOVED_NAMES)));
@@ -242,7 +259,13 @@ class GitletOperator {
             System.out.println(file);
         }
         System.out.println();
+    }
 
+    /** Helper function showing Modified Files part for doStatus.
+     * @param staged -- HashMap(fileName, fileHash)
+     * @param stagedNames -- all staged file names*/
+    private void doStatusModifiedFiles(HashMap<String,
+            String> staged, ArrayList<String> stagedNames) {
         ArrayList<String> modified = new ArrayList<>();
         System.out.println("=== Modifications Not Staged For Commit ===");
         for (String name : stagedNames) {
@@ -285,7 +308,10 @@ class GitletOperator {
             System.out.println(name);
         }
         System.out.println();
+    }
 
+    /** Helper function showing Untracked Files part for doStatus. */
+    private void doStatusUntrackedFiles() {
         System.out.println("=== Untracked Files ===");
         for (File file : getFilesInFile(PATH_WORKING)) {
             String fileName = file.getName();
@@ -448,10 +474,52 @@ class GitletOperator {
     private void doMerge(String[] operands) {
         doTest(operands);
 
+        boolean conflictOccur;
         String givenBranchName = operands[0];
         String currentBranch = getCurrentBranch();
+
+        doMergeCheckFailureCases(currentBranch, givenBranchName);
+
+        String splitCommitHash =
+                getSplitCommit(currentBranch, givenBranchName);
+        Branch givenBranch =
+                new Branch().restoreBranch(givenBranchName);
+        Commit splitCommit =
+                new Commit().restoreCommit(splitCommitHash);
+        Commit lastCommitOfCurrent =
+                new Commit().restoreCommit(_branch.myLatestCommit());
+        Commit lastCommitOfGiven =
+                new Commit().restoreCommit(givenBranch.myLatestCommit());
+
+        doMergeCheckSpecialMerges(givenBranchName, splitCommitHash,
+                lastCommitOfCurrent.myHash(), lastCommitOfGiven.myHash());
+
+        boolean conflictByGiven = checkByGivenBranchSide(splitCommit,
+                lastCommitOfCurrent, lastCommitOfGiven);
+
+        boolean conflictBySplit = checkBySplitCommitSide(splitCommit,
+                lastCommitOfCurrent, lastCommitOfGiven);
+
+        Commit mergedCommit = new Commit(String.format(
+                "Merged %s into %s.", givenBranchName, currentBranch));
+        mergedCommit.createCommit(true);
+        mergedCommit.tagAsMerged();
+        mergedCommit.addParent(lastCommitOfGiven.myHash());
+
+        conflictOccur = conflictByGiven || conflictBySplit;
+
+        if (conflictOccur) {
+            doSystemExit("Encountered a merge conflict.");
+        }
+    }
+
+    /** Helper function for doMerge. Checking failure cases.
+     * @param currentBranch -- currentBranchName
+     * @param givenBranchName -- givenBranchName */
+    private void doMergeCheckFailureCases(String currentBranch,
+                                          String givenBranchName) {
         String[] removed = readFrom(REMOVED_NAMES);
-        boolean conflictOccur = false;
+
         if (!_staged.isEmpty() || removed.length >= 1) {
             doSystemExit("You have uncommitted changes.");
         }
@@ -471,22 +539,25 @@ class GitletOperator {
         if (currentBranch.equals(givenBranchName)) {
             doSystemExit("Cannot merge a branch with itself.");
         }
+    }
 
-        String splitCommitHash = getSplitCommit(currentBranch, givenBranchName);
-        Commit splitCommit = new Commit().restoreCommit(splitCommitHash);
-        Commit lastCommitOfCurrent =
-                new Commit().restoreCommit(_branch.myLatestCommit());
-        Branch givenBranch = new Branch().restoreBranch(givenBranchName);
-        Commit lastCommitOfGiven =
-                new Commit().restoreCommit(givenBranch.myLatestCommit());
+    /** Helper function for doMerge. Checking failure cases.
+     * @param givenBranchName -- givenBranchName
+     * @param splitCommitHash -- splitCommitHash
+     * @param lastCommitOfCurrentHash -- lastCommitOfCurrentHash
+     * @param lastCommitOfGivenHash -- lastCommitOfGivenHash */
+    private void doMergeCheckSpecialMerges(String givenBranchName,
+                                           String splitCommitHash,
+                                           String lastCommitOfCurrentHash,
+                                           String lastCommitOfGivenHash) {
 
-        if (splitCommitHash.equals(lastCommitOfGiven.myHash())) {
+        if (splitCommitHash.equals(lastCommitOfGivenHash)) {
             doSystemExit("Given branch is an ancestor of the current branch.");
         }
-        if (splitCommitHash.equals(lastCommitOfCurrent.myHash())) {
+        if (splitCommitHash.equals(lastCommitOfCurrentHash)) {
             File source =
                     new File(PATH_BRANCHES
-                            + givenBranch.myName() + "/" + COMMITS_FOLDER);
+                            + givenBranchName + "/" + COMMITS_FOLDER);
             File target =
                     new File(PATH_BRANCHES
                             + _branch.myName() + "/" + COMMITS_FOLDER);
@@ -498,21 +569,24 @@ class GitletOperator {
             _branch.changeMyHeadCommitTo(_branch.myLatestCommit());
             doSystemExit("Current branch fast-forwarded.");
         }
+    }
 
+    /** Helper function for doMerge.
+     * Checking merge conditions by given branch's side.
+     * @param splitCommit -- splitCommit
+     * @param lastCommitOfCurrent -- lastCommitOfCurrent
+     * @param lastCommitOfGiven -- lastCommitOfGiven
+     * @return -- if a conflict occurs. */
+    private boolean checkByGivenBranchSide(Commit splitCommit,
+                                        Commit lastCommitOfCurrent,
+                                        Commit lastCommitOfGiven) {
+        boolean conflictOccur = false;
         for (String fileHash : lastCommitOfGiven.myFiles()) {
             String fileName = _blobs.getNameOf(fileHash);
 
-            boolean existedAndBothModifiedSameWay =
-                    splitCommit.containsFileName(fileName)
-                    && !splitCommit.containsFileHash(fileHash)
-                    && lastCommitOfCurrent.containsFileHash(fileHash);
-            if (existedAndBothModifiedSameWay) {
-                continue;
-            }
-
             boolean newFileExistOnlyInGiven =
                     !splitCommit.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileName(fileName);
+                            && !lastCommitOfCurrent.containsFileName(fileName);
             if (newFileExistOnlyInGiven) {
                 File fileShouldBeCreated =
                         new File(PATH_WORKING + fileName);
@@ -520,46 +594,70 @@ class GitletOperator {
                     fileShouldBeCreated.delete();
                 }
                 _blobs.checkOutByHash(fileHash);
-                doAdd(new String[] {fileName});
+                doAdd(new String[]{fileName});
             }
 
             boolean existedButModifiedInDiffWays =
                     splitCommit.containsFileName(fileName)
-                    && !splitCommit.containsFileHash(fileHash)
-                    && lastCommitOfCurrent.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileHash(fileHash)
-                    && !lastCommitOfCurrent.containsFileHash(
+                            && !splitCommit.containsFileHash(fileHash)
+                            && lastCommitOfCurrent.containsFileName(fileName)
+                            && !lastCommitOfCurrent.containsFileHash(fileHash)
+                            && !lastCommitOfCurrent.containsFileHash(
                             splitCommit.getHashByName(fileName));
             boolean newFileButModifiedInDiffWays =
                     !splitCommit.containsFileName(fileName)
-                    && lastCommitOfCurrent.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileHash(fileHash);
+                            && lastCommitOfCurrent.containsFileName(fileName)
+                            && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedInDiffWays
                     || newFileButModifiedInDiffWays) {
                 conflictOccur = true;
-                writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
-                String currentFileHash =
-                        lastCommitOfCurrent.getHashByName(fileName);
-                writeInto(PATH_WORKING + fileName, true,
-                        readFrom(PATH_BLOBS + currentFileHash
-                                + CONTENT_FOLDER + fileName));
-                writeInto(PATH_WORKING + fileName, true, "=======");
-                writeInto(PATH_WORKING + fileName, true,
-                        readFrom(PATH_BLOBS + fileHash
-                                + CONTENT_FOLDER + fileName));
-                writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
-                doAdd(new String[] {fileName});
+                doConflictContionOne(fileName,
+                        fileHash, lastCommitOfCurrent);
             }
         }
+        return conflictOccur;
+    }
 
+    /** Helper for doCheckBySplitCommitSide, operate when a conflict
+     *  that given and current modified in different ways.
+     *  @param fileName -- file name
+     *  @param fileHash -- file hash
+     *  @param lastCommitOfCurrent -- lastCommitOfCurrent */
+    private void doConflictContionOne(String fileName,
+                                      String fileHash,
+                                      Commit lastCommitOfCurrent) {
+        writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
+        String currentFileHash =
+                lastCommitOfCurrent.getHashByName(fileName);
+        writeInto(PATH_WORKING + fileName, true,
+                readFrom(PATH_BLOBS + currentFileHash
+                        + CONTENT_FOLDER + fileName));
+        writeInto(PATH_WORKING + fileName, true, "=======");
+        writeInto(PATH_WORKING + fileName, true,
+                readFrom(PATH_BLOBS + fileHash
+                        + CONTENT_FOLDER + fileName));
+        writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
+        doAdd(new String[] {fileName});
+    }
+
+    /** Helper function for doMerge.
+     * Checking merge conditions by given branch's side.
+     * @param splitCommit -- splitCommit
+     * @param lastCommitOfCurrent -- lastCommitOfCurrent
+     * @param lastCommitOfGiven -- lastCommitOfGiven
+     * @return -- if a conflict occurs. */
+    private boolean checkBySplitCommitSide(Commit splitCommit,
+                                           Commit lastCommitOfCurrent,
+                                           Commit lastCommitOfGiven) {
+        boolean conflictOccur = false;
         for (String fileHash : splitCommit.myFiles()) {
             String fileName = _blobs.getNameOf(fileHash);
 
             boolean existedButModifiedGivenAndUnchangedCurr =
                     lastCommitOfGiven.containsFileName(fileName)
-                    && !lastCommitOfGiven.containsFileHash(fileHash)
-                    && lastCommitOfCurrent.containsFileName(fileName)
-                    && lastCommitOfCurrent.containsFileHash(fileHash);
+                            && !lastCommitOfGiven.containsFileHash(fileHash)
+                            && lastCommitOfCurrent.containsFileName(fileName)
+                            && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButModifiedGivenAndUnchangedCurr) {
                 File fileShouldBeUpdated =
                         new File(PATH_WORKING + fileName);
@@ -571,100 +669,69 @@ class GitletOperator {
                 doAdd(new String[] {fileName});
             }
 
-            boolean existedButBothDeleted =
-                    !lastCommitOfGiven.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileName(fileName);
-            if (existedButBothDeleted) {
-                continue;
-            }
-
-            boolean existedUnchangedGivenButModifiedCurr =
-                    lastCommitOfGiven.containsFileHash(fileHash)
-                    && lastCommitOfCurrent.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileHash(fileHash);
-            if (existedUnchangedGivenButModifiedCurr) {
-                continue;
-            }
-
             boolean existedButDeletedGivenAndUnchangedCurr =
                     !lastCommitOfGiven.containsFileName(fileName)
-                    && lastCommitOfCurrent.containsFileHash(fileHash);
+                            && lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButDeletedGivenAndUnchangedCurr) {
                 doRm(new String[] {fileName});
             }
 
-
-            boolean existedUnchangedGivenButDeletedCurr =
-                    lastCommitOfGiven.containsFileHash(fileHash)
-                    && !lastCommitOfCurrent.containsFileName(fileName);
-            if (existedUnchangedGivenButDeletedCurr) {
-                continue;
-            }
-
             boolean existedButGivenModifedAndCurrDeleted =
                     lastCommitOfGiven.containsFileName(fileName)
-                    && !lastCommitOfGiven.containsFileHash(fileHash)
-                    && !lastCommitOfCurrent.containsFileName(fileName);
+                            && !lastCommitOfGiven.containsFileHash(fileHash)
+                            && !lastCommitOfCurrent.containsFileName(fileName);
             boolean existedButCurrModifedAndGivenDeleted =
                     !lastCommitOfGiven.containsFileName(fileName)
-                    && lastCommitOfCurrent.containsFileName(fileName)
-                    && !lastCommitOfCurrent.containsFileHash(fileHash);
+                            && lastCommitOfCurrent.containsFileName(fileName)
+                            && !lastCommitOfCurrent.containsFileHash(fileHash);
             if (existedButCurrModifedAndGivenDeleted
                     || existedButGivenModifedAndCurrDeleted) {
                 conflictOccur = true;
-                File conflictFile = new File(PATH_WORKING + fileName);
-                if (!conflictFile.exists()) {
-                    try {
-                        conflictFile.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
-                if (lastCommitOfCurrent.containsFileName(fileName)) {
-                    String currentHash =
-                            lastCommitOfCurrent.getHashByName(fileName);
-                    writeInto(PATH_WORKING + fileName, true,
-                            readFrom(PATH_BLOBS + currentHash
-                                    + CONTENT_FOLDER + fileName));
-                    writeInto(PATH_WORKING + fileName, true, "=======");
-                } else {
-                    writeInto(PATH_WORKING + fileName, true, "=======");
-                }
-                if (lastCommitOfGiven.containsFileName(fileName)) {
-                    String givenHash =
-                            lastCommitOfGiven.getHashByName(fileName);
-                    writeInto(PATH_WORKING + fileName, true,
-                            readFrom(PATH_BLOBS + givenHash
-                                    + CONTENT_FOLDER + fileName));
-                    writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
-                } else {
-                    writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
-                }
-                doAdd(new String[] {fileName});
+                doConflictContionTwo(fileName,
+                        lastCommitOfCurrent, lastCommitOfGiven);
             }
         }
+        return conflictOccur;
+    }
 
-        for (String fileHash : lastCommitOfCurrent.myFiles()) {
-            String fileName = _blobs.getNameOf(fileHash);
-
-            boolean newFileExistOnlyInCurr =
-                    !splitCommit.containsFileName(fileName)
-                    && !lastCommitOfGiven.containsFileName(fileName);
-            if (newFileExistOnlyInCurr) {
-                continue;
+    /** Helper for doCheckBySplitCommitSide, operate when a conflict
+     *  that one is modified and one deleted occurs.
+     *  @param fileName -- file name
+     *  @param lastCommitOfCurrent -- lastCommitOfCurrent
+     *  @param lastCommitOfGiven -- lastCommitOfGiven */
+    private void doConflictContionTwo(String fileName,
+                                      Commit lastCommitOfCurrent,
+                                      Commit lastCommitOfGiven) {
+        File conflictFile = new File(PATH_WORKING + fileName);
+        if (!conflictFile.exists()) {
+            try {
+                conflictFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-
-        Commit mergedCommit = new Commit(String.format(
-                "Merged %s into %s.", givenBranchName, currentBranch));
-        mergedCommit.createCommit(true);
-        mergedCommit.tagAsMerged();
-        mergedCommit.addParent(lastCommitOfGiven.myHash());
-
-        if (conflictOccur) {
-            doSystemExit("Encountered a merge conflict.");
+        writeInto(PATH_WORKING + fileName, false, "<<<<<<< HEAD");
+        if (lastCommitOfCurrent.containsFileName(fileName)) {
+            String currentHash =
+                    lastCommitOfCurrent.getHashByName(fileName);
+            writeInto(PATH_WORKING + fileName, true,
+                    readFrom(PATH_BLOBS + currentHash
+                            + CONTENT_FOLDER + fileName));
+            writeInto(PATH_WORKING + fileName, true, "=======");
+        } else {
+            writeInto(PATH_WORKING + fileName, true, "=======");
         }
+        if (lastCommitOfGiven.containsFileName(fileName)) {
+            String givenHash =
+                    lastCommitOfGiven.getHashByName(fileName);
+            writeInto(PATH_WORKING + fileName, true,
+                    readFrom(PATH_BLOBS + givenHash
+                            + CONTENT_FOLDER + fileName));
+            writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
+        } else {
+            writeInto(PATH_WORKING + fileName, true, ">>>>>>>");
+        }
+        doAdd(new String[] {fileName});
     }
 
     /** Function for add-remote [remote name] [name of remote]/.gitlet.
