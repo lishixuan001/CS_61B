@@ -525,7 +525,9 @@ class GitletOperator {
                 lastCommitOfCurrent, lastCommitOfGiven);
 
         Commit mergedCommit = new Commit(String.format(
-                "Merged %s into %s.", givenBranchName, currentBranch));
+                "Merged %s into %s.",
+                correctOutputPathFormat(givenBranchName),
+                correctOutputPathFormat(currentBranch)));
         mergedCommit.createCommit(true);
         mergedCommit.tagAsMerged();
         mergedCommit.addParent(lastCommitOfGiven.myHash());
@@ -1033,7 +1035,6 @@ class GitletOperator {
         if (!target.exists()) {
             target.mkdir();
         }
-
         String[] sourceFileList = source.list();
         if (sourceFileList != null) {
             for (String f : sourceFileList) {
@@ -1284,7 +1285,7 @@ class GitletOperator {
      * @param remoteName -- remote name
      * @param remoteDirectory -- remote directory. */
     void addRemote(String remoteName, String remoteDirectory) {
-        remoteDirectory = correctDirectoryFormat(remoteDirectory);
+        remoteDirectory = correctInputPathFormat(remoteDirectory);
         writeInto(REMOTE_LIST, true, remoteName, remoteDirectory);
     }
 
@@ -1303,13 +1304,31 @@ class GitletOperator {
     /** Change directory separator to proper ones for the operating system.
      * @param path -- input
      * @return -- corrected path. */
-    private String correctDirectoryFormat(String path) {
+    private String correctInputPathFormat(String path) {
         StringBuilder result = new StringBuilder();
         String[] steps = path.split(File.pathSeparator);
         for (String step : steps) {
             result.append(step).append("/");
         }
         return result.toString();
+    }
+
+    /** Change ":" in directory to "/" for the out print (E.g, Merge).
+     * @param path -- input
+     * @return -- corrected path. */
+    private String correctOutputPathFormat(String path) {
+        if (path.contains(":")) {
+            StringBuilder result = new StringBuilder();
+            String[] steps = path.split(":");
+            for (String step : steps) {
+                result.append(step).append("/");
+            }
+            int stringLength = result.length();
+            result.delete(stringLength - 1, stringLength);
+            return result.toString();
+        } else {
+            return path;
+        }
     }
 
     /* **********************************

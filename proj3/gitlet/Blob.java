@@ -85,7 +85,7 @@ class Blob {
      * @param fileHash -- input.
      * @return -- check result. */
     boolean hasFileHash(String fileHash) {
-        for (String hash: _files) {
+        for (String hash : getAllDirectorysFrom(PATH_BLOBS)) {
             if (hash.equals(fileHash)) {
                 return true;
             }
