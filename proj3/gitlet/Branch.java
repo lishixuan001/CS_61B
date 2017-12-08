@@ -80,7 +80,7 @@ public class Branch {
      * @param remoteDirectory -- remote directory
      * @param branchName -- branchName to be restored
      * @return -- restored branch. */
-    Branch restoreBranch(String remoteDirectory, String branchName) {
+    Branch restoreRemoteBranch(String remoteDirectory, String branchName) {
         String path = remoteDirectory + PATH_BRANCHES + branchName + "/";
         File file = new File(path);
 

@@ -108,7 +108,7 @@ public class Remote {
         if (currentBranchName == null) {
             return null;
         }
-        return new Branch().restoreBranch(_myDirectory, currentBranchName[0]);
+        return new Branch().restoreRemoteBranch(_myDirectory, currentBranchName[0]);
     }
 
 
@@ -150,7 +150,7 @@ public class Remote {
     /** Choose the branch in remote.
      *  @param branchName -- branch name. */
     void chooseBranch(String branchName) {
-        _currentBranch = new Branch().restoreBranch(_myDirectory, branchName);
+        _currentBranch = new Branch().restoreRemoteBranch(_myDirectory, branchName);
     }
 
     /** Add Commit. Copying local commit to remote.

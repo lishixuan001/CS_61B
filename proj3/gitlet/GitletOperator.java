@@ -768,7 +768,7 @@ class GitletOperator {
         if (hasRemoteName(remoteName)) {
             doSystemExit("A remote with that name already exists.");
         }
-        String[] remoteHomeDirectory = remoteDirectory.split(".gitlet");
+        String[] remoteHomeDirectory = remoteDirectory.split("/.gitlet");
         remoteDirectory = remoteHomeDirectory[0];
         addRemote(remoteName, remoteDirectory);
     }
