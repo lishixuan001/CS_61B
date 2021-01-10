@@ -56,6 +56,7 @@ class Doc {
 
     /** Set the local parameters. */
     private String _myName, _myPath, _myHash;
+
     /** Convenience for name.txt folder. */
     static final String NAME_FOLDER = "name.txt";
 
